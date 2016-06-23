@@ -10,6 +10,7 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <jailhouse/control.h>
 #include <jailhouse/ivshmem.h>
 #include <asm/irqchip.h>
 
@@ -41,4 +42,13 @@ int arch_ivshmem_update_msix(struct pci_device *device)
 	ive->arch.irq_id = irq_id;
 
 	return 0;
+}
+
+void arch_ivshmem_init(struct ivshmem_endpoint *ive, struct cell *cell)
+{
+	if (ive->device->info->num_msix_vectors == 0) {
+		u8 pin = ive->cspace[PCI_CFG_INT/4] >> 8;
+
+		ive->arch.irq_id = cell->config->vpci_irq_base + pin - 1;
+	}
 }

@@ -1,0 +1,30 @@
+/dts-v1/;
+/plugin/;
+/ {
+	compatible = "lemaker,bananapi", "allwinner,sun7i-a20";
+
+	fragment {
+		target-path = "/soc@01c00000";
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			vpci@2000000 {
+				compatible = "pci-host-ecam-generic";
+				device_type = "pci";
+				bus-range = <0 0>;
+				#address-cells = <3>;
+				#size-cells = <2>;
+				#interrupt-cells = <1>;
+				interrupt-map-mask = <0 0 0 7>;
+				interrupt-map = <0 0 0 1 &gic 0 91 0>,
+						<0 0 0 2 &gic 0 92 0>,
+						<0 0 0 3 &gic 0 93 0>,
+						<0 0 0 4 &gic 0 94 0>;
+				reg = <0x2000000 0x100000>;
+				ranges =
+					<0x02000000 0x00 0x10000000 0x10000000 0x00 0x30000000>;
+			};
+		};
+	};
+};

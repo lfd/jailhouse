@@ -59,5 +59,12 @@ void arch_ivshmem_write_doorbell(struct ivshmem_endpoint *ive);
  */
 int arch_ivshmem_update_msix(struct pci_device *device);
 
+/**
+ * Architecture-specific initialization of ivshmem endpoint.
+ * @param ive		ivshmem endpoint to initialize.
+ * @param cell		Cell the endpoint will belong to.
+ */
+void arch_ivshmem_init(struct ivshmem_endpoint *ive, struct cell *cell);
+
 /** @} IVSHMEM */
 #endif /* !_JAILHOUSE_IVSHMEM_H */

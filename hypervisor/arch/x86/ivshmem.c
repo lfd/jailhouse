@@ -69,3 +69,7 @@ int arch_ivshmem_update_msix(struct pci_device *device)
 
 	return 0;
 }
+
+void arch_ivshmem_init(struct ivshmem_endpoint *ive, struct cell *cell)
+{
+}

@@ -231,7 +231,7 @@ static struct ivshmem_data **ivshmem_find(struct pci_device *d, int *cellnum)
 	return NULL;
 }
 
-static void ivshmem_connect_cell(struct ivshmem_data *iv,
+static void ivshmem_connect_cell(struct ivshmem_data *iv, struct cell *cell,
 				 struct pci_device *d,
 				 const struct jailhouse_memory *mem,
 				 int cellnum)
@@ -243,6 +243,14 @@ static void ivshmem_connect_cell(struct ivshmem_data *iv,
 	d->bar[4] = PCI_BAR_64BIT;
 
 	memcpy(ive->cspace, &default_cspace, sizeof(default_cspace));
+
+	if (d->info->num_msix_vectors == 0) {
+		/* let the PIN rotate based on the device number */
+		ive->cspace[PCI_CFG_INT/4] =
+			(((d->info->bdf >> 3) & 0x3) + 1) << 8;
+		/* disable MSI-X capability */
+		ive->cspace[PCI_CFG_CAPS/4] = 0;
+	}
 
 	ive->cspace[IVSHMEM_CFG_SHMEM_PTR/4] = (u32)mem->virt_start;
 	ive->cspace[IVSHMEM_CFG_SHMEM_PTR/4 + 1] = (u32)(mem->virt_start >> 32);
@@ -260,6 +268,8 @@ static void ivshmem_connect_cell(struct ivshmem_data *iv,
 		remote->remote = NULL;
 	}
 	d->ivshmem_endpoint = ive;
+
+	arch_ivshmem_init(ive, cell);
 }
 
 static void ivshmem_disconnect_cell(struct ivshmem_data *iv, int cellnum)
@@ -341,9 +351,6 @@ int ivshmem_init(struct cell *cell, struct pci_device *device)
 	struct ivshmem_data **ivp;
 	struct pci_device *dev0;
 
-	if (device->info->num_msix_vectors != 1)
-		return trace_error(-EINVAL);
-
 	if (device->info->shmem_region >= cell->config->num_memory_regions)
 		return trace_error(-EINVAL);
 
@@ -360,7 +367,7 @@ int ivshmem_init(struct cell *cell, struct pci_device *device)
 		    (mem0->size == mem->size)) {
 			if ((*ivp)->eps[1].device)
 				return trace_error(-EBUSY);
-			ivshmem_connect_cell(*ivp, device, mem, 1);
+			ivshmem_connect_cell(*ivp, cell, device, mem, 1);
 			printk("Virtual PCI connection established "
 				"\"%s\" <--> \"%s\"\n",
 				cell->config->name, dev0->cell->config->name);
@@ -374,7 +381,8 @@ int ivshmem_init(struct cell *cell, struct pci_device *device)
 	*ivp = page_alloc(&mem_pool, 1);
 	if (!(*ivp))
 		return -ENOMEM;
-	ivshmem_connect_cell(*ivp, device, mem, 0);
+
+	ivshmem_connect_cell(*ivp, cell, device, mem, 0);
 
 connected:
 	printk("Adding virtual PCI device %02x:%02x.%x to cell \"%s\"\n",
