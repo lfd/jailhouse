@@ -82,7 +82,11 @@ struct {
 			.address = 0x50041000,
 			.pin_base = 32,
 			.pin_bitmap = {
-				0, 0, 1 << (90+32 - 96)
+				/* 90: UART D Interrupt */
+				0,
+				0,
+				(1 << (90 % 32)),
+				0,
 			},
 		},
 		/* GIC */ {
