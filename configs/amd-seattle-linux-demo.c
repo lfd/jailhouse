@@ -69,16 +69,18 @@ struct {
 		/* RAM */ {
 			.phys_start = 0x82d0000000,
 			.virt_start = 0x0,
-			.size = 0x10000000,	/* 256 MiB */
+			.size = 0x10000,	/* 1 MiB */
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
+				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA |
+				JAILHOUSE_MEM_LOADABLE,
 		},
 		/* RAM */ {
-			.phys_start = 0x82e0000000,
-			.virt_start = 0x82e0000000,
-			.size =         0x10000000,	/* 256 MiB */
+			.phys_start = 0x82d0100000,
+			.virt_start = 0x82d0100000,
+			.size =         0x1ff00000,	/* 511 MiB */
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
+				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA |
+				JAILHOUSE_MEM_LOADABLE,
 		},
 	},
 

@@ -54,9 +54,9 @@
 		serial0 = &serial0;
 	};
 
-	memory@82e0000000 {
+	memory@82d0100000 {
 		device_type = "memory";
-		reg = <0x82 0xe0000000 0x0 0x10000000>;	/* 256 MiB */
+		reg = <0x82 0xd0100000 0x0 0x1ff00000>;	/* 511 MiB */
 	};
 
 	gic: interrupt-controller@e1110000 {
