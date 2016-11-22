@@ -45,14 +45,15 @@ struct {
 
 	.mem_regions = {
 		/* UART */ {
-			.phys_start = 0x70006000,
-			.virt_start = 0x70006000,
-			.size = 0x1000,
+			.phys_start = 0x70006300,
+			.virt_start = 0x70006300,
+			.size = 0x40,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_ROOTSHARED,
+				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_ROOTSHARED |
+				JAILHOUSE_MEM_IO_8,
 		},
 		/* RAM */ {
-			.phys_start = 0xfbef0000,
+			.phys_start = 0xe0000000,
 			.virt_start = 0,
 			.size = 0x10000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
@@ -60,10 +61,9 @@ struct {
 				JAILHOUSE_MEM_LOADABLE,
 		},
 		/* RAM */ {
-			.phys_start = 0xe8000000,
-			/* cannot go higher than this, must be 128M-aligned */
+			.phys_start = 0xe0010000,
 			.virt_start = 0xe8000000,
-			.size = 0xeef0000,
+			.size = 256 * 1024 * 1024,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA |
 				JAILHOUSE_MEM_LOADABLE,
