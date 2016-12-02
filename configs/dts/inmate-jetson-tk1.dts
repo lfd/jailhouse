@@ -80,6 +80,13 @@
 		status = "okay";
 	};
 
+	jailhouse_car: clock@60006000 {
+		compatible = "jailhouse,jailhouse-car";
+		reg = <0x60006000 0x1000>;
+		#clock-cells = <1>;
+		#reset-cells = <1>;
+	};
+
 	vpci@48000000 {
 		compatible = "pci-host-ecam-generic";
 		device_type = "pci";
