@@ -98,6 +98,17 @@
 		status = "okay";
 	};
 
+	i2c@7000c400 {
+		compatible = "nvidia,tegra124-i2c", "nvidia,tegra114-i2c";
+		reg = <0x7000c400 0x100>;
+		interrupts = <GIC_SPI 84 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&jailhouse_car 1>;
+		clock-names = "div-clk";
+		resets = <&jailhouse_car 1>;
+		reset-names = "i2c";
+		status = "okay";
+	};
+
 	vpci@48000000 {
 		compatible = "pci-host-ecam-generic";
 		device_type = "pci";

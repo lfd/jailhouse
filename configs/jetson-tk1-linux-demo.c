@@ -21,7 +21,7 @@
 struct {
 	struct jailhouse_cell_desc cell;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[6];
+	struct jailhouse_memory mem_regions[7];
 	struct jailhouse_irqchip irqchips[2];
 	struct jailhouse_pci_device pci_devices[1];
 } __attribute__((packed)) config = {
@@ -90,6 +90,13 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_IO_32,
 		},
+		/* I2C-1 */ {
+			.phys_start = 0x7000c400,
+			.virt_start = 0x7000c400,
+			.size = 0x100,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_IO_32,
+		},
 	},
 
 	.irqchips = {
@@ -98,10 +105,11 @@ struct {
 			.pin_base = 32,
 			.pin_bitmap = {
 				/* 38: I2C-0 Interrupt */
+				/* 84: I2C-1 Interrupt */
 				/* 90: UART D Interrupt */
 				0,
 				(1 << (38 % 32)),
-				(1 << (90 % 32)),
+				(1 << (84 % 32)) | (1 << (90 % 32)),
 				0,
 			},
 		},
