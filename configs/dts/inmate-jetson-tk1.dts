@@ -14,6 +14,7 @@
  */
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/pinctrl/pinctrl-tegra.h>
 
 /dts-v1/;
 
@@ -130,6 +131,26 @@
 		resets = <&jailhouse_car 2>;
 		reset-names = "dma";
 		#dma-cells = <1>;
+	};
+
+	pinmux: pinmux@70000868 {
+		compatible = "nvidia,tegra124-pinmux";
+		reg = <0x70000868 0x164>, /* Pad control registers */
+		      <0x70003000 0x434>, /* Mux registers */
+		      <0x70000820 0x008>; /* MIPI pad control */
+		status = "okay";
+
+		pinctrl-names = "boot";
+		pinctrl-0 = <&state_boot>;
+
+		state_boot: pinmux {
+			pu0 {
+				nvidia,pins = "pu0";
+				nvidia,pull = <TEGRA_PIN_PULL_NONE>;
+				nvidia,tristate = <TEGRA_PIN_DISABLE>;
+				nvidia,enable-input = <TEGRA_PIN_ENABLE>;
+			};
+		};
 	};
 
 	i2c@7000c000 {
