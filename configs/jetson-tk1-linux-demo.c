@@ -21,7 +21,7 @@
 struct {
 	struct jailhouse_cell_desc cell;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[11];
+	struct jailhouse_memory mem_regions[10];
 	struct jailhouse_irqchip irqchips[2];
 	struct jailhouse_pci_device pci_devices[1];
 } __attribute__((packed)) config = {
@@ -45,9 +45,9 @@ struct {
 
 	.mem_regions = {
 		/* UART */ {
-			.phys_start = 0x70006300,
-			.virt_start = 0x70006300,
-			.size = 0x40,
+			.phys_start = 0x70006000,
+			.virt_start = 0x70006000,
+			.size = 0x1000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_ROOTSHARED |
 				JAILHOUSE_MEM_IO_8,
@@ -86,17 +86,17 @@ struct {
 		/* I2C-0 */ {
 			.phys_start = 0x7000c000,
 			.virt_start = 0x7000c000,
-			.size = 0x100,
+			.size = 0x1000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_IO_32,
+				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_IO_32 | JAILHOUSE_MEM_ROOTSHARED,
 		},
-		/* I2C-1 */ {
+		/* I2C-1 */ /*{
 			.phys_start = 0x7000c400,
 			.virt_start = 0x7000c400,
 			.size = 0x100,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_IO_32,
-		},
+		},*/
 		/* APBDMA */ {
 			.phys_start = 0x60020000,
 			.virt_start = 0x60020000,
@@ -105,11 +105,11 @@ struct {
 				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_IO_32,
 		},
 		/* SPI-0 */ {
-			.phys_start = 0x7000d400,
-			.virt_start = 0x7000d400,
-			.size = 0x200,
+			.phys_start = 0x7000d000,
+			.virt_start = 0x7000d000,
+			.size = 0x1000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_IO_32,
+				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_IO_32 | JAILHOUSE_MEM_ROOTSHARED,
 		},
 		/* Pinmux */ {
 			.phys_start = 0x70000000,
