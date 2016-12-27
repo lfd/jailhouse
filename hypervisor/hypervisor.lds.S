@@ -35,6 +35,12 @@ SECTIONS
 	. = ALIGN(16);
 	.bss		: { *(.bss) }
 
+	/* The console section shall only contain the hypervisor console. This
+	 * section and the next section must be aligned to PAGE_SIZE, as we
+	 * want the console section to reserve a whole page */
+	. = ALIGN(PAGE_SIZE);
+	.console	: { *(.console) }
+
 	. = ALIGN(PAGE_SIZE);
 	__page_pool = .;
 
