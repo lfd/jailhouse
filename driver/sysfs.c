@@ -309,6 +309,24 @@ void jailhouse_sysfs_cell_delete(struct cell *cell)
 	kobject_put(&cell->kobj);
 }
 
+static ssize_t console_show(struct device *dev, struct device_attribute *attr,
+			    char *buffer)
+{
+	ssize_t ret;
+
+	ret = jailhouse_console_page_delta(buffer, 0, NULL);
+	if (ret > 0)
+		/* We can safely fill the whole buffer and append a terminating
+		 * \0, as buffer comes preallocated with PAGE_SIZE and
+		 * the content is smaller than PAGE_SIZE */
+		buffer[ret++] = 0;
+
+	/* don't return error if jailhouse is not enabled */
+	if (ret == -EAGAIN)
+		ret = 0;
+	return ret;
+}
+
 static ssize_t enabled_show(struct device *dev, struct device_attribute *attr,
 			    char *buffer)
 {
@@ -361,6 +379,7 @@ static ssize_t remap_pool_used_show(struct device *dev,
 	return info_show(dev, buffer, JAILHOUSE_INFO_REMAP_POOL_USED);
 }
 
+static DEVICE_ATTR_RO(console);
 static DEVICE_ATTR_RO(enabled);
 static DEVICE_ATTR_RO(mem_pool_size);
 static DEVICE_ATTR_RO(mem_pool_used);
@@ -368,6 +387,7 @@ static DEVICE_ATTR_RO(remap_pool_size);
 static DEVICE_ATTR_RO(remap_pool_used);
 
 static struct attribute *jailhouse_sysfs_entries[] = {
+	&dev_attr_console.attr,
 	&dev_attr_enabled.attr,
 	&dev_attr_mem_pool_size.attr,
 	&dev_attr_mem_pool_used.attr,

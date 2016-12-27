@@ -19,6 +19,7 @@
 #include <linux/miscdevice.h>
 #include <linux/firmware.h>
 #include <linux/mm.h>
+#include <linux/slab.h>
 #include <linux/smp.h>
 #include <linux/uaccess.h>
 #include <linux/reboot.h>
@@ -37,7 +38,6 @@
 #include "pci.h"
 #include "sysfs.h"
 
-#include <jailhouse/header.h>
 #include <jailhouse/hypercall.h>
 #include <generated/version.h>
 
@@ -77,6 +77,8 @@ static void *hypervisor_mem;
 static unsigned long hv_core_and_percpu_size;
 static atomic_t call_done;
 static int error_code;
+static struct jailhouse_console *console_page;
+static bool console_available;
 
 #ifdef CONFIG_X86
 bool jailhouse_use_vmcall;
@@ -90,6 +92,18 @@ static void init_hypercall(void)
 {
 }
 #endif
+
+static void copy_console_page(struct jailhouse_console *dst)
+{
+retry:
+	/* spin while hypervisor is writing to console */
+	while (console_page->lock);
+	/* copy console page */
+	memcpy(dst, console_page, sizeof(struct jailhouse_console));
+	/* check consistency of console_page */
+	if (dst->tail != console_page->tail)
+		goto retry;
+}
 
 static long get_max_cpus(u32 cpu_set_size,
 			 const struct jailhouse_system __user *system_config)
@@ -180,6 +194,89 @@ static inline const char * jailhouse_get_fw_name(void)
 #else
 	return JAILHOUSE_FW_NAME;
 #endif
+}
+
+static int jailhouse_console_delta(struct jailhouse_console *console,
+				   char *dst, unsigned int head,
+				   unsigned int *miss)
+{
+	int ret;
+	unsigned int head_mod, tail_mod;
+	unsigned int delta;
+
+	if (miss)
+		*miss = 0;
+
+	/* check if tail overflowed */
+	if (console->tail < head)
+		delta = (0 - head) + console->tail;
+	else
+		delta = console->tail - head;
+
+	/* check if we have misses */
+	if (delta > sizeof(console->content)) {
+		if (miss)
+			*miss = delta - sizeof(console->content);
+		head = console->tail - sizeof(console->content);
+		delta = sizeof(console->content);
+	}
+
+	head_mod = head % sizeof(console->content);
+	tail_mod = console->tail % sizeof(console->content);
+
+	if (head_mod + delta > sizeof(console->content)) {
+		ret = sizeof(console->content) - head_mod;
+		memcpy(dst, console->content + head_mod, ret);
+		delta -= ret;
+		memcpy(dst + ret, console->content, delta);
+		ret += delta;
+	} else {
+		ret = delta;
+		memcpy(dst, console->content + head_mod, delta);
+	}
+
+	return ret;
+}
+
+int jailhouse_console_page_delta(char *dst, unsigned int head,
+				 unsigned int *miss)
+{
+	int ret;
+	struct jailhouse_console *console;
+
+	if (mutex_lock_interruptible(&jailhouse_lock) != 0)
+		return -EINTR;
+
+	if (!jailhouse_enabled) {
+		ret = -EAGAIN;
+		goto unlock_out;
+	}
+
+	if (!console_available) {
+		ret = -EPERM;
+		goto unlock_out;
+	}
+
+	console = kmalloc(sizeof(struct jailhouse_console), GFP_KERNEL);
+	if (console == NULL) {
+		ret = -ENOMEM;
+		goto unlock_out;
+	}
+
+	copy_console_page(console);
+	if (console->tail == head) {
+		ret = 0;
+		goto console_free_out;
+	}
+
+	ret = jailhouse_console_delta(console, dst, head, miss);
+
+console_free_out:
+	kfree(console);
+
+unlock_out:
+	mutex_unlock(&jailhouse_lock);
+	return ret;
 }
 
 /* See Documentation/bootstrap-interface.txt */
@@ -273,6 +370,9 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 		goto error_release_fw;
 	}
 
+	console_page = (struct jailhouse_console*)
+		(hypervisor_mem + header->console_page);
+
 	/* Copy hypervisor's binary image at beginning of the memory region
 	 * and clear the rest to zero. */
 	memcpy(hypervisor_mem, hypervisor->data, hypervisor->size);
@@ -328,6 +428,9 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 		header->debug_clock_reg = (void * __force)clock_reg;
 	}
 #endif
+
+	console_available = CON2_TYPE(config->debug_console.flags) ==
+				JAILHOUSE_CON2_TYPE_ROOTPAGE;
 
 	err = jailhouse_cell_prepare_root(&config->root_cell);
 	if (err)
