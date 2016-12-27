@@ -18,6 +18,7 @@
 #include <asm/bitops.h>
 #include <asm/spinlock.h>
 
+bool console_print = false;
 struct jailhouse_console console __attribute__((section(".console")));
 
 static DEFINE_SPINLOCK(printk_lock);
