@@ -18,9 +18,10 @@
 #include <asm/bitops.h>
 #include <asm/spinlock.h>
 
+struct jailhouse_console console __attribute__((section(".console")));
+
 static DEFINE_SPINLOCK(printk_lock);
 
-#define console_write(msg)	arch_dbg_write(msg)
 #include "printk-core.c"
 
 static void dbg_write_stub(const char *msg)

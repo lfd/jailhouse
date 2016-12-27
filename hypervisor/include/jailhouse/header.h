@@ -24,6 +24,13 @@
  */
 typedef int (*jailhouse_entry)(unsigned int);
 
+#define CONSOLE_SIZE 0x1000
+
+struct jailhouse_console {
+       unsigned short start;
+       char content[CONSOLE_SIZE - sizeof(unsigned short)];
+} __attribute__((aligned(CONSOLE_SIZE)));
+
 /**
  * Hypervisor description.
  * Located at the beginning of the hypervisor binary image and loaded by

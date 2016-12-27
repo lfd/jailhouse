@@ -35,6 +35,12 @@ SECTIONS
 	. = ALIGN(16);
 	.bss		: { *(.bss) }
 
+	/* The console section only contains the hypervisor console. It must be
+	 * aligned to PAGE_SIZE, as we're exposing a whole page of the
+	 * hypervisor to the root cell. We do not want to leak any more data. */
+	. = ALIGN(PAGE_SIZE);
+	.console	: { *(.console) }
+
 	. = ALIGN(PAGE_SIZE);
 	__page_pool = .;
 
