@@ -100,6 +100,12 @@
 	volatile __u32 padding;						\
 	/** \publicsection */
 
+struct console {
+	__u16 start;
+	char content[PAGE_SIZE - sizeof(__u16)];
+} __attribute__((aligned(PAGE_SIZE)));
+
+
 #include <asm/jailhouse_hypercall.h>
 
 #endif /* !_JAILHOUSE_HYPERCALL_H */

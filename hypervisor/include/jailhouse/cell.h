@@ -29,6 +29,8 @@ struct cell {
 		struct jailhouse_comm_region comm_region;
 		/** Padding to full page size. */
 		u8 padding[PAGE_SIZE];
+		/** Root cell uses the comm_page as console output */
+		struct console console;
 	} __attribute__((aligned(PAGE_SIZE))) comm_page;
 	/**< Page containing the communication region (shared with cell). */
 
