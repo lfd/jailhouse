@@ -19,6 +19,8 @@
 
 extern struct mutex jailhouse_lock;
 extern bool jailhouse_enabled;
+extern struct jailhouse_console *console_page;
+extern bool console_available;
 
 void *jailhouse_ioremap(phys_addr_t phys, unsigned long virt,
 			unsigned long size);

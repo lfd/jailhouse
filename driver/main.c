@@ -77,6 +77,8 @@ static void *hypervisor_mem;
 static unsigned long hv_core_and_percpu_size;
 static atomic_t call_done;
 static int error_code;
+struct jailhouse_console *console_page;
+bool console_available;
 
 #ifdef CONFIG_X86
 bool jailhouse_use_vmcall;
@@ -273,6 +275,9 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 		goto error_release_fw;
 	}
 
+	console_page = (struct jailhouse_console*)
+		(hypervisor_mem + header->console_page);
+
 	/* Copy hypervisor's binary image at beginning of the memory region
 	 * and clear the rest to zero. */
 	memcpy(hypervisor_mem, hypervisor->data, hypervisor->size);
@@ -328,6 +333,9 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 		header->debug_clock_reg = (void * __force)clock_reg;
 	}
 #endif
+
+	console_available = CON2_TYPE(config->debug_console.flags) ==
+				JAILHOUSE_CON2_TYPE_ROOTPAGE;
 
 	err = jailhouse_cell_prepare_root(&config->root_cell);
 	if (err)
