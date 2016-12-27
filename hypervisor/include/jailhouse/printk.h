@@ -10,11 +10,19 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <asm/paging.h>
 #include <jailhouse/types.h>
 
 void __attribute__((format(printf, 1, 2))) printk(const char *fmt, ...);
 
 void __attribute__((format(printf, 1, 2))) panic_printk(const char *fmt, ...);
+
+struct console {
+	unsigned int start;
+	char content[PAGE_SIZE - sizeof(unsigned int)];
+} __attribute__((aligned(PAGE_SIZE)));
+
+extern struct console *console;
 
 #ifdef CONFIG_TRACE_ERROR
 #define trace_error(code) ({						  \

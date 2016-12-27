@@ -24,6 +24,7 @@
 #include <jailhouse/hypercall.h>
 
 struct cell *root_cell;
+struct console *console_page;
 
 static LIST_HEAD(cells);
 static cpumask_t offlined_cpus;

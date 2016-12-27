@@ -17,8 +17,14 @@
 
 #include "cell.h"
 
+struct console {
+	unsigned int start;
+	char content[PAGE_SIZE - sizeof(unsigned int)];
+} __attribute__((aligned(PAGE_SIZE)));
+
 extern struct mutex jailhouse_lock;
 extern bool jailhouse_enabled;
+extern struct console *console_page;
 
 void *jailhouse_ioremap(phys_addr_t phys, unsigned long virt,
 			unsigned long size);
