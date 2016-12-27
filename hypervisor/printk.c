@@ -19,8 +19,23 @@
 #include <asm/spinlock.h>
 
 struct jailhouse_console console __attribute__((section(".console")));
+static unsigned int console_len;
 
 static DEFINE_SPINLOCK(printk_lock);
+
+static void console_write(const char *msg)
+{
+	arch_dbg_write(msg);
+
+	while (*msg)
+		if (console_len != sizeof(console.content)) {
+			console.content[console_len++] = *msg++;
+		} else {
+			console.content[console.start++] = *msg++;
+			if (console.start == sizeof(console.content))
+				console.start = 0;
+		}
+}
 
 #include "printk-core.c"
 
