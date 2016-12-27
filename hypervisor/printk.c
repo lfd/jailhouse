@@ -23,7 +23,24 @@ struct jailhouse_console console __attribute__((section(".console")));
 
 static DEFINE_SPINLOCK(printk_lock);
 
-#define console_write(msg)	arch_dbg_write(msg)
+static void console_write(const char *msg)
+{
+	arch_dbg_write(msg);
+
+	if (!console_print)
+		return;
+
+	console.lock = true;
+	memory_barrier();
+	while (*msg) {
+		console.content[console.tail % sizeof(console.content)] =
+			*msg++;
+		console.tail++;
+	}
+	console.lock = false;
+	memory_barrier();
+}
+
 #include "printk-core.c"
 
 static void dbg_write_stub(const char *msg)
