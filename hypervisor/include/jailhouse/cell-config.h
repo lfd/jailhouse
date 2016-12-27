@@ -40,7 +40,7 @@
 #define _JAILHOUSE_CELL_CONFIG_H
 
 /* Incremented on any layout or semantic change of system or cell config. */
-#define JAILHOUSE_CONFIG_REVISION	3
+#define JAILHOUSE_CONFIG_REVISION	4
 
 #define JAILHOUSE_CELL_NAME_MAXLEN	31
 
@@ -186,9 +186,14 @@ struct jailhouse_iommu {
 
 #define CON1_TYPE(flags) ((flags) & JAILHOUSE_CON1_TYPE_MASK)
 
-/* We use bit 4..5 to differentiate between PIO and MMIO access */
-#define JAILHOUSE_CON1_FLAG_PIO		0x0010
-#define JAILHOUSE_CON1_FLAG_MMIO	0x0020
+#define JAILHOUSE_CON2_TYPE_ROOTPAGE	0x0010
+#define JAILHOUSE_CON2_TYPE_MASK	0x00f0
+
+#define CON2_TYPE(flags) ((flags) & JAILHOUSE_CON2_TYPE_MASK)
+
+/* We use bit 8..9 to differentiate between PIO and MMIO access */
+#define JAILHOUSE_CON1_FLAG_PIO		0x0100
+#define JAILHOUSE_CON1_FLAG_MMIO	0x0200
 
 #define CON1_IS_MMIO(flags) ((flags) & JAILHOUSE_CON1_FLAG_MMIO)
 
