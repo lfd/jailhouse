@@ -19,10 +19,27 @@
 #include <asm/spinlock.h>
 
 struct console *console;
+static unsigned int console_len;
 
 static DEFINE_SPINLOCK(printk_lock);
 
-#define console_write(msg)	arch_dbg_write(msg)
+static void console_write(const char *msg)
+{
+	arch_dbg_write(msg);
+
+	if (!console)
+		return;
+
+	while (*msg)
+		if (console_len < sizeof(console->content)) {
+			console->content[console_len++] = *msg++;
+		} else {
+			console->content[console->start++] = *msg++;
+			if (console->start == sizeof(console->content))
+				console->start = 0;
+		}
+}
+
 #include "printk-core.c"
 
 static void dbg_write_stub(const char *msg)
