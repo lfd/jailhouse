@@ -124,9 +124,25 @@ static void cell_delete(struct cell *cell)
 
 int jailhouse_cell_prepare_root(const struct jailhouse_cell_desc *cell_desc)
 {
+	const struct jailhouse_memory *mem;
+	unsigned int n = 0;
+
 	root_cell = cell_create(cell_desc);
 	if (IS_ERR(root_cell))
 		return PTR_ERR(root_cell);
+
+	for (mem = root_cell->memory_regions; n < root_cell->num_memory_regions;
+	     mem++, n++)
+		if (mem->flags ==
+		    (JAILHOUSE_MEM_READ | JAILHOUSE_MEM_COMM_REGION)) {
+			console_page = ioremap(mem->virt_start, mem->size);
+			if (IS_ERR(console_page)) {
+				pr_alert("jailhouse: Unable to map hypervisor "
+				         "console at %llx", mem->virt_start);
+				return -EINVAL;
+			}
+			break;
+		}
 
 	cpumask_and(&root_cell->cpus_assigned, &root_cell->cpus_assigned,
 		    cpu_online_mask);

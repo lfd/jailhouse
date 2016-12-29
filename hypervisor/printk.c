@@ -18,6 +18,8 @@
 #include <asm/bitops.h>
 #include <asm/spinlock.h>
 
+struct console *console;
+
 static DEFINE_SPINLOCK(printk_lock);
 
 #define console_write(msg)	arch_dbg_write(msg)

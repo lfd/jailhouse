@@ -128,6 +128,9 @@ int map_root_memory_regions(void)
 			err = arch_map_memory_region(&root_cell, mem);
 		if (err)
 			return err;
+		if (mem->flags ==
+		    (JAILHOUSE_MEM_COMM_REGION | JAILHOUSE_MEM_READ))
+			console = &root_cell.comm_page.console;
 	}
 	return 0;
 }
