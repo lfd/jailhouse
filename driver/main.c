@@ -475,6 +475,10 @@ static int jailhouse_cmd_disable(void)
 	jailhouse_enabled = false;
 	module_put(THIS_MODULE);
 
+	if (console_page)
+		iounmap(console_page);
+	console_page = NULL;
+
 	pr_info("The Jailhouse was closed.\n");
 
 unlock_out:

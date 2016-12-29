@@ -34,7 +34,9 @@ static void init_early(unsigned int cpu_id)
 	unsigned long core_and_percpu_size = hypervisor_header.core_size +
 		sizeof(struct per_cpu) * hypervisor_header.max_cpus;
 	u64 hyp_phys_start, hyp_phys_end;
+	const struct jailhouse_memory *mem;
 	struct jailhouse_memory hv_page;
+	unsigned int n;
 
 	master_cpu_id = cpu_id;
 
@@ -79,6 +81,11 @@ static void init_early(unsigned int cpu_id)
 			return;
 		hv_page.virt_start += PAGE_SIZE;
 	}
+
+	for_each_mem_region(mem, root_cell.config, n)
+		if (mem->flags ==
+		    (JAILHOUSE_MEM_COMM_REGION | JAILHOUSE_MEM_READ))
+			console = (struct console*)&root_cell.comm_page;
 
 	paging_dump_stats("after early setup");
 	printk("Initializing processors:\n");

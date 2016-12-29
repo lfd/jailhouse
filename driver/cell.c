@@ -41,7 +41,8 @@ void jailhouse_cell_kobj_release(struct kobject *kobj)
 static struct cell *cell_create(const struct jailhouse_cell_desc *cell_desc)
 {
 	struct cell *cell;
-	unsigned int id;
+	const struct jailhouse_memory *mem;
+	unsigned int id, n = 0;
 	int err;
 
 	if (cell_desc->num_memory_regions >=
@@ -82,20 +83,39 @@ retry:
 
 	memcpy(cell->memory_regions, jailhouse_cell_mem_regions(cell_desc),
 	       sizeof(struct jailhouse_memory) * cell->num_memory_regions);
+	
+	for (mem = cell->memory_regions; n < cell->num_memory_regions;
+	     mem++, n++)
+		if (mem->flags ==
+		    (JAILHOUSE_MEM_READ | JAILHOUSE_MEM_COMM_REGION)) {
+			console_page = ioremap(mem->virt_start, mem->size);
+			if (IS_ERR(console_page)) {
+				pr_alert("jailhouse: Unable to map hypervisor "
+				         "console at %llx", mem->virt_start);
+				return ERR_PTR(-EINVAL);
+			}
+			break;
+		}
 
 	err = jailhouse_pci_cell_setup(cell, cell_desc);
 	if (err) {
 		vfree(cell->memory_regions);
 		kfree(cell);
-		return ERR_PTR(err);
+		goto comm_unmap;
 	}
 
 	err = jailhouse_sysfs_cell_create(cell);
 	if (err)
 		/* cleanup done by jailhouse_sysfs_cell_create */
-		return ERR_PTR(err);
+		goto comm_unmap;
 
 	return cell;
+
+comm_unmap:
+	if (console_page)
+		iounmap(console_page);
+	console_page = NULL;
+	return ERR_PTR(err);
 }
 
 static void cell_register(struct cell *cell)
