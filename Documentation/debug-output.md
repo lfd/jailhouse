@@ -84,6 +84,23 @@ Example configuration for disabled debug output (architecture independent):
 }
 ```
 
+Hypervisor Console via sysfs
+----------------------------
+
+The Hypervisor's console can be connected to the root cell if its communication
+region is mapped. See configs/qemu-vm.c for reference.
+
+The Hypervisor console can be found at /sys/devices/system/console.
+
+Example system configuration:
+```
+/* communication region */ {
+	.virt_start = COMM_VIRT_ADDRESS,
+	.size = 0x1000,
+	.flags = JAILHOUSE_MEM_READ, JAILHOUSE_MEM_COMM_REGION,
+}
+```
+
 Inmates
 -------
 
