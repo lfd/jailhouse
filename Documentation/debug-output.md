@@ -84,6 +84,13 @@ Example configuration for disabled debug output (architecture independent):
 }
 ```
 
+Hypervisor Console via sysfs
+----------------------------
+
+If the debug console of root cell has the flag JAILHOUSE_CON2_TYPE_ROOTPAGE
+set, the hypervisor console is available through
+/sys/devices/jailhouse/console.
+
 Inmates
 -------
 
