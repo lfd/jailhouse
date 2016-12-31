@@ -37,8 +37,8 @@ struct {
 			/* uses OXPCIE952 extension card */
 			.address = 0xe010,
 			.divider = 0x22,
-			.flags = JAILHOUSE_CON_TYPE_UART_X86 |
-				 JAILHOUSE_CON_FLAG_PIO,
+			.flags = JAILHOUSE_CON1_TYPE_UART_X86 |
+				 JAILHOUSE_CON1_FLAG_PIO,
 		},
 		.platform_info = {
 			.pci_mmconfig_base = 0xf8000000,

@@ -47,11 +47,11 @@ void arch_dbg_write_init(void)
 	if (!CON_IS_MMIO(system_config->debug_console.flags))
 		return;
 
-	if (con_type == JAILHOUSE_CON_TYPE_PL011)
+	if (con_type == JAILHOUSE_CON1_TYPE_PL011)
 		uart = &uart_pl011_ops;
-	else if (con_type == JAILHOUSE_CON_TYPE_8250)
+	else if (con_type == JAILHOUSE_CON1_TYPE_8250)
 		uart = &uart_8250_ops;
-	else if (con_type == JAILHOUSE_CON_TYPE_XUARTPS)
+	else if (con_type == JAILHOUSE_CON1_TYPE_XUARTPS)
 		uart = &uart_xuartps_ops;
 
 	if (uart) {
