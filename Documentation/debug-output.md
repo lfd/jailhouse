@@ -89,7 +89,13 @@ Hypervisor Console via sysfs
 
 If the debug console of root cell has the flag JAILHOUSE_CON2_TYPE_ROOTPAGE
 set, the hypervisor console is available through
-/sys/devices/jailhouse/console.
+/sys/devices/jailhouse/console.  Continuous reading of the hypervisor console
+is available through /dev/jailhouse.
+
+Example
+```
+cat /dev/jailhouse
+```
 
 Inmates
 -------
