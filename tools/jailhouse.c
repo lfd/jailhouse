@@ -79,6 +79,13 @@ static void __attribute__((noreturn)) help(char *prog, int exit_status)
 	exit(exit_status);
 }
 
+static bool match_opt(const char *argv, const char *short_opt,
+		      const char *long_opt)
+{
+	return strcmp(argv, short_opt) == 0 ||
+		strcmp(argv, long_opt) == 0;
+}
+
 static void call_extension_script(const char *cmd, int argc, char *argv[])
 {
 	const struct extension *ext;
@@ -275,13 +282,6 @@ static int parse_cell_id(struct jailhouse_cell_id *cell_id, int argc,
 	}
 
 	return arg_pos + 1;
-}
-
-static bool match_opt(const char *argv, const char *short_opt,
-		      const char *long_opt)
-{
-	return strcmp(argv, short_opt) == 0 ||
-		strcmp(argv, long_opt) == 0;
 }
 
 static struct jailhouse_cell_info *get_cell_info(const unsigned int id)
