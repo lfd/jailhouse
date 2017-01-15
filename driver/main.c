@@ -84,6 +84,16 @@ static int error_code;
 static struct jailhouse_console *console_page;
 static bool console_available;
 
+/* dump_last_console_page will be true in two cases:
+ *   - the jailhouse console page when disabling the hypervisor
+ *   - the jailhouse console page when enabling the hypervisor fails
+ *
+ * In these cases, we must copy the console_page to last_console_page before
+ * the hypervisor_mem region is unmapped.
+ */
+static bool dump_last_console_page;
+static struct jailhouse_console last_console_page;
+
 #ifdef CONFIG_X86
 bool jailhouse_use_vmcall;
 
@@ -298,6 +308,9 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 	long max_cpus;
 	int err;
 
+	/* unset the dump_last_console_page to drop pending content */
+	dump_last_console_page = false;
+
 	fw_name = jailhouse_get_fw_name();
 	if (!fw_name) {
 		pr_err("jailhouse: Missing or unsupported HVM technology\n");
@@ -477,6 +490,10 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 	return 0;
 
 error_free_cell:
+	if (console_available) {
+		copy_console_page(&last_console_page);
+		dump_last_console_page = true;
+	}
 	jailhouse_cell_delete_root();
 
 error_unmap:
@@ -576,6 +593,11 @@ static int jailhouse_cmd_disable(void)
 	if (err)
 		goto unlock_out;
 
+	if (console_available) {
+		copy_console_page(&last_console_page);
+		dump_last_console_page = true;
+	}
+
 	vunmap(hypervisor_mem);
 
 	jailhouse_cell_delete_root();
@@ -660,9 +682,21 @@ static ssize_t jailhouse_console_read(struct file *file, char __user *out,
 
 	/* wait for new data */
 	while (1) {
-		ret = jailhouse_console_page_delta(content, user->head, &miss);
-		if ((!ret || ret == -EAGAIN) && file->f_flags & O_NONBLOCK)
-			goto console_free_out;
+		if (dump_last_console_page) {
+			ret = jailhouse_console_delta(&last_console_page,
+						      content, user->head,
+						      &miss);
+			if (ret == 0) {
+				dump_last_console_page = false;
+				goto console_free_out;
+			}
+		} else {
+			ret = jailhouse_console_page_delta(content, user->head,
+							   &miss);
+			if ((!ret || ret == -EAGAIN) &&
+			    file->f_flags & O_NONBLOCK)
+				goto console_free_out;
+		}
 
 		if (ret == -EAGAIN)
 			/* Reset the user head, if jailhouse is not enabled. We
