@@ -60,7 +60,7 @@ static void __attribute__((noreturn)) help(char *prog, int exit_status)
 {
 	const struct extension *ext;
 
-	printf("Usage: %s { COMMAND | --help || --version }\n"
+	printf("Usage: %s { COMMAND | --help | --version }\n"
 	       "\nAvailable commands:\n"
 	       "   enable SYSCONFIG\n"
 	       "   disable\n"
@@ -71,12 +71,37 @@ static void __attribute__((noreturn)) help(char *prog, int exit_status)
 	       "             [-a | --address ADDRESS] ...\n"
 	       "   cell start { ID | [--name] NAME }\n"
 	       "   cell shutdown { ID | [--name] NAME }\n"
-	       "   cell destroy { ID | [--name] NAME }\n",
+	       "   cell destroy { ID | [--name] NAME }\n"
+	       "   console [-f | --follow]\n",
 	       basename(prog));
 	for (ext = extensions; ext->cmd; ext++)
 		printf("   %s %s %s\n", ext->cmd, ext->subcmd, ext->help);
 
 	exit(exit_status);
+}
+
+static int dump_console(int fd, bool non_block)
+{
+	int ret;
+	char buffer[128];
+
+	if (non_block) {
+		ret = fcntl(fd, F_GETFL, 0);
+		if (ret == -1)
+			return -errno;
+		ret = fcntl(fd, F_SETFL, ret | O_NONBLOCK);
+		if (ret == -1)
+			return -errno;
+	}
+
+	do {
+		ret = read(fd, buffer, sizeof(buffer));
+		if (ret < 0)
+			break;
+		ret = write(STDOUT_FILENO, buffer, ret);
+	} while (ret > 0);
+
+	return ret;
 }
 
 static void call_extension_script(const char *cmd, int argc, char *argv[])
@@ -504,6 +529,22 @@ static int cell_management(int argc, char *argv[])
 	return err;
 }
 
+static int console(int argc, char *argv[])
+{
+	int fd;
+	ssize_t ret;
+	bool non_block = false;
+
+	if (!(argc == 3 && match_opt(argv[2], "-f", "--follow")))
+		non_block = true;
+
+	fd = open_dev();
+	ret = dump_console(fd, non_block);
+	close(fd);
+
+	return ret;
+}
+
 int main(int argc, char *argv[])
 {
 	int fd;
@@ -522,6 +563,8 @@ int main(int argc, char *argv[])
 		close(fd);
 	} else if (strcmp(argv[1], "cell") == 0) {
 		err = cell_management(argc, argv);
+	} else if (strcmp(argv[1], "console") == 0) {
+		err = console(argc, argv);
 	} else if (strcmp(argv[1], "config") == 0 ||
 		   strcmp(argv[1], "hardware") == 0) {
 		call_extension_script(argv[1], argc, argv);
