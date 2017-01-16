@@ -62,7 +62,8 @@ static void __attribute__((noreturn)) help(char *prog, int exit_status)
 
 	printf("Usage: %s { COMMAND | --help || --version }\n"
 	       "\nAvailable commands:\n"
-	       "   enable SYSCONFIG\n"
+	       "   enable SYSCONFIG"
+	       " { [ -f | --follow ] | [ -v | --verbose] }\n"
 	       "   disable\n"
 	       "   cell create CELLCONFIG\n"
 	       "   cell list\n"
@@ -84,6 +85,21 @@ static bool match_opt(const char *argv, const char *short_opt,
 {
 	return strcmp(argv, short_opt) == 0 ||
 		strcmp(argv, long_opt) == 0;
+}
+
+static int fd_set_nonblock(int fd)
+{
+	int ret;
+	
+	ret = fcntl(fd, F_GETFL, 0);
+	if (ret == -1)
+		return -errno;
+
+	ret |= O_NONBLOCK;
+	ret = fcntl(fd, F_SETFL, ret);
+	if (ret == -1)
+		return -errno;
+	return 0;
 }
 
 static void call_extension_script(const char *cmd, int argc, char *argv[])
@@ -207,21 +223,55 @@ static int enable(int argc, char *argv[])
 {
 	void *config;
 	int err, fd;
-
-	if (argc != 3)
-		help(argv[0], 1);
-
-	config = read_file(argv[2], NULL);
+	char console_buffer[128];
+	ssize_t r;
+	bool dump_console = false;
 
 	fd = open_dev();
 
+	if (argc < 3 || argc > 4)
+		help(argv[0], 1);
+
+	if (argc == 4 && match_opt(argv[3], "-f", "--follow"))
+		dump_console = true;
+
+	if (argc == 4 && match_opt(argv[3], "-v", "--verbose")) {
+		dump_console = true;
+		err = fd_set_nonblock(fd);
+		if (err) {
+			perror("FD_SET_NONBLOCK");
+			goto fd_close;
+		}
+	}
+
+	config = read_file(argv[2], NULL);
+
 	err = ioctl(fd, JAILHOUSE_ENABLE, config);
-	if (err)
+	if (err) {
 		perror("JAILHOUSE_ENABLE");
+		err = fd_set_nonblock(fd);
+		if (err) {
+			perror("FD_SET_NONBLOCK");
+			goto config_free;
+		}
+		dump_console = true;
+	}
 
-	close(fd);
+	if (dump_console) {
+		do {
+			r = read(fd, console_buffer, sizeof(console_buffer));
+			if (r < 0)
+				break;
+			r = write(STDOUT_FILENO, console_buffer, r);
+		} while(r);
+		if (r < 0)
+			err = r;
+	}
+
+config_free:
 	free(config);
-
+fd_close:
+	close(fd);
 	return err;
 }
 
