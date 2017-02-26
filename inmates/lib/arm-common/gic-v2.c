@@ -17,6 +17,7 @@
 #define GICC_PMR		0x0004
 #define GICC_IAR		0x000c
 #define GICC_EOIR		0x0010
+#define GICD_SGIR		0xf00
 
 #define GICC_CTLR_GRPEN1	(1 << 0)
 
@@ -44,4 +45,10 @@ void gic_write_eoi(u32 irqn)
 u32 gic_read_ack(void)
 {
 	return mmio_read32(GICC_V2_BASE + GICC_IAR);
+}
+
+void gic_issue_sgi(u8 tfl, u8 targets, u8 id)
+{
+	mmio_write32(GICD_V2_BASE + GICD_SGIR,
+		     ((tfl & 0x3) << 24) | (targets << 16) | (id & 0xf));
 }
