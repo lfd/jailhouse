@@ -44,3 +44,8 @@ void gic_enable_irq(unsigned int irq)
 {
 	gic_enable(irq);
 }
+
+void gic_disable_irq(unsigned int irq)
+{
+	gic_disable(irq);
+}

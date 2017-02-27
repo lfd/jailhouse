@@ -58,6 +58,7 @@ static inline void cpu_relax(void)
 typedef void (*irq_handler_t)(unsigned int);
 void gic_setup(irq_handler_t handler);
 void gic_enable_irq(unsigned int irq);
+void gic_disable_irq(unsigned int irq);
 
 unsigned long timer_get_frequency(void);
 u64 timer_get_ticks(void);

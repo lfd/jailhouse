@@ -29,6 +29,12 @@ void gic_enable(unsigned int irqn)
 		     1 << (irqn & 0x1f));
 }
 
+void gic_disable(unsigned int irqn)
+{
+	mmio_write32(GICD_V2_BASE + GICD_ICENABLER + ((irqn >> 3) & ~0x3),
+		     1 << (irqn & 0x1f));
+}
+
 int gic_init(void)
 {
 	mmio_write32(GICC_V2_BASE + GICC_CTLR, GICC_CTLR_GRPEN1);

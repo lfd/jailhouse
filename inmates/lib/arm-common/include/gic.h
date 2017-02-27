@@ -16,6 +16,7 @@
 #include <inmate.h>
 
 #define GICD_ISENABLER			0x0100
+#define GICD_ICENABLER			0x0180
 
 #define is_sgi_ppi(irqn)		((irqn) < 32)
 #define is_spi(irqn)			((irqn) > 31 && (irqn) < 1020)
@@ -24,6 +25,7 @@
 
 int gic_init(void);
 void gic_enable(unsigned int irqn);
+void gic_disable(unsigned int irqn);
 void gic_write_eoi(u32 irqn);
 void gic_issue_sgi(u8 tfl, u8 targets, u8 id);
 u32 gic_read_ack(void);
