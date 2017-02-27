@@ -37,9 +37,9 @@ struct {
 		.debug_console = {
 			.address = 0x70006300,
 			.size = 0x40,
-			/* .clock_reg = 0x60006000 + 0x330, */
-			/* .gate_nr = (65 % 32), */
-			/* .divider = 0xdd, */
+			.clock_reg = 0x60006000 + 0x330,
+			.gate_nr = (65 % 32),
+			.divider = 0xdd,
 			.flags = JAILHOUSE_CON1_TYPE_8250 |
 				 JAILHOUSE_CON1_FLAG_MMIO |
 				 JAILHOUSE_CON2_TYPE_ROOTPAGE,
