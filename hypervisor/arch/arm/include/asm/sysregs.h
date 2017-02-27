@@ -138,6 +138,12 @@
 #define TLBIIPAS2L	SYSREG_32(4, c8, c5, 5)
 #define TLBIIPAS2LIS	SYSREG_32(4, c8, c0, 5)
 
+#define PMCR_EL0	SYSREG_32(0, c9, c12, 0)
+#define PMCNTENSET_EL0	SYSREG_32(0, c9, c12, 1)
+#define PMCNTENCLR_EL0	SYSREG_32(0, c9, c12, 2)
+#define PMCCNTR_EL0	SYSREG_32(0, c9, c13, 0)
+#define PMINTENCLR_EL1	SYSREG_32(0, c9, c14, 2)
+
 #define SYSREG_32(...) 32, __VA_ARGS__
 #define SYSREG_64(...) 64, __VA_ARGS__
 
