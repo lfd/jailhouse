@@ -60,4 +60,15 @@ __reset_entry:
 
 	b	inmate_main
 
+	.globl secondary_startup
+secondary_startup:
+	ldr	r2, =__c_entry
+	ldr	r1, =__cpu_stack_top
+	mov	sp, r1
+	mov	r0, #0
+	str	r0, [r1]
+	arm_read_sysreg(MPIDR_EL1, r9)
+	and	r0, r9, #MPIDR_CPUID_MASK
+	ldr	pc, [r2]
+
 	.ltorg

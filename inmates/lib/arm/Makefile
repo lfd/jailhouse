@@ -18,5 +18,5 @@ always := lib.a
 ccflags-y := -ffunction-sections
 
 lib-y				:= $(COMMON_OBJECTS)
-lib-y				+= header.o
+lib-y				+= header.o psci.o
 lib-$(CONFIG_ARM_GIC_V3)	+= gic-v3.o
