@@ -14,16 +14,22 @@
 
 #include <jailhouse/config.h>
 
-#define INMATE_BASE 0x0
-
 #ifdef CONFIG_MACH_JETSON_TK1
 #define CON_TYPE	"8250"
 #define CON_BASE	0x70006300 /* UART D on tegra124, exposed to the DB9
 				      connector of the Jetson TK1 */
-/* Do not enable the clock in the inmate, as enabling the clock requires access
- * to the tegra-car (Clock and Reset Controller) */
+
+/* Only gate the uart clock in bare-metal case.  Do not enable the clock in the
+ * inmate, as enabling the clock requires access to the tegra-car (Clock and
+ * Reset Controller) */
+#ifdef CONFIG_BARE_METAL
+#define INMATE_BASE 0x90000000
+#define CON_CLOCK_REG  (0x60006000 + 0x330)
+#define CON_GATE_NR    (65 % 32)
+#else
 #define CON_CLOCK_REG  0
 #define CON_GATE_NR    0
+#endif
 
 #define GICD_V2_BASE	((void *)0x50041000)
 #define GICC_V2_BASE	((void *)0x50042000)
@@ -64,4 +70,8 @@
 
 #define TIMER_IRQ	27
 
+#endif
+
+#ifndef INMATE_BASE
+#define INMATE_BASE 0x0
 #endif
