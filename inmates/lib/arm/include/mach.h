@@ -12,6 +12,10 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <jailhouse/config.h>
+
+#define INMATE_BASE 0x0
+
 #ifdef CONFIG_MACH_JETSON_TK1
 #define CON_TYPE	"8250"
 #define CON_BASE	0x70006300 /* UART D on tegra124, exposed to the DB9

@@ -12,11 +12,13 @@
  * the COPYING file in the top-level directory.
  */
 
+#include "include/mach.h"
+
 SECTIONS {
-	. = 0;
+	. = INMATE_BASE;
 	.boot		: { *(.boot) }
 
-	. = 0x100;
+	. = INMATE_BASE + 0x100;
 	.cmdline	: {
 		*(.cmdline)
 		BYTE(0); /* empty string in case no buffer is provided */
