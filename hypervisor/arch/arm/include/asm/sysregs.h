@@ -31,6 +31,9 @@
  */
 #define CTR_EL0		SYSREG_32(0, c0, c0, 1)
 #define MPIDR_EL1	SYSREG_32(0, c0, c0, 5)
+#define  MPIDR_CPUID_MASK	0x00ffffff
+#define  MPIDR_MP_BIT		(1 << 31)
+#define  MPIDR_U_BIT		(1 << 30)
 #define ID_PFR0_EL1	SYSREG_32(0, c0, c1, 0)
 #define ID_PFR1_EL1	SYSREG_32(0, c0, c1, 1)
 #define SCTLR_EL1	SYSREG_32(0, c1, c0, 0)

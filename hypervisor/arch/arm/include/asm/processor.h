@@ -40,10 +40,6 @@
 #define RESET_PSR	(PSR_I_BIT | PSR_F_BIT | PSR_A_BIT | PSR_SVC_MODE \
 			| PSR_32_BIT)
 
-#define MPIDR_CPUID_MASK	0x00ffffff
-#define MPIDR_MP_BIT		(1 << 31)
-#define MPIDR_U_BIT		(1 << 30)
-
 #define PFR1_VIRT(pfr)		((pfr) >> 12 & 0xf)
 
 #define SCTLR_M_BIT	(1 << 0)
