@@ -12,9 +12,10 @@
 
 include $(INMATES_LIB)/Makefile.lib
 
-INMATES := gic-demo.bin uart-demo.bin
+INMATES := gic-demo.bin psci-demo.bin uart-demo.bin
 
 gic-demo-y	:= ../arm/gic-demo.o
+psci-demo-y	:= ../arm/psci-demo.o
 uart-demo-y	:= ../arm/uart-demo.o
 
 $(eval $(call DECLARE_TARGETS,$(INMATES)))
