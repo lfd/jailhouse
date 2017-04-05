@@ -38,3 +38,4 @@
 
 unsigned int psci_version(void);
 int psci_cpu_on(unsigned int cpu_id, void (*c_entry)(void *));
+void __attribute__((noreturn)) psci_cpu_off(void);

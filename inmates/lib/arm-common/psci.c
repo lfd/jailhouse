@@ -69,3 +69,11 @@ int psci_cpu_on(unsigned int cpu_id, void (*c_entry)(void *))
 
 	return 0;
 }
+
+void __attribute__((noreturn)) psci_cpu_off(void)
+{
+	/* point of no return */
+	psci_call(PSCI_CPU_OFF, 0, 0, 0);
+	while (1)
+		asm volatile("wfi");
+}
