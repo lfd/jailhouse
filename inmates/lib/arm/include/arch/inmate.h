@@ -14,6 +14,9 @@
  * To ease the debugging, we can send a spurious hypercall, which should return
  * -ENOSYS, but appear in the hypervisor stats for this cell.
  */
+#ifdef CONFIG_BARE_METAL
+#define heartbeat()
+#else
 static inline void heartbeat(void)
 {
 	asm volatile (
@@ -22,5 +25,6 @@ static inline void heartbeat(void)
 	"hvc	#0\n"
 	: : "r" (0xbea7) : "r0");
 }
+#endif
 
 void __attribute__((interrupt("IRQ"), used)) vector_irq(void);
