@@ -39,6 +39,8 @@
 /* The following definitions are inspired by
  * hypervisor/arch/arm64/include/asm/sysregs.h */
 
+#define MPIDR_CPUID_MASK    0xff00ffffff
+
 #ifndef __ASSEMBLY__
 
 #define __stringify_1(x...)     #x

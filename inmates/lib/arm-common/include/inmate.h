@@ -39,6 +39,8 @@
 #ifndef _JAILHOUSE_INMATE_H
 #define _JAILHOUSE_INMATE_H
 
+#include <asm/sysregs.h>
+
 typedef signed char s8;
 typedef unsigned char u8;
 
@@ -74,6 +76,14 @@ static inline u32 mmio_read32(void *address)
 static inline void mmio_write32(void *address, u32 value)
 {
 	*(volatile u32 *)address = value;
+}
+
+static inline unsigned long cpu_id(void)
+{
+	unsigned long mpidr;
+
+	arm_read_sysreg(MPIDR_EL1, mpidr);
+	return mpidr & MPIDR_CPUID_MASK;
 }
 
 typedef void (*irq_handler_t)(unsigned int);
