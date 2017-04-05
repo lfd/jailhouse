@@ -54,6 +54,7 @@ struct gic {
 	void (*enable)(unsigned int irqn);
 	void (*write_eoi)(u32 irqn);
 	u32 (*read_ack)(void);
+	void (*issue_sgi)(u8 routing_mode, u16 target_list, u8 sgi);
 };
 
 extern const struct gic gic;

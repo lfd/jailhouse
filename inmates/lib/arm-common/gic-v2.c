@@ -50,6 +50,12 @@
 #define GICC_EOIR		0x0010
 #define GICD_CTLR		0x0000
 #define  GICD_CTLR_ENABLE	(1 << 0)
+#define GICD_SGIR		0xf00
+#define  GICD_SGIR_SGIID_MASK	0xf
+#define  GICD_SGIR_TL_SHIFT	16
+#define  GICD_SGIR_TL_MASK	0xff
+#define  GICD_SGIR_RM_SHIFT	24
+#define  GICD_SGIR_RM_MASK	0x3
 
 #define GICC_CTLR_GRPEN1	(1 << 0)
 
@@ -80,11 +86,23 @@ static u32 gic_v2_read_ack(void)
 	return mmio_read32(GICC_V2_BASE + GICC_IAR) & 0x3ff;
 }
 
+static void gic_v2_issue_sgi(u8 routing_mode, u16 target_list, u8 sgi)
+{
+	u32 val;
+
+	val = ((routing_mode & GICD_SGIR_RM_MASK) << GICD_SGIR_RM_SHIFT) |
+	      ((target_list & GICD_SGIR_TL_MASK) << GICD_SGIR_TL_SHIFT) |
+	      (sgi & GICD_SGIR_SGIID_MASK);
+
+	mmio_write32(GICD_V2_BASE + GICD_SGIR, val);
+}
+
 const struct gic gic_v2 = {
 	.init = gic_v2_init,
 	.enable = gic_v2_enable,
 	.write_eoi = gic_v2_write_eoi,
 	.read_ack = gic_v2_read_ack,
+	.issue_sgi = gic_v2_issue_sgi,
 };
 
 #if GIC_VERSION == 2

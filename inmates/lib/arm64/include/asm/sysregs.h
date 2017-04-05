@@ -43,10 +43,13 @@
 
 #ifndef __ASSEMBLY__
 
+#define ICC_SGI1R_EL1                    SYSREG_64(0, c12, c11, 5)
+
 #define __stringify_1(x...)     #x
 #define __stringify(x...)       __stringify_1(x)
 
 #define SYSREG_32(op1, crn, crm, op2)	s3_##op1 ##_##crn ##_##crm ##_##op2
+#define SYSREG_64(op1, crn, crm, op2)       SYSREG_32(op1, crn, crm, op2)
 
 #define arm_write_sysreg(sysreg, val) \
 	asm volatile ("msr	"__stringify(sysreg)", %0\n" : : "r"((u64)(val)))

@@ -45,6 +45,8 @@
 #define CNTV_CTL_EL0	SYSREG_32(0, c14, c3, 1)
 #define CNTPCT_EL0	SYSREG_64(0, c14)
 
+#define ICC_SGI1R_EL1	SYSREG_64(0, c12)
+
 #define MPIDR_EL1		SYSREG_32(0, c0, c0, 5)
 #define  MPIDR_CPUID_MASK	0x00ffffff
 
@@ -63,6 +65,9 @@ asm(".arch_extension virt\n");
 #define arm_write_sysreg_32(op1, crn, crm, op2, val) \
 	asm volatile ("mcr	p15, "#op1", %0, "#crn", "#crm", "#op2"\n" \
 			: : "r"((u32)(val)))
+#define arm_write_sysreg_64(op1, crm, val) \
+	asm volatile ("mcrr	p15, "#op1", %Q0, %R0, "#crm"\n" \
+			: : "r"((u64)(val)))
 
 #define arm_read_sysreg_32(op1, crn, crm, op2, val) \
 	asm volatile ("mrc	p15, "#op1", %0, "#crn", "#crm", "#op2"\n" \

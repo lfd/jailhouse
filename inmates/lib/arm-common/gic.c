@@ -71,3 +71,8 @@ void gic_enable_irq(unsigned int irq)
 {
 	gic.enable(irq);
 }
+
+void gic_issue_sgi(u8 routing_mode, u16 target_list, u8 sgi)
+{
+	gic.issue_sgi(routing_mode, target_list, sgi);
+}

@@ -89,6 +89,7 @@ static inline unsigned long cpu_id(void)
 typedef void (*irq_handler_t)(unsigned int);
 void gic_setup(irq_handler_t handler, void *irq_stack);
 void gic_enable_irq(unsigned int irq);
+void gic_issue_sgi(u8 routing_mode, u16 target_list, u8 sgi);
 
 unsigned long timer_get_frequency(void);
 u64 timer_get_ticks(void);

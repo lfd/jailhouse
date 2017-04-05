@@ -56,6 +56,12 @@
 
 #define ICC_IGRPEN1_EN		0x1
 
+#define ICC_SGIR_IRQN_SHIFT	24
+#define ICC_SGIR_IRQN_MASK	0xf
+#define ICC_SGIR_IRM_SHIFT	40
+#define ICC_SGIR_IRM_MASK	0x1
+#define ICC_SGIR_TARGET_MASK	0xffff
+
 static void gic_v3_enable(unsigned int irqn)
 {
 	if (is_sgi_ppi(irqn))
@@ -88,11 +94,23 @@ static u32 gic_v3_read_ack(void)
 	return val & 0xffffff;
 }
 
+static void gic_v3_issue_sgi(u8 routing_mode, u16 target_list, u8 sgi)
+{
+	u64 val;
+
+	val = ((sgi & ICC_SGIR_IRQN_MASK) << ICC_SGIR_IRQN_SHIFT) |
+	      (((u64)routing_mode & ICC_SGIR_IRQN_MASK) << ICC_SGIR_IRM_SHIFT) |
+	      (target_list & ICC_SGIR_TARGET_MASK);
+
+	arm_write_sysreg(ICC_SGI1R_EL1, val);
+}
+
 const struct gic gic_v3 = {
 	.init = gic_v3_init,
 	.enable = gic_v3_enable,
 	.write_eoi = gic_v3_write_eoi,
 	.read_ack = gic_v3_read_ack,
+	.issue_sgi = gic_v3_issue_sgi,
 };
 
 #if GIC_VERSION == 3
