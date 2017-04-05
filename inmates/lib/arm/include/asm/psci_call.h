@@ -36,12 +36,22 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <psci.h>
-#include <asm/psci_call.h>
+#include <asm/psci_generic.h>
 
-volatile unsigned int cpus_online;
-
-unsigned int psci_version(void)
+static inline int psci_call(unsigned int function_id, unsigned int arg0,
+			    unsigned int arg1, unsigned int arg2)
 {
-	return (unsigned int)psci_call(PSCI_VERSION, 0, 0, 0);
+	register unsigned int __function_id asm("r0") = function_id;
+	register unsigned int __par1 asm("r1") = arg0;
+	register unsigned int __par2 asm("r2") = arg1;
+	register unsigned int __par3 asm("r3") = arg2;
+
+	asm volatile(
+		".arch_extension sec\n\t"
+		"smc #0\n\t"
+		: "=r" (__function_id)
+		: "r"(__function_id), "r"(__par1), "r"(__par2), "r"(__par3)
+		: "memory");
+
+	return __function_id;
 }

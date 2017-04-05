@@ -36,12 +36,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <psci.h>
-#include <asm/psci_call.h>
-
-volatile unsigned int cpus_online;
-
-unsigned int psci_version(void)
-{
-	return (unsigned int)psci_call(PSCI_VERSION, 0, 0, 0);
-}
+#define PSCI_VERSION			0x84000000
+#define PSCI_CPU_OFF			0x84000002
+#define PSCI_CPU_ON_32			0x84000003
+#define PSCI_CPU_ON_64			0xc4000003
