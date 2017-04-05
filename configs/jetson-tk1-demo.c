@@ -2,7 +2,7 @@
  * Jailhouse, a Linux-based partitioning hypervisor
  *
  * Configuration for gic-demo or uart-demo inmate on Nvidia Jetson TK1:
- * 1 CPU, 64K RAM, serial port 0
+ * 2 CPUs, 64K RAM, serial port 0
  *
  * Copyright (c) Siemens AG, 2015
  *
@@ -40,7 +40,7 @@ struct {
 	},
 
 	.cpus = {
-		0x8,
+		0xc,
 	},
 
 	.mem_regions = {
