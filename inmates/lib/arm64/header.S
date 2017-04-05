@@ -2,9 +2,11 @@
  * Jailhouse AArch64 support
  *
  * Copyright (C) 2015 Huawei Technologies Duesseldorf GmbH
+ * Copyright (C) 2017 OTH Regensburg
  *
  * Authors:
  *  Antonios Motakis <antonios.motakis@huawei.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -37,6 +39,7 @@
  */
 
 #include <mach.h>
+#include <asm/sysregs.h>
 
 .macro	ventry	label
 	.align	7
@@ -83,9 +86,7 @@
 	mov	x0, #0
 .endm
 
-	.section ".boot", "ax"
-	.globl __reset_entry
-__reset_entry:
+.macro prepare_cpu
 	ldr	x0, =vectors
 	msr	vbar_el1, x0
 
@@ -96,6 +97,12 @@ __reset_entry:
 	msr	daif, xzr
 
 	isb
+.endm
+
+	.section ".boot", "ax"
+	.globl __reset_entry
+__reset_entry:
+	prepare_cpu
 
 	b	inmate_main
 
@@ -105,6 +112,17 @@ stack_size:
 handle_irq:
 	bl	vector_irq
 	eret
+
+
+	.globl secondary_startup
+secondary_startup:
+	prepare_cpu
+
+	ldr	x1, =__c_entry
+	ldr	x2, [x1]
+	br	x2
+
+	.ltorg
 
 .weak vector_irq
 	b	.

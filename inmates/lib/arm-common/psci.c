@@ -38,10 +38,34 @@
 
 #include <psci.h>
 #include <asm/psci_call.h>
+#include <asm/processor.h>
+
+void (* volatile __c_entry)(void *);
+
+extern void secondary_startup(void);
 
 volatile unsigned int cpus_online;
 
 unsigned int psci_version(void)
 {
 	return (unsigned int)psci_call(PSCI_VERSION, 0, 0, 0);
+}
+
+int psci_cpu_on(unsigned int cpu_id, void (*c_entry)(void *))
+{
+	int err;
+	unsigned int cpus = cpus_online + 1;
+
+	__c_entry = c_entry;
+	memory_barrier();
+
+	err = psci_call(PSCI_CPU_ON, cpu_id, (uintptr_t)secondary_startup, 0);
+	if (err)
+		return err;
+
+	/* spin while CPU is not up */
+	while (cpus != cpus_online)
+		cpu_relax();
+
+	return 0;
 }

@@ -38,6 +38,10 @@
 
 #include <asm/psci_generic.h>
 
+#define PSCI_CPU_ON PSCI_CPU_ON_32
+
+typedef unsigned long uintptr_t;
+
 static inline int psci_call(unsigned int function_id, unsigned int arg0,
 			    unsigned int arg1, unsigned int arg2)
 {

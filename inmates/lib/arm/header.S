@@ -2,10 +2,12 @@
  * Jailhouse, a Linux-based partitioning hypervisor
  *
  * Copyright (c) ARM Limited, 2014
+ * Copyright (c) OTH Regensburg, 2017
  * Copyright (c) Siemens AG, 2016
  *
  * Authors:
  *  Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *  Jan Kiszka <jan.kiszka@siemens.com>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
@@ -42,6 +44,7 @@
 #include <asm/sysregs.h>
 
 	.arm
+	.arch_extension virt
 
 	.section ".boot", "ax"
 	.align 5
@@ -114,10 +117,14 @@ vectors:
 	add	r0, r0, r2
 .endm
 
+.macro load_vectors, reg
+	ldr	\reg, =vectors
+	arm_write_sysreg(VBAR, \reg)
+.endm
+
 	.globl __reset_entry
 __reset_entry:
-	ldr	r0, =vectors
-	arm_write_sysreg(VBAR, r0)
+	load_vectors r0
 
 	mov	r0, #0
 	ldr	r1, =bss_start
@@ -136,5 +143,16 @@ __reset_entry:
 
 stack_size:
 	.word STACK_SIZE
+
+	.globl secondary_startup
+secondary_startup:
+	/* prepare vector base address */
+	load_vectors r0
+
+	/* prepare stack */
+	setup_cpu_stack
+
+	ldr	r1, =__c_entry
+	ldr	pc, [r1]
 
 	.ltorg
