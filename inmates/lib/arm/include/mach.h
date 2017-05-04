@@ -38,6 +38,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define PAGE_SIZE	0x1000
+
 #ifdef CONFIG_MACH_JETSON_TK1
 #define CON_TYPE	"8250"
 #define CON_BASE	0x70006300 /* UART D on tegra124, exposed to the DB9
