@@ -23,7 +23,7 @@
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[20];
+	struct jailhouse_memory mem_regions[21];
 	struct jailhouse_irqchip irqchips[2];
 	struct jailhouse_pci_device pci_devices[1];
 } __attribute__((packed)) config = {
@@ -139,6 +139,13 @@ struct {
 			.phys_start = 0x70000800,
 			.virt_start = 0x70000800,
 			.size = 0x00000100,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+					JAILHOUSE_MEM_IO,
+		},
+		/* PINMUX_AUX */ {
+			.phys_start = 0x70003000,
+			.virt_start = 0x70003000,
+			.size = 0x00001000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 					JAILHOUSE_MEM_IO,
 		},
