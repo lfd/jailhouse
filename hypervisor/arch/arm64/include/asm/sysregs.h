@@ -147,11 +147,16 @@
 
 #ifndef __ASSEMBLY__
 
-#define arm_write_sysreg(sysreg, val) \
-	asm volatile ("msr	"#sysreg", %0\n" : : "r"((u64)(val)))
+#define SYSREG_32(a, b, c, d)  s3_##a ##_##b ##_##c ##_##d
+#define SYSREG_64(a, b, c, d)	s3_##a ##_##b ##_##c ##_##d
 
-#define arm_read_sysreg(sysreg, val) \
-	asm volatile ("mrs	%0, "#sysreg"\n" : "=r"((u64)(val)))
+#define arm_write_sysreg1(sysreg, val) \
+	asm volatile ("msr	"#sysreg", %0\n" : : "r"((u64)(val)))
+#define arm_write_sysreg(a , b) arm_write_sysreg1( a, b)
+
+#define arm_read_sysreg1(sysreg, val) \
+	asm volatile ("mrs	%0,  "#sysreg"\n" : "=r"((val)))
+#define arm_read_sysreg(a , b) arm_read_sysreg1( a, b)
 
 #endif /* __ASSEMBLY__ */
 
