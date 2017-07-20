@@ -189,13 +189,12 @@
 
 static inline u64 gic_read_lr(unsigned int n)
 {
-	u32 lr, lrc;
+	u64 lr;
 
 	switch (n) {
 #define __READ_LR(n)					\
 	case n:						\
 		arm_read_sysreg(ICH_LR##n, lr);		\
-		arm_read_sysreg(ICH_LRC##n, lrc);	\
 		break;
 
 	__READ_LR(0)
@@ -220,19 +219,15 @@ static inline u64 gic_read_lr(unsigned int n)
 		return (u64)(-1);
 	}
 
-	return (u64)lrc << 32 | lr;
+	return lr;
 }
 
 static inline void gic_write_lr(unsigned int n, u64 val)
 {
-	u32 lr = (u32)val;
-	u32 lrc = val >> 32;
-
 	switch (n) {
 #define __WRITE_LR(n)					\
 	case n:						\
-		arm_write_sysreg(ICH_LR##n, lr);	\
-		arm_write_sysreg(ICH_LRC##n, lrc);	\
+		arm_write_sysreg(ICH_LR##n, val);	\
 		break;
 
 	__WRITE_LR(0)
