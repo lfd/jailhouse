@@ -73,6 +73,12 @@
 #define GICD_V2_BASE	((void *)0xf9010000)
 #define GICC_V2_BASE	((void *)0xf902f000)
 
+#elif defined(CONFIG_MACH_ESPRESSOBIN)
+#define CON_TYPE	"MVEBU"
+#define CON_BASE	0xd0012000
+
+#define GICD_V3_BASE	((void *)0xd1d00000)
+#define GICR_V3_BASE	((void *)0xd1d60000)	/* CPU 1 */
 
 #endif
 
