@@ -136,7 +136,6 @@ void gic_handle_sgir_write(struct sgi *sgi, bool virt_input)
 	if (sgi->routing_mode == 2) {
 		/* Route to the caller itself */
 		irqchip_set_pending(cpu_data, sgi->id);
-		sgi->targets = (1 << cpu_data->cpu_id);
 	} else {
 		sgi->targets = 0;
 
@@ -162,6 +161,12 @@ void gic_handle_sgir_write(struct sgi *sgi, bool virt_input)
 			}
 
 			irqchip_set_pending(per_cpu(cpu), sgi->id);
+
+			/*
+			 * routing_mode will be propagated to irqchip_send_sgi.
+			 * as well. So this adjustment is only targeting the
+			 * mode 0 case.
+			 */
 			sgi->targets |= (1 << cpu);
 		}
 	}
