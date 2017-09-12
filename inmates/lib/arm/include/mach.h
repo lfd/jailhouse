@@ -39,6 +39,8 @@
  */
 
 #define PAGE_SIZE	0x1000
+#define STACK_PAGES	1
+#define STACK_SIZE	(STACK_PAGES * PAGE_SIZE)
 
 #ifdef CONFIG_MACH_JETSON_TK1
 #define CON_TYPE	"8250"

@@ -38,6 +38,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <mach.h>
 #include <asm/sysregs.h>
 
 	.arm
@@ -67,6 +68,52 @@ vectors:
 	vector irq
 	vector fiq
 
+/* Sets up the stack for a CPU. Clobbers r0-r2. Returns the location of the IRQ
+ * stack in r0.
+ *
+ * The stack for the n'th onlined CPU is calculated as follows:
+ * stack_top = stack_bottom + (n * stack_size * 2) + stack_size =
+ *           = stack_bottom + (2 * n + 1) * stack_size
+ *
+ * So the stack configuration looks as follows:
+ * +-----------+ <- stack_bottom
+ * |   Pri     |
+ * +-----------+ <- Primary CPU stack top
+ * | Pri_IRQ0  |
+ * +-----------+ <- Primary CPU IRQ stack top
+ * |   Sec1    |
+ * +-----------+ <- 1st secondary CPU stack top
+ * | Sec_IRQ1  |
+ * +-----------+ <- 1st secondary CPU IRQ stack top
+ * |   Sec2    |
+ * +-----------+ <- 2nd secondary CPU stack top
+ * |   ...     |
+ */
+.macro setup_cpu_stack
+	/* increment cpus_online and store */
+	ldr	r0, =cpus_online
+	ldr	r1, [r0]
+	add	r1, r1, #1
+	str	r1, [r0]
+	sub	r1, r1, #1
+
+	ldr	r0, =__stack_bottom
+
+	/* load the stack size */
+	ldr	r2, stack_size
+
+	/* calculate address of CPU stack */
+	mov	r1, r1, lsl #1
+	add	r1, r1, #1
+	mul	r1, r1, r2
+	add	r0, r0, r1
+
+	mov	sp, r0
+
+	/* return location of the IRQ stack */
+	add	r0, r0, r2
+.endm
+
 	.globl __reset_entry
 __reset_entry:
 	ldr	r0, =vectors
@@ -83,8 +130,11 @@ __reset_entry:
 	subs	r2, #1
 	bne	1b
 
-2:	ldr	sp, =stack_top
+2:	setup_cpu_stack
 
 	b	inmate_main
+
+stack_size:
+	.word STACK_SIZE
 
 	.ltorg

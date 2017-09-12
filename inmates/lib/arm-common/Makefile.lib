@@ -39,7 +39,7 @@
 GCOV_PROFILE := n
 
 OBJS-y := ../string.o ../cmdline.o
-OBJS-y += printk.o gic.o timer.o
+OBJS-y += printk.o gic.o timer.o psci.o
 OBJS-y += uart-jailhouse.o uart-pl011.o uart-8250.o uart-8250-8.o
 OBJS-y += uart-xuartps.o uart-mvebu.o
 OBJS-y += gic-v2.o gic-v3.o
