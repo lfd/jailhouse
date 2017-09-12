@@ -36,9 +36,51 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <mach.h>
+
 .macro	ventry	label
 	.align	7
 	b	\label
+.endm
+
+/* Sets up the stack for a CPU. Clobbers x0-x2. Returns 0 in x0.
+ *
+ * The stack for the n'th onlined CPU is calculated as follows:
+ * stack_top = stack_bottom + n * stack_size + stack_size =
+ *           = stack_bottom + (n + 1) * stack_size
+ *
+ * So the stack configuration looks as follows:
+ * +-----------+ <- stack_bottom
+ * |   Pri     |
+ * +-----------+ <- Primary CPU stack top
+ * |   Sec1    |
+ * +-----------+ <- 1st secondary CPU stack top
+ * |   Sec2    |
+ * +-----------+ <- 2nd secondary CPU stack top
+ * |   ...     |
+ */
+.macro setup_cpu_stack
+	/* increment cpus_online and store */
+	mov	x1, #0
+	ldr	x0, =cpus_online
+	ldr	w1, [x0]
+	add	x1, x1, #1
+	str	w1, [x0]
+
+	ldr	x0, =stack_bottom
+
+	/* load the stack size */
+	mov	x2, #0
+	ldr	w2, stack_size
+
+	/* calculate address of CPU stack */
+	mul	x1, x1, x2
+	add	x0, x0, x1
+
+	mov	sp, x0
+
+	/* return NULL */
+	mov	x0, #0
 .endm
 
 	.section ".boot", "ax"
@@ -47,17 +89,18 @@ __reset_entry:
 	ldr	x0, =vectors
 	msr	vbar_el1, x0
 
-	ldr	x0, =stack_top
-	mov	sp, x0
-
 	mov	x0, #(3 << 20)
 	msr	cpacr_el1, x0
 
+	setup_cpu_stack
 	msr	daif, xzr
 
 	isb
 
 	b	inmate_main
+
+stack_size:
+	.word	STACK_SIZE
 
 handle_irq:
 	bl	vector_irq

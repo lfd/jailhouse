@@ -71,8 +71,7 @@ SECTIONS {
 	}
 
 	. = ALIGN(4096);
-	. = . + 0x1000;
-	stack_top = .;
+	stack_bottom = .;
 }
 
 ENTRY(__reset_entry)
