@@ -54,7 +54,7 @@ static void handle_IRQ(unsigned int irqn)
 	timer_start(ticks_per_beat);
 }
 
-void inmate_main(void)
+void inmate_main(void *irq_stack)
 {
 	printk("Initializing the GIC...\n");
 	gic_setup(handle_IRQ);

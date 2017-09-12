@@ -12,7 +12,7 @@
 
 #include <inmate.h>
 
-void inmate_main(void)
+void inmate_main(void *irq_stack)
 {
 	unsigned long dtb;
 	void (*entry)(u64 dtb, u64 x1, u64 x2, u64 x3);

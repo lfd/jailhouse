@@ -12,7 +12,7 @@
 
 #include <inmate.h>
 
-void inmate_main(void)
+void inmate_main(void *irq_stack)
 {
 	unsigned int i = 0, j;
 	/*

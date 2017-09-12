@@ -255,6 +255,9 @@ extern volatile u32 smp_num_cpus;
 extern u8 smp_cpu_ids[SMP_MAX_CPUS];
 void smp_wait_for_all_cpus(void);
 void smp_start_cpu(unsigned int cpu_id, void (*entry)(void));
+
+void inmate_main(void);
+
 #endif
 
 #include "../inmate_common.h"

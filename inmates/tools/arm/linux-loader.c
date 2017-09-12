@@ -14,7 +14,7 @@
 
 #include <inmate.h>
 
-void inmate_main(void)
+void inmate_main(void *irq_stack)
 {
 	void register (*entry)(unsigned long, unsigned long, unsigned long);
 	unsigned long register dtb;
