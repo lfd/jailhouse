@@ -58,13 +58,13 @@ void vector_irq(void)
 	}
 }
 
-void gic_setup(irq_handler_t handler)
+void gic_setup(irq_handler_t handler, void *irq_stack)
 {
 	gic.init();
 
 	irq_handler = handler;
 
-	gic_setup_irq_stack();
+	gic_setup_irq_stack(irq_stack);
 }
 
 void gic_enable_irq(unsigned int irq)

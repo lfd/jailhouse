@@ -57,7 +57,7 @@ static void handle_IRQ(unsigned int irqn)
 void inmate_main(void *irq_stack)
 {
 	printk("Initializing the GIC...\n");
-	gic_setup(handle_IRQ);
+	gic_setup(handle_IRQ, irq_stack);
 	gic_enable_irq(TIMER_IRQ);
 
 	printk("Initializing the timer...\n");

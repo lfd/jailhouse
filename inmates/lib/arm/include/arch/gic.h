@@ -38,10 +38,8 @@
 
 #ifndef __ASSEMBLY__
 
-static inline void gic_setup_irq_stack(void)
+static inline void gic_setup_irq_stack(void *irq_stack)
 {
-	static __attribute__((aligned(0x1000))) u32 irq_stack[1024];
-
 	asm volatile (".arch_extension virt\n");
 	asm volatile ("msr	SP_irq, %0\n" : : "r" (irq_stack));
 	asm volatile ("cpsie	i\n");

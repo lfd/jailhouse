@@ -36,4 +36,4 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define gic_setup_irq_stack()
+#define gic_setup_irq_stack(irq_stack)
