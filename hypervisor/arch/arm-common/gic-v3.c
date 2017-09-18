@@ -485,7 +485,7 @@ static void gic_eoi_irq(u32 irq_id, bool deactivate)
 		arm_write_sysreg(ICC_DIR_EL1, irq_id);
 }
 
-static int gic_inject_irq(struct per_cpu *cpu_data, u16 irq_id)
+static int gic_inject_irq(struct per_cpu *cpu_data, u16 irq_id, u16 caller)
 {
 	int i;
 	int free_lr = -1;
@@ -527,6 +527,7 @@ static int gic_inject_irq(struct per_cpu *cpu_data, u16 irq_id)
 		lr |= ICH_LR_HW_BIT;
 		lr |= (u64)irq_id << ICH_LR_PHYS_ID_SHIFT;
 	}
+	/* Nothing special to do in case of sending SGIs on a GICv3. */
 
 	gic_write_lr(free_lr, lr);
 

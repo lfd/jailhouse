@@ -225,6 +225,7 @@ void irqchip_set_pending(struct per_cpu *cpu_data, u16 irq_id)
 	bool local_injection = (this_cpu_data() == cpu_data);
 	unsigned int new_tail;
 	struct sgi sgi;
+	const u16 sender = this_cpu_data()->cpu_id;
 
 	if (!cpu_data) {
 		/* Injection via GICD */
@@ -233,7 +234,8 @@ void irqchip_set_pending(struct per_cpu *cpu_data, u16 irq_id)
 		return;
 	}
 
-	if (local_injection && irqchip.inject_irq(cpu_data, irq_id) != -EBUSY)
+	if (local_injection &&
+	    irqchip.inject_irq(cpu_data, irq_id, sender) != -EBUSY)
 		return;
 
 	spin_lock(&cpu_data->pending_irqs.lock);
@@ -244,6 +246,8 @@ void irqchip_set_pending(struct per_cpu *cpu_data, u16 irq_id)
 	if (new_tail != cpu_data->pending_irqs.head) {
 		cpu_data->pending_irqs.irqs[cpu_data->pending_irqs.tail] =
 			irq_id;
+		cpu_data->pending_irqs.sender[cpu_data->pending_irqs.tail] =
+			sender;
 		cpu_data->pending_irqs.tail = new_tail;
 		/*
 		 * Make the change to pending_irqs.tail visible before the
@@ -273,13 +277,15 @@ void irqchip_set_pending(struct per_cpu *cpu_data, u16 irq_id)
 
 void irqchip_inject_pending(struct per_cpu *cpu_data)
 {
-	u16 irq_id;
+	u16 irq_id, sender;
 
 	while (cpu_data->pending_irqs.head != cpu_data->pending_irqs.tail) {
 		irq_id = cpu_data->pending_irqs.irqs[
 			cpu_data->pending_irqs.head];
+		sender = cpu_data->pending_irqs.sender[
+			cpu_data->pending_irqs.head];
 
-		if (irqchip.inject_irq(cpu_data, irq_id) == -EBUSY) {
+		if (irqchip.inject_irq(cpu_data, irq_id, sender) == -EBUSY) {
 			/*
 			 * The list registers are full, trigger maintenance
 			 * interrupt and leave.
