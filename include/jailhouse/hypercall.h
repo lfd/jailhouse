@@ -39,6 +39,8 @@
 #ifndef _JAILHOUSE_HYPERCALL_H
 #define _JAILHOUSE_HYPERCALL_H
 
+#include <jailhouse/console.h>
+
 #define JAILHOUSE_HC_DISABLE			0
 #define JAILHOUSE_HC_CELL_CREATE		1
 #define JAILHOUSE_HC_CELL_START			2
@@ -90,7 +92,17 @@
 #define JAILHOUSE_CELL_FAILED			3 /* terminal state */
 #define JAILHOUSE_CELL_FAILED_COMM_REV		4 /* terminal state */
 
-#define COMM_REGION_ABI_REVISION		0
+/* indicates if the cell may use the dbg putc hypercall */
+#define JAILHOUSE_CELL_FLAG_DBG_PUTC		0x0001
+/* indicates if the dbg putc is automatically used as output channel */
+#define JAILHOUSE_CELL_FLAG_DBG_ACTIVE		0x0002
+
+#define JAILHOUSE_CELL_HAS_DBG_PUTC(flags) \
+	!!((flags) & JAILHOUSE_CELL_FLAG_DBG_PUTC)
+#define JAILHOUSE_CELL_HAS_DBG_ACTIVE(flags) \
+	!!((flags) & JAILHOUSE_CELL_FLAG_DBG_ACTIVE)
+
+#define COMM_REGION_ABI_REVISION		1
 #define COMM_REGION_MAGIC			"JHCOMM"
 
 #define COMM_REGION_GENERIC_HEADER					\
@@ -104,9 +116,10 @@
 	volatile __u32 msg_to_cell;					\
 	/** Reply code sent from cell to hypervisor. */			\
 	volatile __u32 reply_from_cell;					\
-	/** \privatesection */						\
-	volatile __u32 padding;						\
-	/** \publicsection */
+	/** Holds information special flags */				\
+	volatile __u32 flags;						\
+	/** Debug console that may be accessed by the inmate */		\
+	struct jailhouse_console console;
 
 #include <asm/jailhouse_hypercall.h>
 
