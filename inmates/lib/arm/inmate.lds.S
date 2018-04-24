@@ -59,6 +59,13 @@ SECTIONS {
 		*(.text)
 	}
 
+	. = ALIGN(8);
+	.uarts		: {
+		__uarts_array_start = .;
+		KEEP(*(.uarts));
+		__uarts_array_end = .;
+	}
+
 	.rodata		: {
 		*(.rodata)
 	}
