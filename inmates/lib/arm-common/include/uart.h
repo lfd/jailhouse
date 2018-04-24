@@ -37,6 +37,8 @@
  */
 
 struct uart_chip {
+	const char *name;
+
 	void *base;
 
 	void *clock_reg;
@@ -48,6 +50,14 @@ struct uart_chip {
 	bool (*is_busy)(struct uart_chip*);
 	void (*write)(struct uart_chip*, char c);
 };
+
+#define DEFINE_UART(__name, __description) \
+	struct uart_chip uart_##__name##_ops = { \
+		.name = __description, \
+		.init = uart_##__name##_init, \
+		.is_busy = uart_##__name##_is_busy, \
+		.write = uart_##__name##_write, \
+	}
 
 extern struct uart_chip uart_jailhouse_ops;
 extern struct uart_chip uart_8250_ops;
