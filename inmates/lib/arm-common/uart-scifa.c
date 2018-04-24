@@ -81,8 +81,4 @@ static void uart_write(struct uart_chip *chip, char c)
 				 ~(SCIFA_SCASSR_TDFE | SCIFA_SCASSR_TEND));
 }
 
-struct uart_chip uart_scifa_ops = {
-	.init = uart_init,
-	.is_busy = uart_is_busy,
-	.write = uart_write,
-};
+DEFINE_UART(scifa, "SCIFA");

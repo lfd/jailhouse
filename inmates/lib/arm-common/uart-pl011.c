@@ -88,8 +88,4 @@ static void uart_write(struct uart_chip *chip, char c)
 	mmio_write32(chip->base + UARTDR, c);
 }
 
-struct uart_chip uart_pl011_ops = {
-	.init = uart_init,
-	.is_busy = uart_is_busy,
-	.write = uart_write,
-};
+DEFINE_UART(pl011, "PL011");

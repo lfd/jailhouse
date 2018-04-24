@@ -80,8 +80,4 @@ static void uart_write(struct uart_chip *chip, char c)
 				 ~(HSCIF_HSFSR_TDFE | HSCIF_HSFSR_TEND));
 }
 
-struct uart_chip uart_hscif_ops = {
-	.init = uart_init,
-	.is_busy = uart_is_busy,
-	.write = uart_write,
-};
+DEFINE_UART(hscif, "HSCIF");

@@ -75,8 +75,4 @@ static void uart_write(struct uart_chip *chip, char c)
 	mmio_write32(chip->base + UART_TX, c);
 }
 
-struct uart_chip uart_8250_ops = {
-	.init = uart_init,
-	.is_busy = uart_is_busy,
-	.write = uart_write,
-};
+DEFINE_UART(8250, "8250");
