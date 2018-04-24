@@ -34,6 +34,13 @@ struct {
 		.num_irqchips = 0,
 		.pio_bitmap_size = 0,
 		.num_pci_devices = 0,
+
+		.console = {
+			.address = 0x09000000,
+			.flags = JAILHOUSE_CON1_TYPE_PL011 |
+				 JAILHOUSE_CON1_ACCESS_MMIO |
+				 JAILHOUSE_CON1_REGDIST_4,
+		},
 	},
 
 	.cpus = {

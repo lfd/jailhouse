@@ -37,6 +37,13 @@ struct {
 		.num_pci_devices = ARRAY_SIZE(config.pci_devices),
 
 		.vpci_irq_base = 123,
+
+		.console = {
+			.address = 0x01c28000,
+			.flags = JAILHOUSE_CON1_TYPE_8250 |
+				 JAILHOUSE_CON1_ACCESS_MMIO |
+				 JAILHOUSE_CON1_REGDIST_4,
+		},
 	},
 
 	.cpus = {
