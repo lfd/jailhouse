@@ -38,6 +38,7 @@
 
 struct uart_chip {
 	const char *name;
+	const __u32 flags;
 
 	void *base;
 
@@ -51,10 +52,11 @@ struct uart_chip {
 	void (*write)(struct uart_chip*, char c);
 };
 
-#define DEFINE_UART(__name, __description) \
+#define DEFINE_UART(__name, __description, __flags) \
 	struct uart_chip uart_##__name##_ops \
 	__attribute__((section(".uarts"), used)) = { \
 		.name = __description, \
+		.flags = __flags, \
 		.init = uart_##__name##_init, \
 		.is_busy = uart_##__name##_is_busy, \
 		.write = uart_##__name##_write, \

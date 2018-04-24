@@ -53,4 +53,4 @@ static void uart_jailhouse_write(struct uart_chip *chip, char c)
 	jailhouse_call_arg1(JAILHOUSE_HC_DEBUG_CONSOLE_PUTC, c);
 }
 
-DEFINE_UART(jailhouse, "JAILHOUSE");
+DEFINE_UART(jailhouse, "JAILHOUSE", JAILHOUSE_CON2_TYPE_ROOTPAGE);

@@ -39,19 +39,6 @@
 #include <inmate.h>
 #include <stdarg.h>
 #include <uart.h>
-#include <mach.h>
-
-#ifndef CON_DIVIDER
-#define CON_DIVIDER 0
-#endif
-
-#ifndef CON_CLOCK_REG
-#define CON_CLOCK_REG 0
-#endif
-
-#ifndef CON_GATE_NR
-#define CON_GATE_NR 0
-#endif
 
 #define UART_IDLE_LOOPS		100
 
@@ -78,14 +65,16 @@ static void console_write(const char *msg)
 
 static void console_init(void)
 {
+	struct jailhouse_console *console = &comm_region->console;
 	struct uart_chip *c;
 	char buf[32];
 	const char *type;
 	unsigned int n;
 
-	type = cmdline_parse_str("con-type", buf, sizeof(buf), CON_TYPE);
+	type = cmdline_parse_str("con-type", buf, sizeof(buf), "");
 	for (c = __uarts_array_start; c < __uarts_array_end; c++)
-		if (!strcmp(type, c->name)) {
+		if (!strcmp(type, c->name) ||
+		    (!*type && console->flags == c->flags)) {
 			chip = c;
 			break;
 		}
@@ -94,11 +83,11 @@ static void console_init(void)
 		return;
 
 	chip->base = (void *)(unsigned long)
-		cmdline_parse_int("con-base", CON_BASE);
-	chip->divider = cmdline_parse_int("con-divider", CON_DIVIDER);
-	chip->gate_nr = cmdline_parse_int("con-gate-nr", CON_GATE_NR);
+		cmdline_parse_int("con-base", console->address);
+	chip->divider = cmdline_parse_int("con-divider", console->divider);
+	chip->gate_nr = cmdline_parse_int("con-gate-nr", console->gate_nr);
 	chip->clock_reg = (void *)(unsigned long)
-		cmdline_parse_int("con-clock-reg", CON_CLOCK_REG);
+		cmdline_parse_int("con-clock-reg", console->clock_reg);
 
 	chip->init(chip);
 

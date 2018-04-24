@@ -80,4 +80,7 @@ static void uart_hscif_write(struct uart_chip *chip, char c)
 				 ~(HSCIF_HSFSR_TDFE | HSCIF_HSFSR_TEND));
 }
 
-DEFINE_UART(hscif, "HSCIF");
+DEFINE_UART(hscif, "HSCIF",
+	JAILHOUSE_CON1_TYPE_HSCIF |
+	JAILHOUSE_CON1_ACCESS_MMIO |
+	JAILHOUSE_CON1_REGDIST_4);

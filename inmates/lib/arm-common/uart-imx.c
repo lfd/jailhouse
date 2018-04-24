@@ -56,4 +56,7 @@ static void uart_imx_write(struct uart_chip *chip, char c)
 	mmio_write32(chip->base + UTXD, c);
 }
 
-DEFINE_UART(imx, "IMX");
+DEFINE_UART(imx, "IMX",
+	JAILHOUSE_CON1_TYPE_IMX |
+	JAILHOUSE_CON1_ACCESS_MMIO |
+	JAILHOUSE_CON1_REGDIST_4);

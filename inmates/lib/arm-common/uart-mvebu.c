@@ -57,4 +57,7 @@ static void uart_mvebu_write(struct uart_chip *chip, char c)
 	mmio_write32(chip->base + UART_TSH, c);
 }
 
-DEFINE_UART(mvebu, "MVEBU");
+DEFINE_UART(mvebu, "MVEBU",
+	JAILHOUSE_CON1_TYPE_MVEBU |
+	JAILHOUSE_CON1_ACCESS_MMIO |
+	JAILHOUSE_CON1_REGDIST_4);

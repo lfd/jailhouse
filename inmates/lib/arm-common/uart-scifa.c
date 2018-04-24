@@ -81,4 +81,7 @@ static void uart_scifa_write(struct uart_chip *chip, char c)
 				 ~(SCIFA_SCASSR_TDFE | SCIFA_SCASSR_TEND));
 }
 
-DEFINE_UART(scifa, "SCIFA");
+DEFINE_UART(scifa, "SCIFA",
+	JAILHOUSE_CON1_TYPE_SCIFA |
+	JAILHOUSE_CON1_ACCESS_MMIO |
+	JAILHOUSE_CON1_REGDIST_4);
