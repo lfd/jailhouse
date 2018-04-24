@@ -52,19 +52,10 @@ struct uart_chip {
 };
 
 #define DEFINE_UART(__name, __description) \
-	struct uart_chip uart_##__name##_ops = { \
+	struct uart_chip uart_##__name##_ops \
+	__attribute__((section(".uarts"), aligned(8), used)) = { \
 		.name = __description, \
 		.init = uart_init, \
 		.is_busy = uart_is_busy, \
 		.write = uart_write, \
 	}
-
-extern struct uart_chip uart_jailhouse_ops;
-extern struct uart_chip uart_8250_ops;
-extern struct uart_chip uart_8250_8_ops;
-extern struct uart_chip uart_pl011_ops;
-extern struct uart_chip uart_xuartps_ops;
-extern struct uart_chip uart_mvebu_ops;
-extern struct uart_chip uart_hscif_ops;
-extern struct uart_chip uart_scifa_ops;
-extern struct uart_chip uart_imx_ops;
