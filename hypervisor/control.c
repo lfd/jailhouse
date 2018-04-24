@@ -481,6 +481,7 @@ static int cell_create(struct per_cpu *cpu_data, unsigned long config_address)
 	       sizeof(comm_region->signature));
 	comm_region->revision = COMM_REGION_ABI_REVISION;
 	comm_region->cell_state = JAILHOUSE_CELL_SHUT_DOWN;
+	comm_region->console = cell->config->console;
 
 	last = &root_cell;
 	while (last->next)

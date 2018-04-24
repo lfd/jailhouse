@@ -39,6 +39,8 @@
 #ifndef _JAILHOUSE_HYPERCALL_H
 #define _JAILHOUSE_HYPERCALL_H
 
+#include <jailhouse/console.h>
+
 #define JAILHOUSE_HC_DISABLE			0
 #define JAILHOUSE_HC_CELL_CREATE		1
 #define JAILHOUSE_HC_CELL_START			2
@@ -106,7 +108,9 @@
 	volatile __u32 reply_from_cell;					\
 	/** \privatesection */						\
 	volatile __u32 padding;						\
-	/** \publicsection */
+	/** \publicsection */						\
+	/** Debug console that may be accessed by the inmate */		\
+	struct jailhouse_console console;
 
 #include <asm/jailhouse_hypercall.h>
 
