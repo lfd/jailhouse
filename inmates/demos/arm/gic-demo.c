@@ -12,7 +12,6 @@
  * the COPYING file in the top-level directory.
  */
 
-#include <mach.h>
 #include <inmate.h>
 
 #define BEATS_PER_SEC		10
@@ -33,7 +32,7 @@ static void handle_IRQ(unsigned int irqn)
 	static u64 min_delta = ~0ULL, max_delta = 0;
 	u64 delta;
 
-	if (irqn != TIMER_IRQ)
+	if (irqn != comm_region->timer_irq)
 		return;
 
 	delta = timer_get_ticks() - expected_ticks;
@@ -58,7 +57,7 @@ void inmate_main(void)
 {
 	printk("Initializing the GIC...\n");
 	gic_setup(handle_IRQ);
-	gic_enable_irq(TIMER_IRQ);
+	gic_enable_irq(comm_region->timer_irq);
 
 	printk("Initializing the timer...\n");
 	ticks_per_beat = timer_get_frequency() / BEATS_PER_SEC;
