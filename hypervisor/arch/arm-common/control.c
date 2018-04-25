@@ -195,6 +195,14 @@ bool arch_handle_phys_irq(struct per_cpu *cpu_data, u32 irqn,
 
 int arch_cell_create(struct cell *cell)
 {
+	struct jailhouse_comm_region *comm_region =
+		&cell->comm_page.comm_region;
+
+	comm_region->gic_version = system_config->platform_info.arm.gic_version;
+	comm_region->gicd_base = system_config->platform_info.arm.gicd_base;
+	comm_region->gicc_base = system_config->platform_info.arm.gicc_base;
+	comm_region->gicr_base = system_config->platform_info.arm.gicr_base;
+
 	return arm_paging_cell_init(cell);
 }
 
