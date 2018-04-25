@@ -50,6 +50,7 @@ struct {
 				.gich_base = 0x01c84000,
 				.gicv_base = 0x01c86000,
 				.maintenance_irq = 25,
+				.timer_irq = 27,
 			},
 		},
 		.root_cell = {

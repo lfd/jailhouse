@@ -216,6 +216,7 @@ struct jailhouse_system {
 			} __attribute__((packed)) x86;
 			struct {
 				u8 maintenance_irq;
+				u8 timer_irq;
 				u8 gic_version;
 				u64 gicd_base;
 				u64 gicc_base;

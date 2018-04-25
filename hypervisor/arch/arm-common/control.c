@@ -203,6 +203,8 @@ int arch_cell_create(struct cell *cell)
 	comm_region->gicc_base = system_config->platform_info.arm.gicc_base;
 	comm_region->gicr_base = system_config->platform_info.arm.gicr_base;
 
+	comm_region->timer_irq = system_config->platform_info.arm.timer_irq;
+
 	return arm_paging_cell_init(cell);
 }
 

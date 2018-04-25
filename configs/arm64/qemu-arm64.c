@@ -51,6 +51,7 @@ struct {
 				.gicd_base = 0x08000000,
 				.gicr_base = 0x080a0000,
 				.maintenance_irq = 25,
+				.timer_irq = 27,
 			},
 		},
 		.root_cell = {

@@ -51,6 +51,7 @@ struct {
 			.gicv_base = 0x2c006000,
 #endif
 			.maintenance_irq = 25,
+			.timer_irq = 27,
 		},
 		.root_cell = {
 			.name = "VExpress Linux",
