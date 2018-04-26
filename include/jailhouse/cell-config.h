@@ -45,7 +45,7 @@
  * Incremented on any layout or semantic change of system or cell config.
  * Also update HEADER_REVISION in tools.
  */
-#define JAILHOUSE_CONFIG_REVISION	9
+#define JAILHOUSE_CONFIG_REVISION	10
 
 #define JAILHOUSE_CELL_NAME_MAXLEN	31
 
