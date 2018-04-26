@@ -84,6 +84,11 @@ static inline void mmio_write32(void *address, u32 value)
 	*(volatile u32 *)address = value;
 }
 
+static inline u64 mmio_read64(void *address)
+{
+	return *(volatile u64 *)address;
+}
+
 static inline void cpu_relax(void)
 {
 	asm volatile("" : : : "memory");
