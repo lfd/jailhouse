@@ -69,7 +69,7 @@ long psci_dispatch(struct trap_context *ctx)
 {
 	u32 function_id = ctx->regs[0];
 
-	this_cpu_data()->stats[JAILHOUSE_CPU_STAT_VMEXITS_PSCI]++;
+	this_cpu_public()->stats[JAILHOUSE_CPU_STAT_VMEXITS_PSCI]++;
 
 	switch (function_id) {
 	case PSCI_VERSION:
