@@ -103,9 +103,9 @@ static void cpu_init(struct per_cpu *cpu_data)
 {
 	int err = -EINVAL;
 
-	printk(" CPU %d... ", cpu_data->cpu_id);
+	printk(" CPU %d... ", cpu_data->public.cpu_id);
 
-	if (!cpu_id_valid(cpu_data->cpu_id))
+	if (!cpu_id_valid(cpu_data->public.cpu_id))
 		goto failed;
 
 	cpu_data->cell = &root_cell;
@@ -190,7 +190,7 @@ int entry(unsigned int cpu_id, struct per_cpu *cpu_data)
 	static volatile bool activate;
 	bool master = false;
 
-	cpu_data->cpu_id = cpu_id;
+	cpu_data->public.cpu_id = cpu_id;
 
 	spin_lock(&init_lock);
 

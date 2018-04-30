@@ -154,13 +154,13 @@ static int gicv2_cpu_init(struct per_cpu *cpu_data)
 	 * Since those didn't have virtualization extensions, we can safely
 	 * ignore that case.
 	 */
-	if (cpu_data->cpu_id >= ARRAY_SIZE(gicv2_target_cpu_map))
+	if (cpu_data->public.cpu_id >= ARRAY_SIZE(gicv2_target_cpu_map))
 		return -EINVAL;
 
-	gicv2_target_cpu_map[cpu_data->cpu_id] =
+	gicv2_target_cpu_map[cpu_data->public.cpu_id] =
 		mmio_read32(gicd_base + GICD_ITARGETSR);
 
-	if (gicv2_target_cpu_map[cpu_data->cpu_id] == 0)
+	if (gicv2_target_cpu_map[cpu_data->public.cpu_id] == 0)
 		return -ENODEV;
 
 	return 0;
