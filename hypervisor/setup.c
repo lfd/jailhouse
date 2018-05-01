@@ -24,8 +24,6 @@
 
 extern u8 __text_start[], __page_pool[];
 
-static const __attribute__((aligned(PAGE_SIZE))) u8 empty_page[PAGE_SIZE];
-
 static DEFINE_SPINLOCK(init_lock);
 static unsigned int master_cpu_id = -1;
 static volatile unsigned int entered_cpus, initialized_cpus;

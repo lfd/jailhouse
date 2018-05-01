@@ -24,6 +24,8 @@
 
 extern u8 __page_pool[];
 
+const __attribute__((aligned(PAGE_SIZE))) u8 empty_page[PAGE_SIZE];
+
 /**
  * Offset between virtual and physical hypervisor addresses.
  *
@@ -586,6 +588,21 @@ void *paging_get_guest_pages(const struct guest_paging_structures *pg_structs,
 	return (void *)page_base;
 }
 
+int paging_map_all_per_cpu(unsigned int cpu, bool enable)
+{
+	struct per_cpu *cpu_data = per_cpu(cpu);
+
+	return paging_create(&hv_paging_structs,
+			     enable ? paging_hvirt2phys(cpu_data)
+				    : paging_hvirt2phys(empty_page),
+			     sizeof(struct per_cpu) -
+			     sizeof(struct public_per_cpu),
+			     (unsigned long)cpu_data,
+			     enable ? PAGE_DEFAULT_FLAGS
+				    : PAGE_NONPRESENT_FLAGS,
+			     PAGING_NON_COHERENT);
+}
+
 /**
  * Initialize the page mapping subsystem.
  *
@@ -645,6 +662,16 @@ int paging_init(void)
 			     PAGE_DEFAULT_FLAGS, PAGING_NON_COHERENT);
 	if (err)
 		return err;
+
+	/*
+	 * Make sure any permission changes on the per_cpu region can be
+	 * performed without allocations of page table pages.
+	 */
+	for (n = 0; n < hypervisor_header.max_cpus; n++) {
+		err = paging_map_all_per_cpu(n, true);
+		if (err)
+			return err;
+	}
 
 	if (CON1_IS_MMIO(system_config->debug_console.flags)) {
 		vaddr = (unsigned long)hypervisor_header.debug_console_base;

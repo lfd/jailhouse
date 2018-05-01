@@ -184,6 +184,8 @@ extern struct page_pool remap_pool;
 extern struct paging_structures hv_paging_structs;
 extern struct paging_structures parking_pt;
 
+extern const u8 empty_page[];
+
 unsigned long paging_get_phys_invalid(pt_entry_t pte, unsigned long virt);
 
 void *page_alloc(struct page_pool *pool, unsigned int num);
@@ -254,6 +256,8 @@ int paging_create_hvpt_link(const struct paging_structures *pg_dest_structs,
 void *paging_get_guest_pages(const struct guest_paging_structures *pg_structs,
 			     unsigned long gaddr, unsigned int num,
 			     unsigned long flags);
+
+int paging_map_all_per_cpu(unsigned int cpu, bool enable);
 
 int paging_init(void);
 
