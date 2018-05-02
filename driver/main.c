@@ -94,7 +94,7 @@ static struct device *jailhouse_dev;
 static unsigned long hv_core_and_percpu_size;
 static atomic_t call_done;
 static int error_code;
-static struct jailhouse_console* volatile console_page;
+static struct jailhouse_ringbuf* volatile console_page;
 static bool console_available;
 static struct resource *hypervisor_mem_res;
 
@@ -124,7 +124,7 @@ static typeof(__hyp_stub_vectors) *__hyp_stub_vectors_sym;
 static struct {
 	bool valid;
 	unsigned int id;
-	struct jailhouse_console page;
+	struct jailhouse_ringbuf page;
 } last_console;
 
 #ifdef CONFIG_X86
@@ -140,7 +140,7 @@ static void init_hypercall(void)
 }
 #endif
 
-static void copy_console_page(struct jailhouse_console *dst)
+static void copy_console_page(struct jailhouse_ringbuf *dst)
 {
 	unsigned int tail;
 
@@ -152,7 +152,7 @@ static void copy_console_page(struct jailhouse_console *dst)
 		rmb();
 
 		/* copy console page */
-		memcpy(dst, console_page, sizeof(struct jailhouse_console));
+		memcpy(dst, console_page, sizeof(struct jailhouse_ringbuf));
 		rmb();
 	} while (console_page->tail != tail || console_page->busy);
 }
@@ -258,7 +258,7 @@ static inline const char * jailhouse_get_fw_name(void)
 #endif
 }
 
-static int __jailhouse_console_dump_delta(struct jailhouse_console *console,
+static int __jailhouse_console_dump_delta(struct jailhouse_ringbuf *console,
 					  char *dst, unsigned int head,
 					  unsigned int *miss)
 {
@@ -312,7 +312,7 @@ int jailhouse_console_dump_delta(char *dst, unsigned int head,
 				 unsigned int *miss)
 {
 	int ret;
-	struct jailhouse_console *console;
+	struct jailhouse_ringbuf *console;
 
 	if (!jailhouse_enabled)
 		return -EAGAIN;
@@ -320,7 +320,7 @@ int jailhouse_console_dump_delta(char *dst, unsigned int head,
 	if (!console_available)
 		return -EPERM;
 
-	console = kmalloc(sizeof(struct jailhouse_console), GFP_KERNEL);
+	console = kmalloc(sizeof(struct jailhouse_ringbuf), GFP_KERNEL);
 	if (console == NULL)
 		return -ENOMEM;
 
@@ -458,7 +458,7 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 		goto error_release_memreg;
 	}
 
-	console_page = (struct jailhouse_console*)
+	console_page = (struct jailhouse_ringbuf*)
 		(hypervisor_mem + header->console_page);
 	last_console.valid = false;
 

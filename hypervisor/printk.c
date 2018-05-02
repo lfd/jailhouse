@@ -19,7 +19,7 @@
 #include <asm/spinlock.h>
 
 bool virtual_console = false;
-volatile struct jailhouse_console console __attribute__((section(".console")));
+volatile struct jailhouse_ringbuf console __attribute__((section(".console")));
 
 static DEFINE_SPINLOCK(printk_lock);
 
