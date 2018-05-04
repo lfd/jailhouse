@@ -92,7 +92,7 @@
 #define JAILHOUSE_CELL_FAILED			3 /* terminal state */
 #define JAILHOUSE_CELL_FAILED_COMM_REV		4 /* terminal state */
 
-#define COMM_REGION_ABI_REVISION		0
+#define COMM_REGION_ABI_REVISION		1
 #define COMM_REGION_MAGIC			"JHCOMM"
 
 #define COMM_REGION_GENERIC_HEADER					\
