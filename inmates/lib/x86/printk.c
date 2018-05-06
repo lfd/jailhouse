@@ -118,7 +118,7 @@ static void console_write(const char *msg)
 
 #include "../../../hypervisor/printk-core.c"
 
-static void console_init(void)
+void console_init(void)
 {
 	const char *type;
 	char buf[32];
@@ -173,13 +173,7 @@ static void console_init(void)
 
 void printk(const char *fmt, ...)
 {
-	static bool inited;
 	va_list ap;
-
-	if (!inited) {
-		console_init();
-		inited = true;
-	}
 
 	if (!console_putc)
 		return;

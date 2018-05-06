@@ -63,7 +63,7 @@ static void console_write(const char *msg)
 	}
 }
 
-static void console_init(void)
+void console_init(void)
 {
 	struct jailhouse_console *console = &comm_region->console;
 	struct uart_chip *c;
@@ -108,13 +108,7 @@ static void console_init(void)
 
 void printk(const char *fmt, ...)
 {
-	static bool inited = false;
 	va_list ap;
-
-	if (!inited) {
-		console_init();
-		inited = true;
-	}
 
 	if (!chip)
 		return;

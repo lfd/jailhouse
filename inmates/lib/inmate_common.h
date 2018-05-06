@@ -67,6 +67,7 @@ static inline void __attribute__((noreturn)) stop(void)
 	halt();
 }
 
+void console_init(void);
 void printk(const char *fmt, ...);
 
 void *memset(void *s, int c, unsigned long n);
