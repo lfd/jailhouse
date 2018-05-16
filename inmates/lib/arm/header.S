@@ -40,6 +40,14 @@
 
 #include <asm/sysregs.h>
 
+.arch_extension virt
+.macro pc, val
+	mov r0, #8
+	mov r1, \val
+	hvc #0x4a48
+.endm
+
+
 	.arm
 
 	.section ".boot", "ax"
@@ -57,6 +65,7 @@ vectors:
 .macro vector, name
 	.weak vector_\name
 	vector_\name:
+	pc #0x39
 	b	.
 .endm
 	vector undef
