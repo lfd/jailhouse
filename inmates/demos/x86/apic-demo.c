@@ -53,7 +53,7 @@ static void init_apic(void)
 
 static void pollute_cache(void)
 {
-	char *mem = (char *)HEAP_BASE;
+	char *mem = alloc(PAGE_SIZE, PAGE_SIZE);
 	unsigned long cpu_cache_line_size, ebx;
 	unsigned long n;
 
