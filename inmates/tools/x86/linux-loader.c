@@ -12,8 +12,6 @@
 
 #include <inmate.h>
 
-#define ZERO_PAGE_ADDR		HEAP_BASE
-
 struct boot_params {
 	u8	padding1[0x230];
 	u32	kernel_alignment;
@@ -40,7 +38,7 @@ struct setup_data {
 
 void inmate_main(void)
 {
-	struct boot_params *boot_params = (struct boot_params *)ZERO_PAGE_ADDR;
+	struct boot_params *boot_params = (struct boot_params *)alloc(PAGE_SIZE, PAGE_SIZE);
 	void (*entry)(int, struct boot_params *);
 	struct setup_data *setup_data;
 	void *kernel;
