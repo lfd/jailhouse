@@ -22,5 +22,7 @@ void inmate_main(void)
 	entry = (void *)(unsigned long)cmdline_parse_int("kernel", 0);
 	dtb = cmdline_parse_int("dtb", 0);
 
+	map_range((void*)dtb, 512 * 1024 * 1024, MAP_UNCACHED);
+
 	entry(0, -1, dtb);
 }
