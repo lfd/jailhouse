@@ -39,7 +39,6 @@
 #ifndef _JAILHOUSE_INMATE_H
 #define _JAILHOUSE_INMATE_H
 
-#define HEAP_BASE		((unsigned long)stack_top)
 #define COMM_REGION_BASE	0x100000
 
 #define INMATE_CS32		0x8
@@ -250,7 +249,6 @@ void apic_timer_set(unsigned long timeout_ns);
 
 enum map_type { MAP_CACHED, MAP_UNCACHED };
 
-void *alloc(unsigned long size, unsigned long align);
 void map_range(void *start, unsigned long size, enum map_type map_type);
 
 u32 pci_read_config(u16 bdf, unsigned int addr, unsigned int size);
@@ -265,8 +263,6 @@ extern volatile u32 smp_num_cpus;
 extern u8 smp_cpu_ids[SMP_MAX_CPUS];
 void smp_wait_for_all_cpus(void);
 void smp_start_cpu(unsigned int cpu_id, void (*entry)(void));
-
-extern const char stack_top[];
 #endif
 
 #include "../inmate_common.h"

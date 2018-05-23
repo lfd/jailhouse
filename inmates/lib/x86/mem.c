@@ -43,16 +43,6 @@
 #define PG_PS		0x80
 #define PG_PCD		0x10
 
-static unsigned long heap_pos = HEAP_BASE;
-
-void *alloc(unsigned long size, unsigned long align)
-{
-	unsigned long base = (heap_pos + align - 1) & ~(align - 1);
-
-	heap_pos = base + size;
-	return (void *)base;
-}
-
 void map_range(void *start, unsigned long size, enum map_type map_type)
 {
 	unsigned long pt_addr, *pt_entry, *pt;
