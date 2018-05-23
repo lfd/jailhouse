@@ -12,6 +12,7 @@ void __attribute__((noreturn)) c_entry(void)
 		   sizeof(comm_region->signature))) {
 		comm_region->cell_state = JAILHOUSE_CELL_FAILED_COMM_REV;
 	} else {
+		comm_region->cell_state = JAILHOUSE_CELL_FAILED_COMM_REV;
 		inmate_main();
 	}
 
