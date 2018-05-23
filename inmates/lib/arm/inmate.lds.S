@@ -46,6 +46,7 @@
 
 SECTIONS {
 	. = CONFIG_INMATE_BASE;
+	__inmate_base = .;
 	.boot		: { *(.boot) }
 
 	. = CONFIG_INMATE_BASE + 0x1000;
