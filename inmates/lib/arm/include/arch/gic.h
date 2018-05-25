@@ -40,7 +40,9 @@
 
 static inline void gic_setup_irq_stack(void)
 {
-	static __attribute__((aligned(PAGE_SIZE))) u8 irq_stack[PAGE_SIZE];
+	u8 *irq_stack;
+
+	irq_stack = alloc(PAGE_SIZE, PAGE_SIZE);
 
 	asm volatile (
 		".arch_extension virt\n\t"
