@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) ARM Limited, 2014
+ * Copyright (c) Ralf Ramsauer, 2018
  *
  * Authors:
- *  Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,20 +36,4 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ASSEMBLY__
-
-#include <alloc.h>
-#include <mem.h>
-
-static inline void gic_setup_irq_stack(void)
-{
-	static __attribute__((aligned(PAGE_SIZE))) u8 irq_stack[PAGE_SIZE];
-
-	asm volatile (
-		".arch_extension virt\n\t"
-		"msr	SP_irq, %0\n\t"
-		"cpsie	i\n\t"
-		: : "r" (irq_stack + sizeof(irq_stack)));
-}
-
-#endif /* !__ASSEMBLY__ */
+void arch_mmu_enable(void);
