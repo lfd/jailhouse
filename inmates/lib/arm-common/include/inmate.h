@@ -39,20 +39,10 @@
 #ifndef _JAILHOUSE_INMATE_H
 #define _JAILHOUSE_INMATE_H
 
+#include <types.h>
+
 #define COMM_REGION_BASE	0x80000000
 #define PAGE_SIZE	(4 * 1024ULL)
-
-typedef signed char s8;
-typedef unsigned char u8;
-
-typedef signed short s16;
-typedef unsigned short u16;
-
-typedef signed int s32;
-typedef unsigned int u32;
-
-typedef signed long long s64;
-typedef unsigned long long u64;
 
 static inline u8 mmio_read8(void *address)
 {

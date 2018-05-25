@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2013-2016
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,56 +36,35 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONFIG_INMATE_BASE
-#define CONFIG_INMATE_BASE	0x0
-#endif
+#ifndef _TYPES_H
+#define _TYPES_H
 
-#define NS_PER_USEC		1000UL
-#define NS_PER_MSEC		1000000UL
-#define NS_PER_SEC		1000000000UL
+#define NULL			((void *)0)
 
-#ifndef __ASSEMBLY__
+typedef enum { true = 1, false = 0 } bool;
 
-#include <jailhouse/hypercall.h>
+typedef signed char s8;
+typedef unsigned char u8;
 
-#define comm_region	((struct jailhouse_comm_region *)COMM_REGION_BASE)
+typedef signed short s16;
+typedef unsigned short u16;
 
-static inline void __attribute__((noreturn)) stop(void)
-{
-	arch_disable_irqs();
-	halt();
-}
+typedef signed int s32;
+typedef unsigned int u32;
 
-void arch_init_early(void);
+typedef signed long long s64;
+typedef unsigned long long u64;
 
-void __attribute__((format(printf, 1, 2))) printk(const char *fmt, ...);
+typedef s8 __s8;
+typedef u8 __u8;
 
-void *alloc(unsigned long size, unsigned long align);
+typedef s16 __s16;
+typedef u16 __u16;
 
-void *memset(void *s, int c, unsigned long n);
-void *memcpy(void *d, const void *s, unsigned long n);
-int memcmp(const void *s1, const void *s2, unsigned long n);
-unsigned long strlen(const char *s);
-int strncmp(const char *s1, const char *s2, unsigned long n);
-int strcmp(const char *s1, const char *s2);
-int strncasecmp(const char *s1, const char *s2, unsigned long n);
+typedef s32 __s32;
+typedef u32 __u32;
 
-const char *cmdline_parse_str(const char *param, char *value_buffer,
-			      unsigned long buffer_size,
-			      const char *default_value);
-long long cmdline_parse_int(const char *param, long long default_value);
-bool cmdline_parse_bool(const char *param, bool default_value);
+typedef s64 __s64;
+typedef u64 __u64;
 
-enum map_type { MAP_CACHED, MAP_UNCACHED };
-
-void map_range(void *start, unsigned long size, enum map_type map_type);
-
-#define CMDLINE_BUFFER(size) \
-	const char cmdline[size] __attribute__((section(".cmdline")))
-
-extern const char cmdline[];
-extern const char stack_top[];
-
-void inmate_main(void);
-
-#endif /* !__ASSEMBLY__ */
+#endif /* _TYPES_H */
