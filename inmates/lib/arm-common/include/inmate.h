@@ -42,7 +42,6 @@
 #include <asm-generic/types.h>
 
 #define COMM_REGION_BASE	0x80000000
-#define PAGE_SIZE	(4 * 1024ULL)
 
 static inline u8 mmio_read8(void *address)
 {
@@ -93,8 +92,6 @@ unsigned long timer_get_frequency(void);
 u64 timer_get_ticks(void);
 u64 timer_ticks_to_ns(u64 ticks);
 void timer_start(u64 timeout);
-
-void arch_mmu_enable(void);
 
 #include <asm/processor.h>
 #include <arch/inmate.h>

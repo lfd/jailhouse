@@ -39,6 +39,7 @@
 #ifndef __ASSEMBLY__
 
 #include <alloc.h>
+#include <mem.h>
 
 static inline void gic_setup_irq_stack(void)
 {

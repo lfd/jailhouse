@@ -36,9 +36,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define HUGE_PAGE_SIZE		(2 * 1024 * 1024ULL)
-#define HUGE_PAGE_MASK		(~(HUGE_PAGE_SIZE - 1))
-
 #define ICC_IAR1_EL1		SYSREG_32(0, c12, c12, 0)
 #define ICC_EOIR1_EL1		SYSREG_32(0, c12, c12, 1)
 #define ICC_PMR_EL1		SYSREG_32(0, c4, c6, 0)
