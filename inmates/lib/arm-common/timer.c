@@ -39,7 +39,7 @@
  */
 
 #include <asm/sysregs.h>
-#include <inmate.h>
+#include <timer.h>
 
 unsigned long timer_get_frequency(void)
 {
