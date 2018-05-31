@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) ARM Limited, 2014
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,4 +36,24 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-void __attribute__((used)) vector_irq(void);
+#ifndef __ASSEMBLY__
+
+static inline void arch_disable_irqs(void)
+{
+	asm volatile("cli");
+}
+
+static inline void cpu_relax(void)
+{
+	asm volatile("rep; nop" : : : "memory");
+}
+
+static inline void __attribute__((noreturn)) halt(void)
+{
+	while (1)
+		asm volatile ("hlt" : : : "memory");
+}
+
+#include <asm-generic/processor.h>
+
+#endif /* __ASSEMBLY__ */

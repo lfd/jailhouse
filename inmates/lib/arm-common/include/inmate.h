@@ -43,47 +43,6 @@
 
 #define COMM_REGION_BASE	0x80000000
 
-static inline u8 mmio_read8(void *address)
-{
-	return *(volatile u8 *)address;
-}
-
-static inline void mmio_write8(void *address, u8 value)
-{
-	*(volatile u8 *)address = value;
-}
-
-static inline u16 mmio_read16(void *address)
-{
-	return *(volatile u16 *)address;
-}
-
-static inline void mmio_write16(void *address, u16 value)
-{
-	*(volatile u16 *)address = value;
-}
-
-static inline u32 mmio_read32(void *address)
-{
-	return *(volatile u32 *)address;
-}
-
-static inline void mmio_write32(void *address, u32 value)
-{
-	*(volatile u32 *)address = value;
-}
-
-static inline u64 mmio_read64(void *address)
-{
-	return *(volatile u64 *)address;
-}
-
-static inline void __attribute__((noreturn)) halt(void)
-{
-	while (1)
-		asm volatile("wfi" : : : "memory");
-}
-
 typedef void (*irq_handler_t)(unsigned int);
 void gic_setup(irq_handler_t handler);
 void gic_enable_irq(unsigned int irq);
@@ -93,7 +52,6 @@ u64 timer_get_ticks(void);
 u64 timer_ticks_to_ns(u64 ticks);
 void timer_start(u64 timeout);
 
-#include <asm/processor.h>
 #include <arch/inmate.h>
 
 #include <inmate_common.h>

@@ -50,12 +50,6 @@
 
 #define comm_region	((struct jailhouse_comm_region *)COMM_REGION_BASE)
 
-static inline void __attribute__((noreturn)) stop(void)
-{
-	arch_disable_irqs();
-	halt();
-}
-
 void arch_init_early(void);
 
 void __attribute__((format(printf, 1, 2))) printk(const char *fmt, ...);
@@ -67,6 +61,9 @@ void inmate_main(void);
 #include <alloc.h>
 #include <cmdline.h>
 #include <mem.h>
+#include <mmio.h>
 #include <string.h>
+
+#include <asm/processor.h>
 
 #endif /* !__ASSEMBLY__ */

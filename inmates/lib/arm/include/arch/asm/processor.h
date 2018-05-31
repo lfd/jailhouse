@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) ARM Limited, 2014
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,4 +36,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-void __attribute__((used)) vector_irq(void);
+static inline void arch_disable_irqs(void)
+{
+	asm volatile("cpsid if"); /* disable IRQs and FIQs */
+}

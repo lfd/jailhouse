@@ -1,7 +1,7 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) OTH Regensburg, 2018
+ * Copyright (c) Ralf Ramsauer, 2018
  *
  * Authors:
  *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
@@ -36,38 +36,83 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ASSEMBLY__
-
-#define dmb(domain)	asm volatile("dmb " #domain ::: "memory")
-#define dsb(domain)	asm volatile("dsb " #domain ::: "memory")
-
-static inline void cpu_relax(void)
+static inline void outb(u8 v, u16 port)
 {
-	asm volatile("" : : : "memory");
+	asm volatile("outb %0,%1" : : "a" (v), "dN" (port));
 }
 
-static inline void memory_barrier(void)
+static inline void outw(u16 v, u16 port)
 {
-	dmb(ish);
+	asm volatile("outw %0,%1" : : "a" (v), "dN" (port));
 }
 
-static inline void synchronization_barrier(void)
+static inline void outl(u32 v, u16 port)
 {
-	dsb(ish);
+	asm volatile("outl %0,%1" : : "a" (v), "dN" (port));
 }
 
-static inline void instruction_barrier(void)
+static inline u8 inb(u16 port)
 {
-	asm volatile("isb");
+	u8 v;
+	asm volatile("inb %1,%0" : "=a" (v) : "dN" (port));
+	return v;
 }
 
-static inline void __attribute__((noreturn)) halt(void)
+static inline u16 inw(u16 port)
 {
-	while (1)
-		asm volatile("wfi" : : : "memory");
+	u16 v;
+	asm volatile("inw %1,%0" : "=a" (v) : "dN" (port));
+	return v;
 }
 
-#include <arch/asm/processor.h>
-#include <asm-generic/processor.h>
+static inline u32 inl(u16 port)
+{
+	u32 v;
+	asm volatile("inl %1,%0" : "=a" (v) : "dN" (port));
+	return v;
+}
 
-#endif /* __ASSEMBLY__ */
+static inline u8 mmio_read8(void *address)
+{
+	return *(volatile u8 *)address;
+}
+
+static inline u16 mmio_read16(void *address)
+{
+	return *(volatile u16 *)address;
+}
+
+static inline u32 mmio_read32(void *address)
+{
+	u32 value;
+
+	/* assembly-encoded to match the hypervisor MMIO parser support */
+	asm volatile("movl (%1),%0" : "=r" (value) : "r" (address));
+	return value;
+}
+
+static inline u64 mmio_read64(void *address)
+{
+	return *(volatile u64 *)address;
+}
+
+static inline void mmio_write8(void *address, u8 value)
+{
+	*(volatile u8 *)address = value;
+}
+
+static inline void mmio_write16(void *address, u16 value)
+{
+	*(volatile u16 *)address = value;
+}
+
+static inline void mmio_write32(void *address, u32 value)
+{
+	/* assembly-encoded to match the hypervisor MMIO parser support */
+	asm volatile("movl %0,(%1)" : : "r" (value), "r" (address));
+}
+
+static inline void mmio_write64(void *address, u64 value)
+{
+	*(volatile u64 *)address = value;
+}
