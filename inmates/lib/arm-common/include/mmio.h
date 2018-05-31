@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) ARM Limited, 2014
+ * Copyright (c) Ralf Ramsauer, 2018
  *
  * Authors:
- *  Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,42 +36,39 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _JAILHOUSE_INMATE_H
-#define _JAILHOUSE_INMATE_H
-
 #include <asm-generic/types.h>
 
-#define COMM_REGION_BASE	0x80000000
-
-static inline void __attribute__((noreturn)) halt(void)
+static inline u8 mmio_read8(void *address)
 {
-	while (1)
-		asm volatile("wfi" : : : "memory");
+	return *(volatile u8 *)address;
 }
 
-typedef void (*irq_handler_t)(unsigned int);
-void gic_setup(irq_handler_t handler);
-void gic_enable_irq(unsigned int irq);
-
-unsigned long timer_get_frequency(void);
-u64 timer_get_ticks(void);
-u64 timer_ticks_to_ns(u64 ticks);
-void timer_start(u64 timeout);
-
-#include <asm/processor.h>
-#include <arch/inmate.h>
-
-#include <inmate_common.h>
-
-/*
- * To ease the debugging, we can send a spurious hypercall, which should return
- * -ENOSYS, but appear in the hypervisor stats for this cell.
- */
-static inline void heartbeat(void)
+static inline void mmio_write8(void *address, u8 value)
 {
-#ifndef CONFIG_BARE_METAL
-	jailhouse_call(0xdeadbeef);
-#endif
+	*(volatile u8 *)address = value;
 }
 
-#endif /* !_JAILHOUSE_INMATE_H */
+static inline u16 mmio_read16(void *address)
+{
+	return *(volatile u16 *)address;
+}
+
+static inline void mmio_write16(void *address, u16 value)
+{
+	*(volatile u16 *)address = value;
+}
+
+static inline u32 mmio_read32(void *address)
+{
+	return *(volatile u32 *)address;
+}
+
+static inline void mmio_write32(void *address, u32 value)
+{
+	*(volatile u32 *)address = value;
+}
+
+static inline u64 mmio_read64(void *address)
+{
+	return *(volatile u64 *)address;
+}
