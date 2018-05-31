@@ -13,7 +13,7 @@
  */
 
 #include <inmate.h>
-#include <gic.h>
+#include <int.h>
 
 #define TIMER_PERIOD	(100 * NS_PER_MSEC)
 
@@ -55,8 +55,8 @@ void inmate_main(void)
 {
 	printk("Initializing the GIC...\n");
 	timer_init();
-	gic_setup(handle_IRQ);
-	gic_enable_irq(TIMER_IRQ);
+	int_init(handle_IRQ);
+	int_enable_irq(TIMER_IRQ);
 
 	printk("Initializing the timer...\n");
 	expected = timer_get_ns() + TIMER_PERIOD;

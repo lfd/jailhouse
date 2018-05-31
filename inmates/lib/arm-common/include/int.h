@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) ARM Limited, 2014
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,18 +36,12 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _JAILHOUSE_INMATE_H
-#define _JAILHOUSE_INMATE_H
+#ifndef _JAILHOUSE_INMATES_INT_H
+#define _JAILHOUSE_INMATES_INT_H
 
-#include <types.h>
+typedef void (*int_handler_t)(unsigned int);
 
-#include <gic.h>
-#include <timer.h>
+void int_init(int_handler_t handler);
+void int_enable_irq(unsigned int irq);
 
-#define COMM_REGION_BASE	0x80000000
-
-#include <arch/inmate.h>
-
-#include <inmate_common.h>
-
-#endif /* !_JAILHOUSE_INMATE_H */
+#endif

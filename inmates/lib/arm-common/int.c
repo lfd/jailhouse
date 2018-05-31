@@ -37,12 +37,12 @@
  */
 
 #include <inmate.h>
-#include <gic.h>
+#include <int.h>
 
 extern const struct gic gic_v2;
 extern const struct gic gic_v3;
 
-static irq_handler_t irq_handler = (irq_handler_t)NULL;
+static int_handler_t int_handler;
 static const struct gic *gic = &gic_v2;
 
 /* Replaces the weak reference in header.S */
@@ -55,26 +55,26 @@ void vector_irq(void)
 		if (irqn == 0x3ff)
 			break;
 
-		if (irq_handler)
-			irq_handler(irqn);
+		if (int_handler)
+			int_handler(irqn);
 
 		gic->write_eoi(irqn);
 	}
 }
 
-void gic_setup(irq_handler_t handler)
+void int_init(int_handler_t handler)
 {
 	if (comm_region->gic_version == 3)
 		gic = &gic_v3;
 
 	gic->init();
 
-	irq_handler = handler;
+	int_handler = handler;
 
 	gic_setup_irq_stack();
 }
 
-void gic_enable_irq(unsigned int irq)
+void int_enable_irq(unsigned int irq)
 {
 	gic->enable(irq);
 }
