@@ -41,11 +41,8 @@
 
 #include <asm-generic/types.h>
 
+#include <gic.h>
 #include <timer.h>
-
-typedef void (*irq_handler_t)(unsigned int);
-void gic_setup(irq_handler_t handler);
-void gic_enable_irq(unsigned int irq);
 
 #include <arch/inmate.h>
 

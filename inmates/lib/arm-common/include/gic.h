@@ -39,8 +39,6 @@
 #ifndef _JAILHOUSE_INMATES_GIC_H
 #define _JAILHOUSE_INMATES_GIC_H
 
-#include <inmate.h>
-
 #define GICD_ISENABLER	0x0100
 
 #define TIMER_IRQ	27
@@ -56,6 +54,10 @@ struct gic {
 	void (*write_eoi)(u32 irqn);
 	u32 (*read_ack)(void);
 };
+
+typedef void (*irq_handler_t)(unsigned int);
+void gic_setup(irq_handler_t handler);
+void gic_enable_irq(unsigned int irq);
 
 #endif /* !__ASSEMBLY__ */
 

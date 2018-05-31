@@ -37,7 +37,7 @@
  */
 
 #include <asm/sysregs.h>
-#include <gic.h>
+#include <inmate.h>
 
 static void *gicd_v3_base;
 static void *gicr_v3_base;
