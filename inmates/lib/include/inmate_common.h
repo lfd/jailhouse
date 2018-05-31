@@ -36,10 +36,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONFIG_INMATE_BASE
-#define CONFIG_INMATE_BASE	0x0
-#endif
-
 #define NS_PER_USEC		1000UL
 #define NS_PER_MSEC		1000000UL
 #define NS_PER_SEC		1000000000UL
@@ -48,18 +44,15 @@
 
 #include <jailhouse/hypercall.h>
 
-#define comm_region	((struct jailhouse_comm_region *)COMM_REGION_BASE)
-
 void arch_init_early(void);
 
 void __attribute__((format(printf, 1, 2))) printk(const char *fmt, ...);
-
-extern const char stack_top[];
 
 void inmate_main(void);
 
 #include <alloc.h>
 #include <cmdline.h>
+#include <layout.h>
 #include <mem.h>
 #include <mmio.h>
 #include <string.h>

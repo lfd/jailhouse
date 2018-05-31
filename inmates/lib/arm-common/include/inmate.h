@@ -44,8 +44,6 @@
 #include <gic.h>
 #include <timer.h>
 
-#define COMM_REGION_BASE	0x80000000
-
 #include <arch/inmate.h>
 
 #include <inmate_common.h>

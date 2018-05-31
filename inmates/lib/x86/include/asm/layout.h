@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2018
+ * Copyright (c) Ralf Ramsauer, 2018
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,15 +36,4 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <alloc.h>
-#include <layout.h>
-
-static unsigned long heap_pos = (unsigned long)stack_top;
-
-void *alloc(unsigned long size, unsigned long align)
-{
-	unsigned long base = (heap_pos + align - 1) & ~(align - 1);
-
-	heap_pos = base + size;
-	return (void *)base;
-}
+#define COMM_REGION_BASE	0x100000

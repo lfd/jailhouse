@@ -39,8 +39,6 @@
 #ifndef _JAILHOUSE_INMATE_H
 #define _JAILHOUSE_INMATE_H
 
-#define COMM_REGION_BASE	0x100000
-
 #define INMATE_CS32		0x8
 #define INMATE_CS64		0x10
 #define INMATE_DS32		0x18
