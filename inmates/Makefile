@@ -25,7 +25,7 @@ INCLUDES += -I$(src)/../hypervisor/arch/arm-common/include
 endif
 
 LINUXINCLUDE  := $(INCLUDES)
-KBUILD_CFLAGS := -g -Os -Wall -Wstrict-prototypes -Wtype-limits \
+KBUILD_CFLAGS := -g -Os -Wall -Werror -Wstrict-prototypes -Wtype-limits \
 		 -Wmissing-declarations -Wmissing-prototypes \
 		 -fno-strict-aliasing -fomit-frame-pointer -fno-pic \
 		 -fno-common -fno-stack-protector -ffreestanding \
