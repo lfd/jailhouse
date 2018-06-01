@@ -36,7 +36,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <mem.h>
+#include <setup.h>
 
 void arch_init_early(void)
 {

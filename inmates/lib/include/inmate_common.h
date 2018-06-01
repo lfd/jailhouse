@@ -44,8 +44,6 @@
 
 #include <jailhouse/hypercall.h>
 
-void arch_init_early(void);
-
 void inmate_main(void);
 
 #include <alloc.h>
