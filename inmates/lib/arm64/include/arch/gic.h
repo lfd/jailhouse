@@ -37,3 +37,5 @@
  */
 
 #define gic_setup_irq_stack()
+
+void __attribute__((used)) vector_irq(void);
