@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <setup.h>
 #include <asm/processor.h>
 
 void __attribute__((noreturn)) c_entry(void);

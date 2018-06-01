@@ -49,8 +49,6 @@
 #include <bool.h>
 #include <jailhouse/hypercall.h>
 
-void arch_init_early(void);
-
 extern const char stack_top[];
 
 void inmate_main(void);

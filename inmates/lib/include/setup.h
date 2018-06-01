@@ -36,8 +36,4 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <setup.h>
-
-void arch_init_early(void)
-{
-}
+void arch_init_early(void);
