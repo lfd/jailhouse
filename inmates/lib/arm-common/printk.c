@@ -38,6 +38,7 @@
 
 #include <inmate.h>
 #include <uart.h>
+#include <asm/processor.h>
 
 static void reg_out_mmio8(struct uart_chip *chip, unsigned int reg, u32 value)
 {

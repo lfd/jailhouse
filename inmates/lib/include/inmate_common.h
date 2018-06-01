@@ -56,6 +56,4 @@ void inmate_main(void);
 #include <printk.h>
 #include <string.h>
 
-#include <asm/processor.h>
-
 #endif /* !__ASSEMBLY__ */

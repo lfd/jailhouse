@@ -39,6 +39,7 @@
 #include <inmate.h>
 #include <int.h>
 #include <timer.h>
+#include <asm/processor.h>
 
 #define APIC_DM_INIT	(5 << 8)
 #define APIC_DM_SIPI	(6 << 8)

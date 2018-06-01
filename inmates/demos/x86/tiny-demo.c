@@ -12,6 +12,7 @@
 
 #include <inmate.h>
 #include <timer.h>
+#include <asm/processor.h>
 
 void inmate_main(void)
 {

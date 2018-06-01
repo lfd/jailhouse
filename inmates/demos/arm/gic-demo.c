@@ -14,6 +14,7 @@
 
 #include <inmate.h>
 #include <int.h>
+#include <asm/processor.h>
 
 #define TIMER_PERIOD	(100 * NS_PER_MSEC)
 

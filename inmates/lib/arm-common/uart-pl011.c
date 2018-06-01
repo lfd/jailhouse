@@ -38,6 +38,7 @@
 
 #include <inmate.h>
 #include <uart.h>
+#include <asm/processor.h>
 
 #define UARTDR		0x00
 #define UARTFR		0x18

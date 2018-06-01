@@ -38,6 +38,7 @@
 
 #include <inmate.h>
 #include <layout.h>
+#include <asm/processor.h>
 #include <asm/sysregs.h>
 
 static u64 __attribute__((aligned(4096))) page_directory[4];

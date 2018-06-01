@@ -41,6 +41,7 @@
 #include <stdarg.h>
 #include <inmate.h>
 #include <uart.h>
+#include <asm/processor.h>
 
 #define UART_IDLE_LOOPS		100
 
