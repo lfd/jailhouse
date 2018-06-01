@@ -54,4 +54,6 @@ static inline void gic_setup_irq_stack(void)
 		: : "r" (irq_stack + sizeof(irq_stack)));
 }
 
+void __attribute__((interrupt("IRQ"), used)) vector_irq(void);
+
 #endif /* !__ASSEMBLY__ */

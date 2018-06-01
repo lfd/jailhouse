@@ -44,8 +44,6 @@
 #include <gic.h>
 #include <timer.h>
 
-#include <arch/inmate.h>
-
 #include <inmate_common.h>
 
 /*
