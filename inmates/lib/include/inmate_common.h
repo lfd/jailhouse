@@ -62,8 +62,6 @@ void arch_init_early(void);
 
 void printk(const char *fmt, ...);
 
-void *alloc(unsigned long size, unsigned long align);
-
 void *memset(void *s, int c, unsigned long n);
 void *memcpy(void *d, const void *s, unsigned long n);
 int memcmp(const void *s1, const void *s2, unsigned long n);
@@ -89,5 +87,7 @@ extern const char cmdline[];
 extern const char stack_top[];
 
 void inmate_main(void);
+
+#include <alloc.h>
 
 #endif /* !__ASSEMBLY__ */
