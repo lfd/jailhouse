@@ -61,4 +61,13 @@ static inline void instruction_barrier(void)
 	asm volatile("isb");
 }
 
+static inline void __attribute__((noreturn)) halt(void)
+{
+	while (1)
+		asm volatile("wfi" : : : "memory");
+}
+
+#include <arch/asm/processor.h>
+#include <asm-generic/processor.h>
+
 #endif /* __ASSEMBLY__ */

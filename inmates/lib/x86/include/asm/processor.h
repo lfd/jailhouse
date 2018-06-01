@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2013-2016
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,35 +36,24 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONFIG_INMATE_BASE
-#define CONFIG_INMATE_BASE	0x0
-#endif
-
-#define NS_PER_USEC		1000UL
-#define NS_PER_MSEC		1000000UL
-#define NS_PER_SEC		1000000000UL
-
 #ifndef __ASSEMBLY__
 
-#include <bool.h>
-#include <jailhouse/hypercall.h>
+static inline void arch_disable_irqs(void)
+{
+	asm volatile("cli");
+}
 
-#define comm_region	((struct jailhouse_comm_region *)COMM_REGION_BASE)
+static inline void cpu_relax(void)
+{
+	asm volatile("rep; nop" : : : "memory");
+}
 
-void arch_init_early(void);
+static inline void __attribute__((noreturn)) halt(void)
+{
+	while (1)
+		asm volatile ("hlt" : : : "memory");
+}
 
-void printk(const char *fmt, ...);
+#include <asm-generic/processor.h>
 
-extern const char stack_top[];
-
-void inmate_main(void);
-
-#include <alloc.h>
-#include <cmdline.h>
-#include <mem.h>
-#include <mmio.h>
-#include <string.h>
-
-#include <asm/processor.h>
-
-#endif /* !__ASSEMBLY__ */
+#endif /* __ASSEMBLY__ */

@@ -80,22 +80,6 @@
 
 #ifndef __ASSEMBLY__
 
-static inline void arch_disable_irqs(void)
-{
-	asm volatile("cli");
-}
-
-static inline void cpu_relax(void)
-{
-	asm volatile("rep; nop" : : : "memory");
-}
-
-static inline void __attribute__((noreturn)) halt(void)
-{
-	while (1)
-		asm volatile ("hlt" : : : "memory");
-}
-
 static inline u64 read_msr(unsigned int msr)
 {
 	u32 low, high;

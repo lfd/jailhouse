@@ -37,8 +37,3 @@
  */
 
 void __attribute__((interrupt("IRQ"), used)) vector_irq(void);
-
-static inline void arch_disable_irqs(void)
-{
-	asm volatile("cpsid if"); /* disable IRQs and FIQs */
-}

@@ -43,12 +43,6 @@
 
 #define COMM_REGION_BASE	0x80000000
 
-static inline void __attribute__((noreturn)) halt(void)
-{
-	while (1)
-		asm volatile("wfi" : : : "memory");
-}
-
 typedef void (*irq_handler_t)(unsigned int);
 void gic_setup(irq_handler_t handler);
 void gic_enable_irq(unsigned int irq);
@@ -58,7 +52,6 @@ u64 timer_get_ticks(void);
 u64 timer_ticks_to_ns(u64 ticks);
 void timer_start(u64 timeout);
 
-#include <asm/processor.h>
 #include <arch/inmate.h>
 
 #include <inmate_common.h>
