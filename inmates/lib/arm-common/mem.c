@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <layout.h>
 #include <asm/processor.h>
 #include <asm/sysregs.h>
 

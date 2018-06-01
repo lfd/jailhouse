@@ -36,7 +36,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <alloc.h>
+#include <layout.h>
 
 static unsigned long heap_pos = (unsigned long)stack_top;
 
