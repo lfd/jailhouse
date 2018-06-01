@@ -16,6 +16,7 @@
  */
 
 #include <inmate.h>
+#include <asm/processor.h>
 
 #define E1000_REG_CTRL		0x0000
 # define E1000_CTRL_LRST	(1 << 3)

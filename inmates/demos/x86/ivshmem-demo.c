@@ -9,7 +9,9 @@
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
  */
+
 #include <inmate.h>
+#include <asm/processor.h>
 
 #define VENDORID	0x1af4
 #define DEVICEID	0x1110

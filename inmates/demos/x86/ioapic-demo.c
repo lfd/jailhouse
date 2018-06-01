@@ -21,6 +21,7 @@
  */
 
 #include <inmate.h>
+#include <asm/processor.h>
 
 #define PM1_STATUS		0
 #define PM1_ENABLE		2

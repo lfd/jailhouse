@@ -35,7 +35,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include <inmate.h>
+#include <asm/processor.h>
 
 void __attribute__((noreturn)) c_entry(void);
 

@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <asm/processor.h>
 
 #define IPI_VECTOR		40
 
