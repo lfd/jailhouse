@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) ARM Limited, 2014
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,14 +36,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _JAILHOUSE_INMATE_H
-#define _JAILHOUSE_INMATE_H
+#include <jailhouse/hypercall.h>
 
-#include <asm-generic/types.h>
-
-#include <gic.h>
-#include <timer.h>
-
-#include <inmate_common.h>
-
-#endif /* !_JAILHOUSE_INMATE_H */
+/*
+ * To ease the debugging, we can send a spurious hypercall, which should return
+ * -ENOSYS, but appear in the hypervisor stats for this cell.
+ */
+static inline void heartbeat(void)
+{
+#ifndef CONFIG_BARE_METAL
+	jailhouse_call(0xdeadbeef);
+#endif
+}

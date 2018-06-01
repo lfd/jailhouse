@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <heartbeat.h>
 
 void inmate_main(void)
 {
