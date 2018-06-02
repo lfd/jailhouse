@@ -12,6 +12,7 @@
 
 #include <inmate.h>
 #include <int.h>
+#include <pci.h>
 #include <timer.h>
 #include <asm/processor.h>
 

@@ -16,6 +16,7 @@
  */
 
 #include <inmate.h>
+#include <pci.h>
 #include <timer.h>
 #include <asm/processor.h>
 
