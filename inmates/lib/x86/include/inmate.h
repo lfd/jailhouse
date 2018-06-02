@@ -47,17 +47,6 @@
 
 #include <types.h>
 
-enum ioapic_trigger_mode {
-	TRIGGER_EDGE = 0,
-	TRIGGER_LEVEL_ACTIVE_HIGH = 1 << 15,
-	TRIGGER_LEVEL_ACTIVE_LOW = (1 << 15) | (1 << 13),
-};
-
-void ioapic_init(void);
-void ioapic_pin_set_vector(unsigned int pin,
-			   enum ioapic_trigger_mode trigger_mode,
-			   unsigned int vector);
-
 void hypercall_init(void);
 
 #endif

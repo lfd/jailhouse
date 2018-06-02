@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2014
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,29 +36,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
-#include <ioapic.h>
-#include <asm/processor.h>
+enum ioapic_trigger_mode {
+	TRIGGER_EDGE = 0,
+	TRIGGER_LEVEL_ACTIVE_HIGH = 1 << 15,
+	TRIGGER_LEVEL_ACTIVE_LOW = (1 << 15) | (1 << 13),
+};
 
-#define IOAPIC_BASE		((void *)0xfec00000)
-#define IOAPIC_REG_INDEX	0x00
-#define IOAPIC_REG_DATA		0x10
-#define IOAPIC_REDIR_TBL_START	0x10
-
-void ioapic_init(void)
-{
-	map_range(IOAPIC_BASE, PAGE_SIZE, MAP_UNCACHED);
-}
-
+void ioapic_init(void);
 void ioapic_pin_set_vector(unsigned int pin,
 			   enum ioapic_trigger_mode trigger_mode,
-			   unsigned int vector)
-{
-	mmio_write32(IOAPIC_BASE + IOAPIC_REG_INDEX,
-		     IOAPIC_REDIR_TBL_START + pin * 2 + 1);
-	mmio_write32(IOAPIC_BASE + IOAPIC_REG_DATA, cpu_id() << (56 - 32));
-
-	mmio_write32(IOAPIC_BASE + IOAPIC_REG_INDEX,
-		     IOAPIC_REDIR_TBL_START + pin * 2);
-	mmio_write32(IOAPIC_BASE + IOAPIC_REG_DATA, trigger_mode | vector);
-}
+			   unsigned int vector);
