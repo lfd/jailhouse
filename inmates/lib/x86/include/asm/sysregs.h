@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2014
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,28 +36,27 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
-#include <asm/processor.h>
+#ifndef __ASSEMBLY__
 
-#define IOAPIC_BASE		((void *)0xfec00000)
-#define IOAPIC_REG_INDEX	0x00
-#define IOAPIC_REG_DATA		0x10
-#define IOAPIC_REDIR_TBL_START	0x10
+#define X2APIC_ID		0x802
+#define X2APIC_ICR		0x830
 
-void ioapic_init(void)
+#define APIC_LVL_ASSERT		(1 << 14)
+
+static inline u64 read_msr(unsigned int msr)
 {
-	map_range(IOAPIC_BASE, PAGE_SIZE, MAP_UNCACHED);
+	u32 low, high;
+
+	asm volatile("rdmsr" : "=a" (low), "=d" (high) : "c" (msr));
+	return low | ((u64)high << 32);
 }
 
-void ioapic_pin_set_vector(unsigned int pin,
-			   enum ioapic_trigger_mode trigger_mode,
-			   unsigned int vector)
+static inline void write_msr(unsigned int msr, u64 val)
 {
-	mmio_write32(IOAPIC_BASE + IOAPIC_REG_INDEX,
-		     IOAPIC_REDIR_TBL_START + pin * 2 + 1);
-	mmio_write32(IOAPIC_BASE + IOAPIC_REG_DATA, cpu_id() << (56 - 32));
-
-	mmio_write32(IOAPIC_BASE + IOAPIC_REG_INDEX,
-		     IOAPIC_REDIR_TBL_START + pin * 2);
-	mmio_write32(IOAPIC_BASE + IOAPIC_REG_DATA, trigger_mode | vector);
+	asm volatile("wrmsr"
+		: /* no output */
+		: "c" (msr), "a" ((u32)val), "d" ((u32)(val >> 32))
+		: "memory");
 }
+
+#endif /* __ASSEMBLY__ */

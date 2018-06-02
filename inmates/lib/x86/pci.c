@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <asm/processor.h>
 
 #define PCI_REG_ADDR_PORT	0xcf8
 #define PCI_REG_DATA_PORT	0xcfc

@@ -43,11 +43,6 @@
 #define INMATE_CS64		0x10
 #define INMATE_DS32		0x18
 
-#define X2APIC_ID		0x802
-#define X2APIC_ICR		0x830
-
-#define APIC_LVL_ASSERT		(1 << 14)
-
 #define PCI_CFG_VENDOR_ID	0x000
 #define PCI_CFG_DEVICE_ID	0x002
 #define PCI_CFG_COMMAND		0x004
@@ -77,27 +72,6 @@
 #ifndef __ASSEMBLY__
 
 #include <types.h>
-
-static inline u64 read_msr(unsigned int msr)
-{
-	u32 low, high;
-
-	asm volatile("rdmsr" : "=a" (low), "=d" (high) : "c" (msr));
-	return low | ((u64)high << 32);
-}
-
-static inline void write_msr(unsigned int msr, u64 val)
-{
-	asm volatile("wrmsr"
-		: /* no output */
-		: "c" (msr), "a" ((u32)val), "d" ((u32)(val >> 32))
-		: "memory");
-}
-
-static inline unsigned int cpu_id(void)
-{
-	return read_msr(X2APIC_ID);
-}
 
 enum ioapic_trigger_mode {
 	TRIGGER_EDGE = 0,

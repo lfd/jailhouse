@@ -36,6 +36,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <asm/sysregs.h>
+
 #ifndef __ASSEMBLY__
 
 static inline void arch_disable_irqs(void)
@@ -52,6 +54,11 @@ static inline void __attribute__((noreturn)) halt(void)
 {
 	while (1)
 		asm volatile ("hlt" : : : "memory");
+}
+
+static inline unsigned int cpu_id(void)
+{
+	return read_msr(X2APIC_ID);
 }
 
 #include <asm-generic/processor.h>
