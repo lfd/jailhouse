@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <timing.h>
 #include <asm/processor.h>
 
 void inmate_main(void)

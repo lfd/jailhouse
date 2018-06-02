@@ -17,6 +17,7 @@
 
 #include <inmate.h>
 #include <pci.h>
+#include <timing.h>
 #include <asm/processor.h>
 
 #define IRQ_VECTOR		32

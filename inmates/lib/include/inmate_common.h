@@ -36,10 +36,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define NS_PER_USEC		1000UL
-#define NS_PER_MSEC		1000000UL
-#define NS_PER_SEC		1000000000UL
-
 #ifndef __ASSEMBLY__
 
 #include <bool.h>

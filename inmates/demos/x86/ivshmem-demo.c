@@ -12,6 +12,7 @@
 
 #include <inmate.h>
 #include <pci.h>
+#include <timing.h>
 #include <asm/processor.h>
 
 #define VENDORID	0x1af4

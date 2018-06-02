@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <timing.h>
 #include <asm/processor.h>
 
 #define PM_TIMER_HZ		3579545

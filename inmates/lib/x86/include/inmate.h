@@ -70,16 +70,6 @@ void ioapic_pin_set_vector(unsigned int pin,
 
 void hypercall_init(void);
 
-unsigned long pm_timer_read(void);
-
-unsigned long tsc_read(void);
-unsigned long tsc_init(void);
-
-void delay_us(unsigned long microsecs);
-
-unsigned long apic_timer_init(unsigned int vector);
-void apic_timer_set(unsigned long timeout_ns);
-
 extern volatile u32 smp_num_cpus;
 extern u8 smp_cpu_ids[SMP_MAX_CPUS];
 void smp_wait_for_all_cpus(void);
