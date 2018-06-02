@@ -14,6 +14,7 @@
 
 #include <inmate.h>
 #include <gic.h>
+#include <timer.h>
 #include <asm/processor.h>
 
 #define BEATS_PER_SEC		10

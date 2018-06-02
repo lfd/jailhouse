@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <gic.h>
 
 #define GICC_CTLR		0x0000
 #define GICC_PMR		0x0004
