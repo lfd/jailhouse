@@ -37,7 +37,7 @@
  */
 
 #include <asm/smp.h>
-#include <inmate.h>
+#include <asm/sysregs.h>
 
 #define X86_CR0_PE		0x00000001
 #define X86_CR0_WP		0x00010000

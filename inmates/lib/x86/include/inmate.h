@@ -41,10 +41,6 @@
 
 #include <asm-generic/types.h>
 
-#define INMATE_CS32		0x8
-#define INMATE_CS64		0x10
-#define INMATE_DS32		0x18
-
 #include <inmate_common.h>
 
 #endif /* !_JAILHOUSE_INMATE_H */
