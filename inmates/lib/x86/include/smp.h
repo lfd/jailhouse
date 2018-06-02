@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2013-2016
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,32 +36,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _JAILHOUSE_INMATE_H
-#define _JAILHOUSE_INMATE_H
+#include <asm/smp.h>
 
-#define INMATE_CS32		0x8
-#define INMATE_CS64		0x10
-#define INMATE_DS32		0x18
-
-#ifndef __ASSEMBLY__
-
-#include <types.h>
-
-enum ioapic_trigger_mode {
-	TRIGGER_EDGE = 0,
-	TRIGGER_LEVEL_ACTIVE_HIGH = 1 << 15,
-	TRIGGER_LEVEL_ACTIVE_LOW = (1 << 15) | (1 << 13),
-};
-
-void ioapic_init(void);
-void ioapic_pin_set_vector(unsigned int pin,
-			   enum ioapic_trigger_mode trigger_mode,
-			   unsigned int vector);
-
-void hypercall_init(void);
-
-#endif
-
-#include <inmate_common.h>
-
-#endif /* !_JAILHOUSE_INMATE_H */
+extern volatile u32 smp_num_cpus;
+extern u8 smp_cpu_ids[SMP_MAX_CPUS];
+void smp_wait_for_all_cpus(void);
+void smp_start_cpu(unsigned int cpu_id, void (*entry)(void));

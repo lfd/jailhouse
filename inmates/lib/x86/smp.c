@@ -38,6 +38,7 @@
 
 #include <inmate.h>
 #include <int.h>
+#include <smp.h>
 #include <timer.h>
 #include <asm/processor.h>
 

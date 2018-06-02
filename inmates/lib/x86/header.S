@@ -36,6 +36,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <asm/smp.h>
 #include <inmate.h>
 
 #define X86_CR0_PE		0x00000001

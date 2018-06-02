@@ -39,6 +39,7 @@
 #include <inmate.h>
 #include <timer.h>
 #include <asm/processor.h>
+#include <asm/smp.h>
 
 #define PM_TIMER_HZ		3579545
 #define PM_TIMER_OVERFLOW      ((0x1000000 * NS_PER_SEC) / PM_TIMER_HZ)
