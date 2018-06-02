@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <ioapic.h>
 #include <asm/processor.h>
 
 #define IOAPIC_BASE		((void *)0xfec00000)
