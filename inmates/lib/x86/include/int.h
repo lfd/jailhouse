@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2015
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,35 +36,10 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
-#include <int.h>
-#include <smp.h>
-#include <timing.h>
-#include <asm/processor.h>
+#define APIC_LVL_ASSERT		(1 << 14)
 
-#define APIC_DM_INIT	(5 << 8)
-#define APIC_DM_SIPI	(6 << 8)
+typedef void(*int_handler_t)(void);
 
-extern void (* volatile ap_entry)(void);
-
-void smp_wait_for_all_cpus(void)
-{
-	while (smp_num_cpus < comm_region->num_cpus)
-		cpu_relax();
-}
-
-void smp_start_cpu(unsigned int cpu_id, void (*entry)(void))
-{
-	u64 base_val = ((u64)cpu_id << 32) | APIC_LVL_ASSERT;
-
-	ap_entry = entry;
-
-	write_msr(X2APIC_ICR, base_val | APIC_DM_INIT);
-	delay_us(10000);
-	write_msr(X2APIC_ICR, base_val | APIC_DM_SIPI);
-	delay_us(200);
-	write_msr(X2APIC_ICR, base_val | APIC_DM_SIPI);
-
-	while (ap_entry != NULL)
-		cpu_relax();
-}
+void int_init(void);
+void int_set_handler(unsigned int vector, int_handler_t handler);
+void int_send_ipi(unsigned int cpu_id, unsigned int vector);

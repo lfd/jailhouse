@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <int.h>
 #include <smp.h>
 #include <asm/processor.h>
 

@@ -45,15 +45,7 @@
 #define INMATE_CS64		0x10
 #define INMATE_DS32		0x18
 
-#define APIC_LVL_ASSERT		(1 << 14)
-
 #ifndef __ASSEMBLY__
-
-typedef void(*int_handler_t)(void);
-
-void int_init(void);
-void int_set_handler(unsigned int vector, int_handler_t handler);
-void int_send_ipi(unsigned int cpu_id, unsigned int vector);
 
 enum ioapic_trigger_mode {
 	TRIGGER_EDGE = 0,

@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <int.h>
 #include <timing.h>
 
 #define POLLUTE_CACHE_SIZE	(512 * 1024)
