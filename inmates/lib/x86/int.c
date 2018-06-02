@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <asm/sysregs.h>
 
 #define NUM_IDT_DESC		64
 
