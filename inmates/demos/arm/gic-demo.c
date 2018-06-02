@@ -12,6 +12,7 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <gic.h>
 #include <inmate.h>
 #include <int.h>
 #include <timer.h>

@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) ARM Limited, 2014
+ * Copyright (c) Siemens AG, 2013-2016
  *
  * Authors:
- *  Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+ *  Jan Kiszka <jan.kiszka@siemens.com>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,14 +36,23 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _JAILHOUSE_INMATE_H
-#define _JAILHOUSE_INMATE_H
+#define NS_PER_USEC		1000UL
+#define NS_PER_MSEC		1000000UL
+#define NS_PER_SEC		1000000000UL
+
+#ifndef __ASSEMBLY__
 
 #include <types.h>
+#include <jailhouse/hypercall.h>
 
-#include <gic.h>
-#include <timer.h>
+void inmate_main(void);
 
-#include <inmate_common.h>
+#include <alloc.h>
+#include <cmdline.h>
+#include <layout.h>
+#include <mem.h>
+#include <mmio.h>
+#include <printk.h>
+#include <string.h>
 
-#endif /* !_JAILHOUSE_INMATE_H */
+#endif /* !__ASSEMBLY__ */
