@@ -16,6 +16,7 @@
  */
 
 #include <inmate.h>
+#include <pci.h>
 #include <asm/processor.h>
 
 #define E1000_REG_CTRL		0x0000
