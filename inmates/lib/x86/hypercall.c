@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <hypercall.h>
 
 #define X86_FEATURE_VMX		(1 << 5)
 
