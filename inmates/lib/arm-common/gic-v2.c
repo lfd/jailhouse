@@ -36,7 +36,10 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <gic.h>
+#include <layout.h>
+#include <mem.h>
+#include <mmio.h>
 
 #define GICC_CTLR		0x0000
 #define GICC_PMR		0x0004

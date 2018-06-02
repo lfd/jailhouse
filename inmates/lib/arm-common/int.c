@@ -36,8 +36,12 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <alloc.h>
+#include <gic.h>
 #include <int.h>
+#include <layout.h>
+#include <printk.h>
+#include <string.h>
 
 #define NUM_IRQS	128
 

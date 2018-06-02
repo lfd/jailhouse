@@ -36,8 +36,11 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <gic.h>
+#include <layout.h>
+#include <mem.h>
+#include <mmio.h>
 #include <asm/sysregs.h>
-#include <inmate.h>
 
 static void *gicd_v3_base;
 static void *gicr_v3_base;

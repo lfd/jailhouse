@@ -36,6 +36,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <types.h>
+
 #define GICD_ISENABLER	0x0100
 
 #define is_sgi(irqn)			((irqn) < 16)
