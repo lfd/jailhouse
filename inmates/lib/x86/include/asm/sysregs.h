@@ -36,6 +36,10 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define INMATE_CS32		0x8
+#define INMATE_CS64		0x10
+#define INMATE_DS32		0x18
+
 #ifndef __ASSEMBLY__
 
 #define X2APIC_ID		0x802

@@ -39,10 +39,6 @@
 #ifndef _JAILHOUSE_INMATE_H
 #define _JAILHOUSE_INMATE_H
 
-#define INMATE_CS32		0x8
-#define INMATE_CS64		0x10
-#define INMATE_DS32		0x18
-
 #ifndef __ASSEMBLY__
 
 #include <types.h>
