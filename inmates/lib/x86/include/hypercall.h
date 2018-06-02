@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2013
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,47 +36,4 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
-#include <uart.h>
-#include <hypercall.h>
-#include <asm/processor.h>
-
-static void reg_out_mmio8(struct uart_chip *chip, unsigned int reg, u32 value)
-{
-	mmio_write8(chip->base + reg, value);
-}
-
-static u32 reg_in_mmio8(struct uart_chip *chip, unsigned int reg)
-{
-	return mmio_read8(chip->base + reg);
-}
-
-static void reg_out_pio(struct uart_chip *chip, unsigned int reg, u32 value)
-{
-	outb(value, (unsigned long)chip->base + reg);
-}
-
-static u32 reg_in_pio(struct uart_chip *chip, unsigned int reg)
-{
-	return inb((unsigned long)chip->base + reg);
-}
-
-void arch_console_init(struct uart_chip *chip)
-{
-	struct jailhouse_console *console = &comm_region->console;
-
-	if (cmdline_parse_bool("con-is-mmio", CON_IS_MMIO(console->flags))) {
-#ifdef __x86_64__
-		map_range((void *)chip->base, 0x1000, MAP_UNCACHED);
-#endif
-
-		if (cmdline_parse_bool("con-regdist-1",
-				       CON_USES_REGDIST_1(console->flags))) {
-			chip->reg_out = reg_out_mmio8;
-			chip->reg_in = reg_in_mmio8;
-		}
-	} else {
-		chip->reg_out = reg_out_pio;
-		chip->reg_in = reg_in_pio;
-	}
-}
+void hypercall_init(void);
