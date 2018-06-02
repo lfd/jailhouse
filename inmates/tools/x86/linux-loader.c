@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <smp.h>
 
 struct boot_params {
 	u8	padding1[0x230];

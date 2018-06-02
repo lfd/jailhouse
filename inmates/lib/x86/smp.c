@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <smp.h>
 #include <timing.h>
 #include <asm/processor.h>
 
