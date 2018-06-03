@@ -37,6 +37,7 @@
  */
 
 #include <jailhouse/hypercall.h>
+#include <hypercall.h>
 
 /*
  * To ease the debugging, we can send a spurious hypercall, which should return

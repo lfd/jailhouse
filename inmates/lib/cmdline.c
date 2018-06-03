@@ -36,7 +36,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <asm-generic/types.h>
+#include <cmdline.h>
+#include <string.h>
 
 #define CMDLINE_BUFFER_SIZE 256
 CMDLINE_BUFFER(CMDLINE_BUFFER_SIZE) __attribute__((weak));

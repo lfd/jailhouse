@@ -10,6 +10,10 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <cmdline.h>
+#include <comm_region.h>
+#include <mem.h>
+#include <string.h>
 #include <inmate.h>
 #include <smp.h>
 

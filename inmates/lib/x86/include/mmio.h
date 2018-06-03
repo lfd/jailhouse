@@ -36,6 +36,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <asm-generic/types.h>
+
 static inline void outb(u8 v, u16 port)
 {
 	asm volatile("outb %0,%1" : : "a" (v), "dN" (port));

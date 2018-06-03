@@ -41,6 +41,13 @@
 #include <uart.h>
 #include <hypercall.h>
 #include <asm/processor.h>
+#include <cmdline.h>
+#include <comm_region.h>
+#include <hypercall.h>
+#include <mem.h>
+#include <printk.h>
+#include <stdarg.h>
+#include <string.h>
 
 #define UART_IDLE_LOOPS		100
 

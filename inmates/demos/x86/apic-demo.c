@@ -11,7 +11,12 @@
  */
 
 #include <inmate.h>
+#include <alloc.h>
+#include <cmdline.h>
+#include <comm_region.h>
 #include <int.h>
+#include <mem.h>
+#include <printk.h>
 #include <timing.h>
 
 #define POLLUTE_CACHE_SIZE	(512 * 1024)

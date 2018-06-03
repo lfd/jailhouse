@@ -36,7 +36,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <comm_region.h>
 #include <int.h>
 #include <smp.h>
 #include <timing.h>

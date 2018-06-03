@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <printk.h>
 #include <timing.h>
 #include <asm/processor.h>
 

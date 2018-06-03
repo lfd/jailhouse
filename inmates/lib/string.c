@@ -36,7 +36,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <asm-generic/types.h>
+#include <string.h>
 
 static inline int tolower(int c)
 {

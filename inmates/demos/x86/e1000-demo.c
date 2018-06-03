@@ -15,8 +15,13 @@
  * machines as needed.
  */
 
+#include <comm_region.h>
 #include <inmate.h>
+#include <mem.h>
+#include <mmio.h>
 #include <pci.h>
+#include <printk.h>
+#include <string.h>
 #include <timing.h>
 #include <asm/processor.h>
 

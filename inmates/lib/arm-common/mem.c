@@ -36,8 +36,11 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <alloc.h>
+#include <comm_region.h>
 #include <layout.h>
+#include <mem.h>
+#include <string.h>
 #include <asm/processor.h>
 #include <asm/sysregs.h>
 

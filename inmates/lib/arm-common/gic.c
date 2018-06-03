@@ -36,7 +36,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <comm_region.h>
 #include <gic.h>
 
 extern const struct gic gic_v2;

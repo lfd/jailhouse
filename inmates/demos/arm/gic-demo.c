@@ -13,7 +13,11 @@
  */
 
 #include <inmate.h>
+#include <cmdline.h>
+#include <comm_region.h>
 #include <gic.h>
+#include <mmio.h>
+#include <printk.h>
 #include <timer.h>
 #include <asm/processor.h>
 

@@ -36,7 +36,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <mmio.h>
 #include <pci.h>
 
 int pci_find_device(u16 vendor, u16 device, u16 start_bdf)

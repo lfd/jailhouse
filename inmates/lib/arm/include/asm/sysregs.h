@@ -39,6 +39,8 @@
 /* The following definitions are inspired by
  * hypervisor/arch/arm/include/asm/sysregs.h */
 
+#include <asm-generic/types.h>
+
 #define VBAR		SYSREG_32(0, c12, c0, 0)
 #define CNTFRQ_EL0	SYSREG_32(0, c14, c0, 0)
 #define CNTV_TVAL_EL0	SYSREG_32(0, c14, c3, 0)

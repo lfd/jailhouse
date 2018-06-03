@@ -39,6 +39,8 @@
 /* The following definitions are inspired by
  * hypervisor/arch/arm64/include/asm/sysregs.h */
 
+#include <asm-generic/types.h>
+
 #ifndef __ASSEMBLY__
 
 #define SCTLR_EL1_I	(1 << 12)

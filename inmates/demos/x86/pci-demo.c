@@ -17,7 +17,10 @@
 
 #include <inmate.h>
 #include <int.h>
+#include <mem.h>
+#include <mmio.h>
 #include <pci.h>
+#include <printk.h>
 #include <timing.h>
 #include <asm/processor.h>
 

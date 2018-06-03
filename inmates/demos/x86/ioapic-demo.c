@@ -20,9 +20,12 @@
  * Many of them can't be isolated easily from other other cells - if at all.
  */
 
+#include <comm_region.h>
 #include <inmate.h>
 #include <int.h>
 #include <ioapic.h>
+#include <mmio.h>
+#include <printk.h>
 #include <asm/processor.h>
 
 #define PM1_STATUS		0

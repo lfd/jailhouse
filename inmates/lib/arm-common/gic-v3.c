@@ -37,8 +37,10 @@
  */
 
 #include <asm/sysregs.h>
-#include <inmate.h>
+#include <comm_region.h>
 #include <gic.h>
+#include <mem.h>
+#include <mmio.h>
 
 static void *gicd_v3_base;
 static void *gicr_v3_base;
