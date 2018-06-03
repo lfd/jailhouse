@@ -36,7 +36,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
 #include <uart.h>
 
 DECLARE_UART(8250);

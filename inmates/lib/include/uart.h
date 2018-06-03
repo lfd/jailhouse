@@ -36,6 +36,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <hypercall.h>
+#include <mmio.h>
+
 struct uart_chip {
 	const char *name;
 	const __u16 type;

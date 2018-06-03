@@ -10,8 +10,10 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <layout.h>
 #include <inmate.h>
 #include <int.h>
+#include <printk.h>
 #include <smp.h>
 #include <asm/processor.h>
 

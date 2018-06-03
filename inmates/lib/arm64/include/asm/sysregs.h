@@ -41,6 +41,8 @@
 
 #ifndef __ASSEMBLY__
 
+#include <types.h>
+
 #define SCTLR_EL1_I	(1 << 12)
 #define SCTLR_EL1_C	(1 << 2)
 #define SCTLR_EL1_M	(1 << 0)

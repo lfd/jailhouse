@@ -38,9 +38,12 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdarg.h>
-#include <inmate.h>
+#include <cmdline.h>
+#include <layout.h>
 #include <uart.h>
+#include <printk.h>
+#include <stdarg.h>
+#include <string.h>
 #include <asm/processor.h>
 
 #define UART_IDLE_LOOPS		100

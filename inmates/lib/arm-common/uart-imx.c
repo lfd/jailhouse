@@ -34,7 +34,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
 #include <uart.h>
 
 #define UTS			0xb4

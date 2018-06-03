@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <printk.h>
 
 void inmate_main(void)
 {

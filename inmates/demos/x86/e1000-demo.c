@@ -16,7 +16,12 @@
  */
 
 #include <inmate.h>
+#include <layout.h>
+#include <mem.h>
+#include <mmio.h>
 #include <pci.h>
+#include <printk.h>
+#include <string.h>
 #include <timer.h>
 #include <asm/processor.h>
 

@@ -36,8 +36,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
 #include <int.h>
+#include <layout.h>
 #include <smp.h>
 #include <timer.h>
 #include <asm/processor.h>

@@ -36,9 +36,11 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
-#include <uart.h>
 #include <asm/processor.h>
+#include <cmdline.h>
+#include <layout.h>
+#include <mem.h>
+#include <uart.h>
 
 static void reg_out_mmio8(struct uart_chip *chip, unsigned int reg, u32 value)
 {

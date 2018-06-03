@@ -42,6 +42,8 @@
 
 #ifndef __ASSEMBLY__
 
+#include <types.h>
+
 #define X2APIC_ID		0x802
 #define X2APIC_ICR		0x830
 

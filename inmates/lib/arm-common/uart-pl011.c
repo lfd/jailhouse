@@ -36,7 +36,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
 #include <uart.h>
 #include <asm/processor.h>
 

@@ -47,12 +47,4 @@
 
 void inmate_main(void);
 
-#include <alloc.h>
-#include <cmdline.h>
-#include <layout.h>
-#include <mem.h>
-#include <mmio.h>
-#include <printk.h>
-#include <string.h>
-
 #endif /* !__ASSEMBLY__ */

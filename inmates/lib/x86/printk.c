@@ -40,6 +40,13 @@
 #include <uart.h>
 #include <hypercall.h>
 #include <asm/processor.h>
+#include <cmdline.h>
+#include <hypercall.h>
+#include <layout.h>
+#include <mem.h>
+#include <printk.h>
+#include <stdarg.h>
+#include <string.h>
 
 static void reg_out_mmio8(struct uart_chip *chip, unsigned int reg, u32 value)
 {

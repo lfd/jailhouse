@@ -36,7 +36,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
 #include <int.h>
 #include <asm/sysregs.h>
 

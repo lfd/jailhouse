@@ -10,6 +10,9 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <layout.h>
+#include <mmio.h>
+#include <printk.h>
 #include <inmate.h>
 
 #define EXPECT_EQUAL(a, b)	evaluate(a, b, __LINE__)

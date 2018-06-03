@@ -36,7 +36,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
+#include <alloc.h>
+#include <mem.h>
+#include <mmio.h>
 
 #define PG_PRESENT	0x01
 #define PG_RW		0x02

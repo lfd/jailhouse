@@ -36,6 +36,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <types.h>
+
 const char *cmdline_parse_str(const char *param, char *value_buffer,
 			      unsigned long buffer_size,
 			      const char *default_value);

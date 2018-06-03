@@ -96,6 +96,9 @@
 #include <asm/sysregs_common.h>
 
 #ifndef __ASSEMBLY__
+
+#include <types.h>
+
 asm(".arch_extension virt\n");
 
 #define arm_write_sysreg_32(op1, crn, crm, op2, val) \

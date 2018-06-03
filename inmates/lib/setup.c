@@ -36,8 +36,11 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cmdline.h>
 #include <inmate.h>
+#include <layout.h>
 #include <setup.h>
+#include <string.h>
 #include <asm/processor.h>
 
 void __attribute__((noreturn)) c_entry(void);

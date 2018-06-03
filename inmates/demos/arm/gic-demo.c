@@ -12,9 +12,13 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <cmdline.h>
 #include <gic.h>
 #include <inmate.h>
 #include <int.h>
+#include <layout.h>
+#include <mmio.h>
+#include <printk.h>
 #include <timer.h>
 #include <asm/processor.h>
 

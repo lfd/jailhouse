@@ -37,6 +37,9 @@
  */
 
 #include <inmate.h>
+#include <layout.h>
+#include <mmio.h>
+#include <printk.h>
 #include <timer.h>
 #include <asm/processor.h>
 #include <asm/smp.h>

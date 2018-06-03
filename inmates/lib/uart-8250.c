@@ -38,7 +38,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inmate.h>
 #include <uart.h>
 
 #define UART_TX			0x0

@@ -11,6 +11,7 @@
  */
 
 #include <asm/sysregs.h>
+#include <cmdline.h>
 #include <inmate.h>
 
 void inmate_main(void)

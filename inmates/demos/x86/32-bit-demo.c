@@ -14,6 +14,7 @@
  */
 
 #include <inmate.h>
+#include <printk.h>
 #include <asm/sysregs.h>
 
 #define IA32_EFER	0xc0000080

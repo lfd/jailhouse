@@ -36,6 +36,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <types.h>
 #include <jailhouse/hypercall.h>
 
 #include <arch/hypercall.h>

@@ -23,6 +23,9 @@
 #include <inmate.h>
 #include <int.h>
 #include <ioapic.h>
+#include <layout.h>
+#include <mmio.h>
+#include <printk.h>
 #include <asm/processor.h>
 
 #define PM1_STATUS		0
