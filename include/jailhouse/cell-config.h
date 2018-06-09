@@ -50,8 +50,26 @@
 #define JAILHOUSE_CELL_NAME_MAXLEN	31
 
 #define JAILHOUSE_CELL_PASSIVE_COMMREG	0x00000001
-#define JAILHOUSE_CELL_DEBUG_CONSOLE	0x00000002
-#define JAILHOUSE_CELL_TEST_DEVICE	0x00000004
+#define JAILHOUSE_CELL_TEST_DEVICE	0x00000002
+
+/*
+ * JAILHOUSE_VIRTUAL_CONSOLE_PERMITTED allows inmates to invoke the dbg putc
+ * hypercall.
+ *
+ * JAILHOUSE_VIRTUAL_CONSOLE_ACTIVE may be used as a flag for system
+ * configurations as well as for cell configurations.
+ *
+ * If set in a system configuration, the root-cell is allowed to read from the
+ * virtual console. If set in a non root cell configuration, the inmate is
+ * allowed to issue the dbg putc hypercall and will automatically use it.
+ */
+#define JAILHOUSE_VIRTUAL_CONSOLE_PERMITTED	0x40000000
+#define JAILHOUSE_VIRTUAL_CONSOLE_ACTIVE	0x80000000
+
+#define CELL_FLAGS_VIRTUAL_CONSOLE_ACTIVE(flags) \
+	!!((flags) & JAILHOUSE_VIRTUAL_CONSOLE_ACTIVE)
+#define CELL_FLAGS_VIRTUAL_CONSOLE_PERMITTED(flags) \
+	!!((flags) & JAILHOUSE_VIRTUAL_CONSOLE_PERMITTED)
 
 #define JAILHOUSE_CELL_DESC_SIGNATURE	"JHCELL"
 
@@ -192,6 +210,7 @@ struct jailhouse_iommu {
 struct jailhouse_system {
 	char signature[6];
 	__u16 revision;
+	__u32 flags;
 
 	/** Jailhouse's location in memory */
 	struct jailhouse_memory hypervisor_memory;
