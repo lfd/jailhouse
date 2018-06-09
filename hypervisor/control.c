@@ -887,8 +887,8 @@ long hypercall(unsigned long code, unsigned long arg1, unsigned long arg2)
 	case JAILHOUSE_HC_CPU_GET_INFO:
 		return cpu_get_info(cpu_data, arg1, arg2);
 	case JAILHOUSE_HC_DEBUG_CONSOLE_PUTC:
-		if (!(cpu_data->public.cell->config->flags &
-		      JAILHOUSE_CELL_DEBUG_CONSOLE))
+		if (!CELL_FLAGS_VIRTUAL_CONSOLE_PERMITTED(
+			cpu_data->public.cell->config->flags))
 			return trace_error(-EPERM);
 		printk("%c", (char)arg1);
 		return 0;
