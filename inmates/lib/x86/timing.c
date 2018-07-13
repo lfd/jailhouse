@@ -114,7 +114,7 @@ void delay_us(unsigned long microsecs)
 		cpu_relax();
 }
 
-unsigned long apic_timer_init(void)
+void apic_timer_init(void)
 {
 	unsigned int vector = TIMER_IRQ;
 	unsigned long apic_freq;
@@ -138,7 +138,7 @@ unsigned long apic_timer_init(void)
 	/* Required when using TSC deadline mode. */
 	asm volatile("mfence" : : : "memory");
 
-	return apic_freq;
+	printk("Calibrated APIC frequency: %lu kHz\n", apic_freq);
 }
 
 void apic_timer_set(unsigned long timeout_ns)

@@ -37,13 +37,10 @@ static void irq_handler(void)
 
 static void init_apic(void)
 {
-	unsigned long apic_freq_khz;
-
 	int_init();
 	int_enable_irq(TIMER_IRQ, irq_handler);
 
-	apic_freq_khz = apic_timer_init();
-	printk("Calibrated APIC frequency: %lu kHz\n", apic_freq_khz);
+	apic_timer_init();
 
 	expected_time = tsc_read() + NS_PER_MSEC;
 	apic_timer_set(NS_PER_MSEC);
