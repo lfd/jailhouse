@@ -101,12 +101,6 @@ static inline unsigned int cpu_id(void)
 	return read_msr(X2APIC_ID);
 }
 
-typedef void(*int_handler_t)(void);
-
-void int_init(void);
-int int_set_handler(unsigned int vector, int_handler_t handler);
-void int_send_ipi(unsigned int cpu_id, unsigned int vector);
-
 enum ioapic_trigger_mode {
 	TRIGGER_EDGE = 0,
 	TRIGGER_LEVEL_ACTIVE_HIGH = 1 << 15,

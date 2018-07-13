@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <int.h>
 
 #define APIC_DM_INIT	(5 << 8)
 #define APIC_DM_SIPI	(6 << 8)

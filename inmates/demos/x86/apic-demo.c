@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <int.h>
 
 #define POLLUTE_CACHE_SIZE	(512 * 1024)
 
@@ -40,7 +41,7 @@ static void init_apic(void)
 	unsigned long apic_freq_khz;
 
 	int_init();
-	int_set_handler(APIC_TIMER_VECTOR, irq_handler);
+	int_enable_irq(APIC_TIMER_VECTOR, irq_handler);
 
 	apic_freq_khz = apic_timer_init(APIC_TIMER_VECTOR);
 	printk("Calibrated APIC frequency: %lu kHz\n", apic_freq_khz);

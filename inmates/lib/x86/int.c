@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <int.h>
 
 #define NUM_IDT_DESC		64
 
@@ -77,7 +78,7 @@ static void __attribute__((used)) handle_interrupt(unsigned int vector)
 	write_msr(X2APIC_EOI, APIC_EOI_ACK);
 }
 
-int int_set_handler(unsigned int vector, int_handler_t handler)
+int int_enable_irq(unsigned int vector, int_handler_t handler)
 {
 	unsigned long entry = (unsigned long)irq_entry + vector * 16;
 

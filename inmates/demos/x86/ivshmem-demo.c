@@ -10,6 +10,7 @@
  * the COPYING file in the top-level directory.
  */
 #include <inmate.h>
+#include <int.h>
 
 #define VENDORID	0x1af4
 #define DEVICEID	0x1110
@@ -145,7 +146,7 @@ void inmate_main(void)
 
 		memcpy(d->shmem, str, 32);
 
-		int_set_handler(IRQ_VECTOR + ndevices - 1, irq_handler);
+		int_enable_irq(IRQ_VECTOR + ndevices - 1, irq_handler);
 		pci_msix_set_vector(bdf, IRQ_VECTOR + ndevices - 1, 0);
 		bdf++;
 	}

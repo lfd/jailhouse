@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <int.h>
 
 #define IPI_VECTOR		40
 
@@ -41,7 +42,7 @@ void inmate_main(void)
 	printk("\nFound %d other CPU(s)\n", smp_num_cpus - 1);
 
 	int_init();
-	int_set_handler(IPI_VECTOR, ipi_handler);
+	int_enable_irq(IPI_VECTOR, ipi_handler);
 
 	asm volatile("sti");
 

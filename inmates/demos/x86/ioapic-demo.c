@@ -21,6 +21,7 @@
  */
 
 #include <inmate.h>
+#include <int.h>
 
 #define PM1_STATUS		0
 #define PM1_ENABLE		2
@@ -43,7 +44,7 @@ static void irq_handler(void)
 void inmate_main(void)
 {
 	int_init();
-	int_set_handler(IRQ_VECTOR, irq_handler);
+	int_enable_irq(IRQ_VECTOR, irq_handler);
 
 	ioapic_init();
 	ioapic_pin_set_vector(ACPI_GSI, TRIGGER_LEVEL_ACTIVE_HIGH, IRQ_VECTOR);

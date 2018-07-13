@@ -44,4 +44,6 @@ typedef void (*int_handler_t)(void);
 void int_init(void);
 int int_enable_irq(unsigned int irq, int_handler_t handler);
 
+void int_send_ipi(unsigned int cpu_id, unsigned int vector);
+
 #endif
