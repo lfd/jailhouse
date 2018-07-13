@@ -35,19 +35,6 @@ static void irq_handler(void)
 	apic_timer_set(expected_time - tsc_read());
 }
 
-static void init_apic(void)
-{
-	int_init();
-	int_enable_irq(TIMER_IRQ, irq_handler);
-
-	apic_timer_init();
-
-	expected_time = tsc_read() + NS_PER_MSEC;
-	apic_timer_set(NS_PER_MSEC);
-
-	asm volatile("sti");
-}
-
 static void pollute_cache(char *mem)
 {
 	unsigned long cpu_cache_line_size, ebx;
@@ -81,7 +68,15 @@ void inmate_main(void)
 	printk("Calibrated TSC frequency: %lu.%03lu kHz\n", tsc_freq / 1000,
 	       tsc_freq % 1000);
 
-	init_apic();
+	int_init();
+	int_enable_irq(TIMER_IRQ, irq_handler);
+
+	apic_timer_init();
+
+	expected_time = tsc_read() + NS_PER_MSEC;
+	apic_timer_set(NS_PER_MSEC);
+
+	asm volatile("sti");
 
 	while (!terminate) {
 		asm volatile("hlt");
