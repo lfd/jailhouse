@@ -1,7 +1,7 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Ralf Ramsauer, 2018
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
  *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
@@ -36,9 +36,4 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <types.h>
-#include <arch/timer.h>
-
-void timer_init(void);
-u64 timer_get_ns(void);
-void timer_arm_expire(u64 timeout_ns);
+#define TIMER_IRQ	32

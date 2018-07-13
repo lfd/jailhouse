@@ -12,10 +12,9 @@
 
 #include <inmate.h>
 #include <int.h>
+#include <arch/timer.h>
 
 #define POLLUTE_CACHE_SIZE	(512 * 1024)
-
-#define APIC_TIMER_VECTOR	32
 
 static unsigned long expected_time;
 static unsigned long min = -1, max;
@@ -41,9 +40,9 @@ static void init_apic(void)
 	unsigned long apic_freq_khz;
 
 	int_init();
-	int_enable_irq(APIC_TIMER_VECTOR, irq_handler);
+	int_enable_irq(TIMER_IRQ, irq_handler);
 
-	apic_freq_khz = apic_timer_init(APIC_TIMER_VECTOR);
+	apic_freq_khz = apic_timer_init(TIMER_IRQ);
 	printk("Calibrated APIC frequency: %lu kHz\n", apic_freq_khz);
 
 	expected_time = tsc_read() + NS_PER_MSEC;
