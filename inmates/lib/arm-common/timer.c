@@ -39,6 +39,7 @@
  */
 
 #include <asm/sysregs.h>
+#include <inmate.h>
 #include <timer.h>
 
 static unsigned long timer_frequency;
@@ -48,26 +49,18 @@ void timer_init(void)
 	arm_read_sysreg(CNTFRQ_EL0, timer_frequency);
 }
 
-unsigned long timer_get_frequency(void)
-{
-	return timer_frequency;
-}
-
-u64 timer_get_ticks(void)
+u64 timer_get_ns(void)
 {
 	u64 pct64;
 
 	arm_read_sysreg(CNTPCT_EL0, pct64);
-	return pct64;
+
+	return (pct64 * 1000 * 1000) / (timer_frequency / 1000);
 }
 
-u64 timer_ticks_to_ns(u64 ticks)
+void timer_arm_expire(u64 timeout_ns)
 {
-	return (ticks * 1000) / (timer_get_frequency() / 1000 / 1000);
-}
-
-void timer_start(u64 timeout)
-{
-	arm_write_sysreg(CNTV_TVAL_EL0, timeout);
+	arm_write_sysreg(CNTV_TVAL_EL0,
+			(timer_frequency * timeout_ns) / NS_PER_SEC);
 	arm_write_sysreg(CNTV_CTL_EL0, 1);
 }
