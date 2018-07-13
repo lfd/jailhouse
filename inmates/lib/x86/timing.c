@@ -85,14 +85,6 @@ unsigned long tsc_read(void)
 	return tmr + tsc_overflows[cpu];
 }
 
-unsigned long tsc_init(void)
-{
-	tsc_freq = comm_region->tsc_khz * 1000L;
-	tsc_overflow = (0x100000000L * NS_PER_SEC) / tsc_freq;
-
-	return tsc_freq;
-}
-
 unsigned long pm_timer_read(void)
 {
 	unsigned int cpu = cpu_id();
@@ -120,13 +112,18 @@ void apic_timer_init(void)
 	unsigned long apic_freq;
 	unsigned long ecx;
 
+	tsc_freq = comm_region->tsc_khz * 1000L;
+	tsc_overflow = (0x100000000L * NS_PER_SEC) / tsc_freq;
+	printk("Calibrated TSC frequency: %lu.%03lu kHz\n", tsc_freq / 1000,
+	       tsc_freq % 1000);
+
 	asm volatile("cpuid" : "=c" (ecx) : "a" (1)
 		: "rbx", "rdx", "memory");
 	tsc_deadline = !!(ecx & (1 << 24));
 
 	if (tsc_deadline) {
 		vector |= LVTT_TSC_DEADLINE;
-		apic_tick_freq = tsc_init();
+		apic_tick_freq = tsc_freq;
 		apic_freq = apic_tick_freq / 1000;
 	} else {
 		apic_tick_freq = comm_region->apic_khz * 1000 / 16;

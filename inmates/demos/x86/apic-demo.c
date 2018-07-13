@@ -52,7 +52,6 @@ void inmate_main(void)
 {
 	bool allow_terminate = false;
 	bool terminate = false;
-	unsigned long tsc_freq;
 	bool cache_pollution;
 	char *mem;
 
@@ -63,10 +62,6 @@ void inmate_main(void)
 		mem = alloc(PAGE_SIZE, PAGE_SIZE);
 		printk("Cache pollution enabled\n");
 	}
-
-	tsc_freq = tsc_init();
-	printk("Calibrated TSC frequency: %lu.%03lu kHz\n", tsc_freq / 1000,
-	       tsc_freq % 1000);
 
 	int_init();
 	int_enable_irq(TIMER_IRQ, irq_handler);
