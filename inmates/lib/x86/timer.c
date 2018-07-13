@@ -37,7 +37,7 @@
  */
 
 #include <inmate.h>
-#include <arch/timer.h>
+#include <timer.h>
 
 #define PM_TIMER_HZ		3579545
 #define PM_TIMER_OVERFLOW      ((0x1000000 * NS_PER_SEC) / PM_TIMER_HZ)
@@ -73,10 +73,10 @@ static u64 rdtsc(void)
 #endif
 }
 
-unsigned long tsc_read(void)
+u64 timer_get_ns(void)
 {
 	unsigned int cpu = cpu_id();
-	unsigned long tmr;
+	u64 tmr;
 
 	tmr = ((rdtsc() & 0xffffffffLL) * NS_PER_SEC) / tsc_freq;
 	if (tmr < tsc_last[cpu])
@@ -106,7 +106,7 @@ void delay_us(unsigned long microsecs)
 		cpu_relax();
 }
 
-void apic_timer_init(void)
+void timer_init(void)
 {
 	unsigned int vector = TIMER_IRQ;
 	unsigned long apic_freq;
@@ -138,7 +138,7 @@ void apic_timer_init(void)
 	printk("Calibrated APIC frequency: %lu kHz\n", apic_freq);
 }
 
-void apic_timer_set(unsigned long timeout_ns)
+void timer_arm_expire(u64 timeout_ns)
 {
 	unsigned long long ticks =
 		(unsigned long long)timeout_ns * apic_tick_freq / NS_PER_SEC;

@@ -114,15 +114,6 @@ void ioapic_pin_set_vector(unsigned int pin,
 
 void hypercall_init(void);
 
-unsigned long pm_timer_read(void);
-
-unsigned long tsc_read(void);
-
-void delay_us(unsigned long microsecs);
-
-void apic_timer_init(void);
-void apic_timer_set(unsigned long timeout_ns);
-
 u32 pci_read_config(u16 bdf, unsigned int addr, unsigned int size);
 void pci_write_config(u16 bdf, unsigned int addr, u32 value,
 		      unsigned int size);

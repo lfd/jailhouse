@@ -37,3 +37,6 @@
  */
 
 #define TIMER_IRQ	32
+
+unsigned long pm_timer_read(void);
+void delay_us(unsigned long microsecs);

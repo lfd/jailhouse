@@ -12,7 +12,7 @@
 
 #include <inmate.h>
 #include <int.h>
-#include <arch/timer.h>
+#include <timer.h>
 
 #define POLLUTE_CACHE_SIZE	(512 * 1024)
 
@@ -23,7 +23,7 @@ static void irq_handler(void)
 {
 	unsigned long delta;
 
-	delta = tsc_read() - expected_time;
+	delta = timer_get_ns() - expected_time;
 	if (delta < min)
 		min = delta;
 	if (delta > max)
@@ -32,7 +32,7 @@ static void irq_handler(void)
 	       delta, min, max);
 
 	expected_time += 100 * NS_PER_MSEC;
-	apic_timer_set(expected_time - tsc_read());
+	timer_arm_expire(expected_time - timer_get_ns());
 }
 
 static void pollute_cache(char *mem)
@@ -66,10 +66,10 @@ void inmate_main(void)
 	int_init();
 	int_enable_irq(TIMER_IRQ, irq_handler);
 
-	apic_timer_init();
+	timer_init();
 
-	expected_time = tsc_read() + NS_PER_MSEC;
-	apic_timer_set(NS_PER_MSEC);
+	expected_time = timer_get_ns() + NS_PER_MSEC;
+	timer_arm_expire(NS_PER_MSEC);
 
 	asm volatile("sti");
 

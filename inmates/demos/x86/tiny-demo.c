@@ -11,6 +11,7 @@
  */
 
 #include <inmate.h>
+#include <timer.h>
 
 void inmate_main(void)
 {

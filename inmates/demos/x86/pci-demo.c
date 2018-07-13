@@ -17,6 +17,7 @@
 
 #include <inmate.h>
 #include <int.h>
+#include <timer.h>
 
 #define IRQ_VECTOR		32
 
