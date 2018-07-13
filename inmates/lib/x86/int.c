@@ -77,15 +77,20 @@ static void __attribute__((used)) handle_interrupt(unsigned int vector)
 	write_msr(X2APIC_EOI, APIC_EOI_ACK);
 }
 
-void int_set_handler(unsigned int vector, int_handler_t handler)
+int int_set_handler(unsigned int vector, int_handler_t handler)
 {
 	unsigned long entry = (unsigned long)irq_entry + vector * 16;
+
+	if (vector >= NUM_IDT_DESC)
+		return -1;
 
 	int_handler[vector] = handler;
 
 	idt[vector * 4] = (entry & 0xffff) | (INMATE_CS64 << 16);
 	idt[vector * 4 + 1] = 0x8e00 | (entry & 0xffff0000);
 	idt[vector * 4 + 2] = entry >> 32;
+
+	return 0;
 }
 
 #ifdef __x86_64__
