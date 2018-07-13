@@ -121,7 +121,7 @@ unsigned long tsc_init(void);
 
 void delay_us(unsigned long microsecs);
 
-unsigned long apic_timer_init(unsigned int vector);
+unsigned long apic_timer_init(void);
 void apic_timer_set(unsigned long timeout_ns);
 
 u32 pci_read_config(u16 bdf, unsigned int addr, unsigned int size);

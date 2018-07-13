@@ -37,6 +37,7 @@
  */
 
 #include <inmate.h>
+#include <arch/timer.h>
 
 #define PM_TIMER_HZ		3579545
 #define PM_TIMER_OVERFLOW      ((0x1000000 * NS_PER_SEC) / PM_TIMER_HZ)
@@ -113,8 +114,9 @@ void delay_us(unsigned long microsecs)
 		cpu_relax();
 }
 
-unsigned long apic_timer_init(unsigned int vector)
+unsigned long apic_timer_init(void)
 {
+	unsigned int vector = TIMER_IRQ;
 	unsigned long apic_freq;
 	unsigned long ecx;
 
