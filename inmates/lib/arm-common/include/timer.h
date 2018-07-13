@@ -38,6 +38,7 @@
 
 #include <types.h>
 
+void timer_init(void);
 unsigned long timer_get_frequency(void);
 u64 timer_get_ticks(void);
 u64 timer_ticks_to_ns(u64 ticks);

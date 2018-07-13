@@ -41,12 +41,16 @@
 #include <asm/sysregs.h>
 #include <timer.h>
 
+static unsigned long timer_frequency;
+
+void timer_init(void)
+{
+	arm_read_sysreg(CNTFRQ_EL0, timer_frequency);
+}
+
 unsigned long timer_get_frequency(void)
 {
-	unsigned long freq;
-
-	arm_read_sysreg(CNTFRQ_EL0, freq);
-	return freq;
+	return timer_frequency;
 }
 
 u64 timer_get_ticks(void)
