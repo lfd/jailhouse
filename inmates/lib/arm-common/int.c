@@ -39,10 +39,12 @@
 #include <inmate.h>
 #include <int.h>
 
+#define NUM_IRQS	128
+
 extern const struct gic gic_v2;
 extern const struct gic gic_v3;
 
-static int_handler_t int_handler;
+static int_handler_t *int_handlers;
 static const struct gic *gic = &gic_v2;
 
 /* Replaces the weak reference in header.S */
@@ -55,26 +57,37 @@ void vector_irq(void)
 		if (irqn == 0x3ff)
 			break;
 
-		if (int_handler)
-			int_handler(irqn);
+		if (irqn < NUM_IRQS && int_handlers[irqn])
+			int_handlers[irqn]();
+		else
+			printk("WARNING: unable to handle IRQ %u\n", irqn);
 
 		gic->write_eoi(irqn);
 	}
 }
 
-void int_init(int_handler_t handler)
+void int_init(void)
 {
 	if (comm_region->gic_version == 3)
 		gic = &gic_v3;
 
+	int_handlers = alloc(NUM_IRQS * sizeof(int_handler_t),
+			     sizeof(int_handler_t));
+	memset(int_handlers, 0, NUM_IRQS * sizeof(int_handler_t));
+
 	gic->init();
-
-	int_handler = handler;
-
 	gic_setup_irq_stack();
 }
 
-void int_enable_irq(unsigned int irq)
+int int_enable_irq(unsigned int irq, int_handler_t handler)
 {
-	gic->enable(irq);
+	if (irq >= NUM_IRQS)
+		return -1;
+
+	int_handlers[irq] = handler;
+
+	if (!is_sgi(irq))
+		gic->enable(irq);
+
+	return 0;
 }

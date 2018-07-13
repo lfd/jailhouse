@@ -39,9 +39,9 @@
 #ifndef _JAILHOUSE_INMATES_INT_H
 #define _JAILHOUSE_INMATES_INT_H
 
-typedef void (*int_handler_t)(unsigned int);
+typedef void (*int_handler_t)(void);
 
-void int_init(int_handler_t handler);
-void int_enable_irq(unsigned int irq);
+void int_init(void);
+int int_enable_irq(unsigned int irq, int_handler_t handler);
 
 #endif

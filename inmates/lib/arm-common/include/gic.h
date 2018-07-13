@@ -40,6 +40,7 @@
 
 #define TIMER_IRQ	27
 
+#define is_sgi(irqn)			((irqn) < 16)
 #define is_sgi_ppi(irqn)		((irqn) < 32)
 #define is_spi(irqn)			((irqn) > 31 && (irqn) < 1020)
 

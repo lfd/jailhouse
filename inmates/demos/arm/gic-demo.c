@@ -27,13 +27,10 @@ static volatile u64 expected;
 static void *led_reg;
 static unsigned int led_pin;
 
-static void handle_IRQ(unsigned int irqn)
+static void handler_timer(void)
 {
 	static u64 min_delta = ~0ULL, max_delta = 0;
 	u64 delta;
-
-	if (irqn != TIMER_IRQ)
-		return;
 
 	delta = timer_get_ns() - expected;
 	if (delta < min_delta)
@@ -53,10 +50,17 @@ static void handle_IRQ(unsigned int irqn)
 
 void inmate_main(void)
 {
+	int err;
+
 	printk("Initializing the GIC...\n");
 	timer_init();
-	int_init(handle_IRQ);
-	int_enable_irq(TIMER_IRQ);
+	int_init();
+
+	err = int_enable_irq(TIMER_IRQ, handler_timer);
+	if (err) {
+		printk("Unable to enable IRQ %u\n", TIMER_IRQ);
+		goto out;
+	}
 
 	printk("Initializing the timer...\n");
 	expected = timer_get_ns() + TIMER_PERIOD;
@@ -65,5 +69,6 @@ void inmate_main(void)
 	led_reg = (void *)(unsigned long)cmdline_parse_int("led-reg", 0);
 	led_pin = cmdline_parse_int("led-pin", 0);
 
+out:
 	halt();
 }
