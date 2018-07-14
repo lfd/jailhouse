@@ -42,4 +42,4 @@ include $(INMATES_LIB)/../arm-common/Makefile.lib
 always := lib.a inmate.lds
 
 lib-y := $(common-objs-y)
-lib-y += header.o
+lib-y += div.o header.o

@@ -1,12 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) ARM Limited, 2014
- * Copyright (c) Siemens AG, 2015
+ * Copyright (c) OTH Regensburg, 2018
  *
  * Authors:
- *  Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,34 +34,62 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This work is based on Linux's lib/div64.c
  */
 
-#include <asm/sysregs.h>
 #include <inmate.h>
 
-unsigned long timer_get_frequency(void)
-{
-	unsigned long freq;
+/* NOTE: The implementation of __aeabi_uldivmod currently only supports 32-bit
+ * wide divisors.
+ */
 
-	arm_read_sysreg(CNTFRQ_EL0, freq);
-	return freq;
+struct aeabi_divres {
+        u64 quot;
+        u64 remainder;
+};
+
+struct aeabi_divres __aeabi_uldivmod(u64 divident, u64 divisor);
+
+static u64 __div64_32(u64 *n, u32 base)
+{
+	u64 rem = *n;
+	u64 b = base;
+	u64 res, d = 1;
+	u64 high = rem >> 32;
+
+	/* Reduce the thing a bit first */
+	res = 0;
+	if (high >= base) {
+		high /= base;
+		res = (u64) high << 32;
+		rem -= (u64) (high*base) << 32;
+	}
+
+	while ((long long)b > 0 && b < rem) {
+		b = b+b;
+		d = d+d;
+	}
+
+	do {
+		if (rem >= b) {
+			rem -= b;
+			res += d;
+		}
+		b >>= 1;
+		d >>= 1;
+	} while (d);
+
+	*n = res;
+	return rem;
 }
 
-u64 timer_get_ticks(void)
+struct aeabi_divres __aeabi_uldivmod(u64 divident, u64 divisor)
 {
-	u64 pct64;
+        struct aeabi_divres result;
 
-	arm_read_sysreg(CNTPCT_EL0, pct64);
-	return pct64;
-}
+        result.quot = divident;
+        result.remainder = __div64_32(&result.quot, (u32)divisor);
 
-u64 timer_ticks_to_ns(u64 ticks)
-{
-	return (ticks * 1000) / (timer_get_frequency() / 1000 / 1000);
-}
-
-void timer_start(u64 timeout)
-{
-	arm_write_sysreg(CNTV_TVAL_EL0, timeout);
-	arm_write_sysreg(CNTV_CTL_EL0, 1);
+        return result;
 }
