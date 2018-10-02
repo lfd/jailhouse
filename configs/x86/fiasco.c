@@ -47,7 +47,7 @@
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[70];
+	struct jailhouse_memory mem_regions[50];
 	struct jailhouse_irqchip irqchips[3];
 	__u8 pio_bitmap[0x2000];
 	struct jailhouse_pci_device pci_devices[192];
@@ -135,163 +135,7 @@ struct {
 		{
 			.phys_start = 0x3f200000,
 			.virt_start = 0x3f200000,
-			.size = 0x319f7000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 70bf6018-70c4e857 : System RAM */
-		{
-			.phys_start = 0x70bf6018,
-			.virt_start = 0x70bf6018,
-			.size = 0x59000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 70c4e858-70c4f017 : System RAM */
-		{
-			.phys_start = 0x70c4e858,
-			.virt_start = 0x70c4e858,
-			.size = 0x1000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 70c4f018-70ca7857 : System RAM */
-		{
-			.phys_start = 0x70c4f018,
-			.virt_start = 0x70c4f018,
-			.size = 0x59000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 70ca7858-70ca8017 : System RAM */
-		{
-			.phys_start = 0x70ca7858,
-			.virt_start = 0x70ca7858,
-			.size = 0x1000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 70ca8018-70d00857 : System RAM */
-		{
-			.phys_start = 0x70ca8018,
-			.virt_start = 0x70ca8018,
-			.size = 0x59000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 70d00858-70d01017 : System RAM */
-		{
-			.phys_start = 0x70d00858,
-			.virt_start = 0x70d00858,
-			.size = 0x1000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 70d01018-70d59857 : System RAM */
-		{
-			.phys_start = 0x70d01018,
-			.virt_start = 0x70d01018,
-			.size = 0x59000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 70d59858-71232017 : System RAM */
-		{
-			.phys_start = 0x70d59858,
-			.virt_start = 0x70d59858,
-			.size = 0x4d9000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 71232018-7124a457 : System RAM */
-		{
-			.phys_start = 0x71232018,
-			.virt_start = 0x71232018,
-			.size = 0x19000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 7124a458-71571fff : System RAM */
-		{
-			.phys_start = 0x7124a458,
-			.virt_start = 0x7124a458,
-			.size = 0x328000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 71572000-71572fff : ACPI Tables */
-		{
-			.phys_start = 0x71572000,
-			.virt_start = 0x71572000,
-			.size = 0x1000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-		/* MemRegion: 71573000-731dc017 : System RAM */
-		{
-			.phys_start = 0x71573000,
-			.virt_start = 0x71573000,
-			.size = 0x1c6a000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 731dc018-731e4057 : System RAM */
-		{
-			.phys_start = 0x731dc018,
-			.virt_start = 0x731dc018,
-			.size = 0x9000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 731e4058-73337fff : System RAM */
-		{
-			.phys_start = 0x731e4058,
-			.virt_start = 0x731e4058,
-			.size = 0x154000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 73338000-73339fff : ACPI Tables */
-		{
-			.phys_start = 0x73338000,
-			.virt_start = 0x73338000,
-			.size = 0x2000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-		/* MemRegion: 7333a000-7a088fff : System RAM */
-		{
-			.phys_start = 0x7333a000,
-			.virt_start = 0x7333a000,
-			.size = 0x6d4f000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 7af0b000-7b93afff : ACPI Non-volatile Storage */
-		{
-			.phys_start = 0x7af0b000,
-			.virt_start = 0x7af0b000,
-			.size = 0xa30000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-		/* MemRegion: 7b93b000-7bab2fff : ACPI Tables */
-		{
-			.phys_start = 0x7b93b000,
-			.virt_start = 0x7b93b000,
-			.size = 0x178000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-		/* MemRegion: 7bab3000-7bafffff : System RAM */
-		{
-			.phys_start = 0x7bab3000,
-			.virt_start = 0x7bab3000,
-			.size = 0x4d000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 7bb00000-7bffffff : RAM buffer */
-		{
-			.phys_start = 0x7bb00000,
-			.virt_start = 0x7bb00000,
-			.size = 0x500000,
+			.size = 0x40e00000, // 0x319f7000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
@@ -4106,7 +3950,7 @@ struct {
                                 0x00000000, 0xffffffe0, 0xffffffff,
                         },
                         .num_msix_vectors = 1,
-                        .shmem_region = 69,
+                        .shmem_region = 49,
                         .shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
                 },
 	},
