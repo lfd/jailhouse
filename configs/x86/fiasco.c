@@ -3941,17 +3941,18 @@ struct {
 			.msix_region_size = 0x0,
 			.msix_address = 0x0,
 		},
-                { /* IVSHMEM (networking) */
-                        .type = JAILHOUSE_PCI_TYPE_IVSHMEM,
-                        .domain = 0,
-                        .bdf = 0x0e << 3,
-                        .bar_mask = {
-                                0xffffff00, 0xffffffff, 0x00000000,
-                                0x00000000, 0xffffffe0, 0xffffffff,
-                        },
-                        .num_msix_vectors = 1,
-                        .shmem_region = 49,
-                        .shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
+		{ /* IVSHMEM (networking) */
+			.type = JAILHOUSE_PCI_TYPE_IVSHMEM,
+			.domain = 0,
+			.iommu = 1,
+			.bdf = 0x0e << 3,
+			.bar_mask = {
+				0xffffff00, 0xffffffff, 0x00000000,
+				0x00000000, 0xffffffe0, 0xffffffff,
+			},
+			.num_msix_vectors = 1,
+			.shmem_region = 49,
+			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
                 },
 	},
 
