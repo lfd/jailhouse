@@ -17,22 +17,19 @@
 
 #define ARRAY_SIZE(a) sizeof(a) / sizeof(a[0])
 
+/* Wir haben Platz ab physikalisch
+ * 0x100600000 -- 0x1a004fffff
+ */
+
+
 struct {
 	struct jailhouse_cell_desc cell;
 	__u64 cpus[1];
-#ifdef CONFIG_QEMU_E1000E_ASSIGNMENT
-	struct jailhouse_memory mem_regions[8];
-#else
-	struct jailhouse_memory mem_regions[4];
-#endif
+	struct jailhouse_memory mem_regions[5];
 	struct jailhouse_cache cache_regions[1];
 	struct jailhouse_irqchip irqchips[1];
 	__u8 pio_bitmap[0x2000];
-#ifdef CONFIG_QEMU_E1000E_ASSIGNMENT
-	struct jailhouse_pci_device pci_devices[2];
-#else
 	struct jailhouse_pci_device pci_devices[1];
-#endif
 	struct jailhouse_pci_capability pci_caps[6];
 } __attribute__((packed)) config = {
 	.cell = {
@@ -65,7 +62,7 @@ struct {
 
 	.mem_regions = {
 		/* low RAM */ {
-			.phys_start = 0x3a600000,
+			.phys_start = 0x100600000,
 			.virt_start = 0,
 			.size = 0x00100000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
@@ -78,51 +75,31 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_COMM_REGION,
 		},
 		/* high RAM */ {
-			.phys_start = 0x3a700000,
+			/* Wir haben zwar Platz ab 0x100700000, brauchen ab 2M
+			 * alignement fuer Hugepages
+			 */
+			.phys_start = 0x100700000,
 			.virt_start = 0x00200000,
-			.size = 0x4a00000,
+			.size = 0x4100000, /* 64.~ MiB */
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA |
 				JAILHOUSE_MEM_LOADABLE,
 		},
+		/* higher RAM */ {
+			.phys_start = 0x104800000,
+			.virt_start = 0x100000000,
+			.size = 0x1a00500000 - 0x104800000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
+		},
 		/* IVSHMEM shared memory region */
 		{
-			.phys_start = 0x3f100000,
-			.virt_start = 0x3f100000,
+			.phys_start = 0x1a00500000,
+			.virt_start = 0x1a00500000,
 			.size = 0xff000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_ROOTSHARED,
 		},
-#ifdef CONFIG_QEMU_E1000E_ASSIGNMENT
-		/* MemRegion: feb40000-feb7ffff : 0000:00:02.0 */
-		{
-			.phys_start = 0xfeb40000,
-			.virt_start = 0xfeb40000,
-			.size = 0x40000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-		/* MemRegion: feb80000-feb9ffff : e1000e */
-		{
-			.phys_start = 0xfeb80000,
-			.virt_start = 0xfeb80000,
-			.size = 0x20000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-		/* MemRegion: feba0000-febbffff : e1000e */
-		{
-			.phys_start = 0xfeba0000,
-			.virt_start = 0xfeba0000,
-			.size = 0x20000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-		/* MemRegion: febd1000-febd3fff : e1000e */
-		{
-			.phys_start = 0xfebd1000,
-			.virt_start = 0xfebd1000,
-			.size = 0x3000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-#endif
 	},
 
 	.cache_regions = {
@@ -163,27 +140,9 @@ struct {
 				0x00000000, 0xffffffe0, 0xffffffff,
 			},
 			.num_msix_vectors = 1,
-			.shmem_region = 3,
+			.shmem_region = 4,
 			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
 		},
-#ifdef CONFIG_QEMU_E1000E_ASSIGNMENT
-		{ /* e1000e */
-			.type = JAILHOUSE_PCI_TYPE_DEVICE,
-			.domain = 0x0000,
-			.bdf = 0x0010,
-			.bar_mask = {
-				0xfffe0000, 0xfffe0000, 0xffffffe0,
-				0xffffc000, 0x00000000, 0x00000000,
-			},
-			.caps_start = 0,
-			.num_caps = 6,
-			.num_msi_vectors = 1,
-			.msi_64bits = 1,
-			.num_msix_vectors = 5,
-			.msix_region_size = 0x1000,
-			.msix_address = 0xfebd0000,
-		},
-#endif
 	},
 
 	.pci_caps = {
