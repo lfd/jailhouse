@@ -33,10 +33,10 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Configuration for Dell Inc. PowerEdge R630
- * created with './tools/jailhouse config create fiasco.c'
+ * created with './tools/jailhouse config create --mem-inmates 102400M ./configs/x86/fiasco.c'
  *
  * NOTE: This config expects the following to be appended to your kernel cmdline
- *       "memmap=0x5200000$0x3a000000"
+ *       "memmap=0x1900600000$0x100000000"
  */
 
 #include <jailhouse/types.h>
@@ -44,10 +44,13 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
+#define HVSTART 0x100000000
+#define HVSIZE  0x600000
+
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[50];
+	struct jailhouse_memory mem_regions[55];
 	struct jailhouse_irqchip irqchips[3];
 	__u8 pio_bitmap[0x2000];
 	struct jailhouse_pci_device pci_devices[192];
@@ -58,8 +61,8 @@ struct {
 		.revision = JAILHOUSE_CONFIG_REVISION,
 		.flags = JAILHOUSE_SYS_VIRTUAL_DEBUG_CONSOLE,
 		.hypervisor_memory = {
-			.phys_start = 0x3a000000,
-			.size = 0x600000,
+			.phys_start = HVSTART,
+			.size = HVSIZE,
 		},
 		.debug_console = {
 			.address = 0x3f8,
@@ -86,7 +89,7 @@ struct {
 			},
 		},
 		.root_cell = {
-			.name = "RootCell",
+			.name = "fiasco RootCell",
 			.cpu_set_size = sizeof(config.cpus),
 			.num_memory_regions = ARRAY_SIZE(config.mem_regions),
 			.num_irqchips = ARRAY_SIZE(config.irqchips),
@@ -123,19 +126,71 @@ struct {
 			.size = 0x10000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
 		},
-		/* MemRegion: 00100000-39ffffff : System RAM */
+		/* MemRegion: 00100000-71580000: System RAM */
 		{
 			.phys_start = 0x100000,
 			.virt_start = 0x100000,
-			.size = 0x39f00000,
+			.size = 0x71480000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
-		/* MemRegion: 3f200000-70bf6017 : System RAM */
+		/* MemRegion: 71580000-71580fff : ACPI Tables */
 		{
-			.phys_start = 0x3f200000,
-			.virt_start = 0x3f200000,
-			.size = 0x40e00000, // 0x319f7000,
+			.phys_start = 0x71580000,
+			.virt_start = 0x71580000,
+			.size = 0x1000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
+		},
+		/* MemRegion: 71581000-7337ffff : System RAM */
+		{
+			.phys_start = 0x71581000,
+			.virt_start = 0x71581000,
+			.size = 0x1dff000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
+		},
+		/* MemRegion: 73338000-73339fff : ACPI Tables */
+		{
+			.phys_start = 0x73338000,
+			.virt_start = 0x73338000,
+			.size = 0x2000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
+		},
+		/* MemRegion: 7333a000-7a088fff : System RAM */
+		{
+			.phys_start = 0x7333a000,
+			.virt_start = 0x7333a000,
+			.size = 0x6d4f000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
+		},
+		/* MemRegion: 7af0b000-7b93afff : ACPI Non-volatile Storage */
+		{
+			.phys_start = 0x7af0b000,
+			.virt_start = 0x7af0b000,
+			.size = 0xa30000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
+		},
+		/* MemRegion: 7b93b000-7bab2fff : ACPI Tables */
+		{
+			.phys_start = 0x7b93b000,
+			.virt_start = 0x7b93b000,
+			.size = 0x178000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
+		},
+		/* MemRegion: 7bab3000-7bafffff : System RAM */
+		{
+			.phys_start = 0x7bab3000,
+			.virt_start = 0x7bab3000,
+			.size = 0x4d000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
+		},
+		/* MemRegion: 7bb00000-7bffffff : RAM buffer */
+		{
+			.phys_start = 0x7bb00000,
+			.virt_start = 0x7bb00000,
+			.size = 0x500000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
@@ -342,27 +397,11 @@ struct {
 			.size = 0x100000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
 		},
-		/* MemRegion: 100000000-21ef7fffff : System RAM */
+		/* MemRegion: 1a00600000-5992bfffff : System RAM */
 		{
-			.phys_start = 0x100000000,
-			.virt_start = 0x100000000,
-			.size = 0x20ef800000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 21ef800000-21f0ffffff : Kernel */
-		{
-			.phys_start = 0x21ef800000,
-			.virt_start = 0x21ef800000,
-			.size = 0x1800000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
-		},
-		/* MemRegion: 21f1000000-607fffffff : System RAM */
-		{
-			.phys_start = 0x21f1000000,
-			.virt_start = 0x21f1000000,
-			.size = 0x3e8f000000,
+			.phys_start = 0x1a00600000,
+			.virt_start = 0x1a00600000,
+			.size = 0x467fa00000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
@@ -443,17 +482,17 @@ struct {
 			.size = 0x4000000000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
 		},
-		/* MemRegion: 3a600000-3f1fffff : JAILHOUSE Inmate Memory */
+		/* MemRegion: JAILHOUSE Inmate Memory */
 		{
-			.phys_start = 0x3a600000,
-			.virt_start = 0x3a600000,
-			.size = 0x4c00000,
+			.phys_start = HVSTART + HVSIZE,
+			.virt_start = HVSTART + HVSIZE,
+			.size = 0x1a00500000 - (HVSTART + HVSIZE),
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
 		},
 		/* IVSHMEM */
 		{
-			.phys_start = 0x3f100000,
-			.virt_start = 0x3f100000,
+			.phys_start = 0x1a00500000,
+			.virt_start = 0x1a00500000,
 			.size = 0xff000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
 		},
@@ -3951,7 +3990,7 @@ struct {
 				0x00000000, 0xffffffe0, 0xffffffff,
 			},
 			.num_msix_vectors = 1,
-			.shmem_region = 49,
+			.shmem_region = 54,
 			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
                 },
 	},
