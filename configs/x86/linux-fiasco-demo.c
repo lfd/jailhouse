@@ -67,7 +67,7 @@ struct {
 		/* low RAM */ {
 			.phys_start = 0x100600000,
 			.virt_start = 0,
-			.size = 0x00100000,
+			.size = 0x00200000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA |
 				JAILHOUSE_MEM_LOADABLE,
@@ -81,17 +81,17 @@ struct {
 			/* Wir haben zwar Platz ab 0x100700000, brauchen ab 2M
 			 * alignement fuer Hugepages
 			 */
-			.phys_start = 0x100700000,
-			.virt_start = 0x00200000,
-			.size = 0x4100000, /* 64.~ MiB */
+			.phys_start = 0x100800000,
+			.virt_start = 0x000200000,
+			.size =       0x005000000, /* 50MiB */
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA |
 				JAILHOUSE_MEM_LOADABLE,
 		},
 		/* higher RAM */ {
-			.phys_start = 0x104800000,
+			.phys_start = 0x105800000,
 			.virt_start = 0x100000000,
-			.size = 0x1a00500000 - 0x104800000,
+			.size = 0x1a00500000 - 0x105800000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
