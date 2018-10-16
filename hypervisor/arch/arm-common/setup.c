@@ -14,6 +14,7 @@
 #include <jailhouse/paging.h>
 #include <jailhouse/processor.h>
 #include <asm/setup.h>
+#include <asm/smccc.h>
 
 static u32 __attribute__((aligned(PAGE_SIZE))) parking_code[PAGE_SIZE / 4] = {
 	ARM_PARKING_CODE
@@ -32,6 +33,8 @@ int arm_init_early(void)
 			    PAGING_COHERENT);
 	if (err)
 		return err;
+
+	smccc_init();
 
 	return arm_paging_cell_init(&root_cell);
 }

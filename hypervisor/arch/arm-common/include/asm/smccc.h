@@ -12,6 +12,8 @@
 
 #define SMCCC_VERSION			0x80000000
 #define SMCCC_ARCH_FEATURES		0x80000001
+#define SMCCC_ARCH_WORKAROUND_1		0x80008000
+#define SMCCC_ARCH_WORKAROUND_2		0x80007fff
 
 #define ARM_SMCCC_OWNER_MASK		BIT_MASK(29, 24)
 #define ARM_SMCCC_OWNER_SHIFT		24
@@ -57,6 +59,8 @@ static inline int smc_arg1(unsigned long id, unsigned long par1)
 
 	return __id;
 }
+
+void smccc_init(void);
 
 struct trap_context;
 

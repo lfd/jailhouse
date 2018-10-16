@@ -15,6 +15,29 @@
 #include <asm/traps.h>
 #include <asm/smccc.h>
 
+static bool has_workaround_1;
+static bool has_workaround_2;
+
+void smccc_init(void)
+{
+	int ret;
+
+	ret = smc(SMCCC_VERSION);
+	if (ret != ARM_SMCCC_VERSION_1_1)
+		return;
+
+	/* check if SMCCC_ARCH_FEATURES is actually available */
+	ret = smc_arg1(SMCCC_ARCH_FEATURES, SMCCC_ARCH_FEATURES);
+	if (ret != ARM_SMCCC_SUCCESS)
+		return;
+
+	ret = smc_arg1(SMCCC_ARCH_FEATURES, SMCCC_ARCH_WORKAROUND_1);
+	has_workaround_1 = ret >= ARM_SMCCC_SUCCESS;
+
+	ret = smc_arg1(SMCCC_ARCH_FEATURES, SMCCC_ARCH_WORKAROUND_2);
+	has_workaround_2 = ret >= ARM_SMCCC_SUCCESS;
+}
+
 static long handle_arch(struct trap_context *ctx)
 {
 	u32 function_id = ctx->regs[0];
