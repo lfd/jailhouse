@@ -31,8 +31,9 @@ struct {
 		.signature = JAILHOUSE_SYSTEM_SIGNATURE,
 		.revision = JAILHOUSE_CONFIG_REVISION,
 		.flags = JAILHOUSE_SYS_VIRTUAL_DEBUG_CONSOLE,
+		/* ich hab 0x20000000 ab 0x160000000 */
 		.hypervisor_memory = {
-			.phys_start = 0x17c000000,
+			.phys_start = 0x160000000,
 			.size = 0x4000000,
 		},
 		.debug_console = {
