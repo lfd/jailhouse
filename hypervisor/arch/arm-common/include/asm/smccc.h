@@ -40,7 +40,7 @@ static inline int smc(unsigned long id)
 	asm volatile ("smc #0\n\t"
 		: "=r" (__id)
 		: "r"(__id)
-		: "memory");
+		: "memory", "x1", "x2", "x3");
 
 	return __id;
 }
@@ -53,9 +53,11 @@ static inline int smc_arg1(unsigned long id, unsigned long par1)
 	asm volatile ("smc #0\n\t"
 		: "=r" (__id)
 		: "r"(__id), "r"(__par1)
-		: "memory");
+		: "memory", "x2", "x3");
 
 	return __id;
 }
+
+struct trap_context;
 
 int handle_smc(struct trap_context *ctx);
