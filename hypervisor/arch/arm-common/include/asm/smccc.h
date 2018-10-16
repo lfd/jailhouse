@@ -33,4 +33,29 @@
 
 #define SMCCC_IS_CONV_64(function_id)	!!(function_id & (1 << 30))
 
+static inline int smc(unsigned long id)
+{
+	register unsigned long __id asm("r0") = id;
+
+	asm volatile ("smc #0\n\t"
+		: "=r" (__id)
+		: "r"(__id)
+		: "memory");
+
+	return __id;
+}
+
+static inline int smc_arg1(unsigned long id, unsigned long par1)
+{
+	register unsigned long __id asm("r0") = id;
+	register unsigned long __par1 asm("r1") = par1;
+
+	asm volatile ("smc #0\n\t"
+		: "=r" (__id)
+		: "r"(__id), "r"(__par1)
+		: "memory");
+
+	return __id;
+}
+
 int handle_smc(struct trap_context *ctx);
