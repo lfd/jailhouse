@@ -46,6 +46,16 @@ static long handle_arch(struct trap_context *ctx)
 	case SMCCC_VERSION:
 		return ARM_SMCCC_VERSION_1_1;
 
+	case SMCCC_ARCH_WORKAROUND_1:
+		if (has_workaround_1)
+			return smc(function_id);
+		return ARM_SMCCC_NOT_SUPPORTED;
+
+	case SMCCC_ARCH_WORKAROUND_2:
+		if (has_workaround_2)
+			return smc(function_id);
+		return ARM_SMCCC_NOT_SUPPORTED;
+
 	/* No features supported yet */
 	case SMCCC_ARCH_FEATURES:
 	default:
