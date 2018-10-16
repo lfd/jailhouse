@@ -11,6 +11,7 @@
  */
 
 #include <jailhouse/control.h>
+#include <jailhouse/printk.h>
 #include <asm/psci.h>
 #include <asm/traps.h>
 #include <asm/smccc.h>
@@ -23,8 +24,14 @@ void smccc_init(void)
 	int ret;
 
 	ret = smc(SMCCC_VERSION);
-	if (ret != ARM_SMCCC_VERSION_1_1)
+	if (ret == ARM_SMCCC_NOT_SUPPORTED) {
+		printk("SMCCC_VERSION not available\n");
 		return;
+	} else if (ret != ARM_SMCCC_VERSION_1_1) {
+		printk("No Spectre mitigations available: FW too old (%x)\n",
+		       ret);
+		return;
+	}
 
 	/* check if SMCCC_ARCH_FEATURES is actually available */
 	ret = smc_arg1(SMCCC_ARCH_FEATURES, SMCCC_ARCH_FEATURES);
@@ -33,9 +40,13 @@ void smccc_init(void)
 
 	ret = smc_arg1(SMCCC_ARCH_FEATURES, SMCCC_ARCH_WORKAROUND_1);
 	has_workaround_1 = ret >= ARM_SMCCC_SUCCESS;
+	printk("SMCCC_ARCH_WORKAROUND_1 available: %s\n",
+	       has_workaround_1 ? "true": "false");
 
 	ret = smc_arg1(SMCCC_ARCH_FEATURES, SMCCC_ARCH_WORKAROUND_2);
 	has_workaround_2 = ret >= ARM_SMCCC_SUCCESS;
+	printk("SMCCC_ARCH_WORKAROUND_2 available: %s\n",
+	       has_workaround_2 ? "true": "false");
 }
 
 static inline long handle_arch_features(u32 id)
