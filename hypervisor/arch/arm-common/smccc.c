@@ -38,6 +38,25 @@ void smccc_init(void)
 	has_workaround_2 = ret >= ARM_SMCCC_SUCCESS;
 }
 
+static inline long handle_arch_features(u32 id)
+{
+	switch (id) {
+	case SMCCC_ARCH_FEATURES:
+		return ARM_SMCCC_SUCCESS;
+
+	case SMCCC_ARCH_WORKAROUND_1:
+		return has_workaround_1 ?
+			ARM_SMCCC_SUCCESS : ARM_SMCCC_NOT_SUPPORTED;
+
+	case SMCCC_ARCH_WORKAROUND_2:
+		return has_workaround_2 ?
+			ARM_SMCCC_SUCCESS : ARM_SMCCC_NOT_SUPPORTED;
+
+	default:
+		return ARM_SMCCC_NOT_SUPPORTED;
+	}
+}
+
 static long handle_arch(struct trap_context *ctx)
 {
 	u32 function_id = ctx->regs[0];
@@ -56,8 +75,9 @@ static long handle_arch(struct trap_context *ctx)
 			return smc(function_id);
 		return ARM_SMCCC_NOT_SUPPORTED;
 
-	/* No features supported yet */
 	case SMCCC_ARCH_FEATURES:
+		return handle_arch_features(ctx->regs[1]);
+
 	default:
 		return ARM_SMCCC_NOT_SUPPORTED;
 	}
