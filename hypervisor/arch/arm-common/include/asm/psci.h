@@ -10,15 +10,25 @@
  * the COPYING file in the top-level directory.
  */
 
-#define PSCI_VERSION			0x84000000
-#define PSCI_CPU_SUSPEND_32		0x84000001
-#define PSCI_CPU_SUSPEND_64		0xc4000001
-#define PSCI_CPU_OFF			0x84000002
-#define PSCI_CPU_ON_32			0x84000003
-#define PSCI_CPU_ON_64			0xc4000003
-#define PSCI_AFFINITY_INFO_32		0x84000004
-#define PSCI_AFFINITY_INFO_64		0xc4000004
-#define PSCI_FEATURES			0x8400000a
+/* PSCI v0.2 interface */
+#define PSCI_0_2_FN_BASE		0x84000000
+#define PSCI_0_2_FN(n)			(PSCI_0_2_FN_BASE + (n))
+#define PSCI_0_2_64BIT			0x40000000
+#define PSCI_0_2_FN64_BASE		(PSCI_0_2_FN_BASE + PSCI_0_2_64BIT)
+#define PSCI_0_2_FN64(n)		(PSCI_0_2_FN64_BASE + (n))
+
+#define PSCI_0_2_FN_VERSION		PSCI_0_2_FN(0)
+#define PSCI_0_2_FN_CPU_SUSPEND		PSCI_0_2_FN(1)
+#define PSCI_0_2_FN_CPU_OFF		PSCI_0_2_FN(2)
+#define PSCI_0_2_FN_CPU_ON		PSCI_0_2_FN(3)
+#define PSCI_0_2_FN_AFFINITY_INFO	PSCI_0_2_FN(4)
+
+#define PSCI_0_2_FN64_CPU_SUSPEND	PSCI_0_2_FN64(1)
+#define PSCI_0_2_FN64_CPU_ON		PSCI_0_2_FN64(3)
+#define PSCI_0_2_FN64_AFFINITY_INFO	PSCI_0_2_FN64(4)
+
+/* PSCI v1.0 interface */
+#define PSCI_1_0_FN_FEATURES		PSCI_0_2_FN(10)
 
 /* v0.1 function IDs as used by U-Boot */
 #define PSCI_CPU_OFF_V0_1_UBOOT		0x95c1ba5f
@@ -37,8 +47,17 @@
 
 #define PSCI_INVALID_ADDRESS		(-1L)
 
-/* Major[31:16], minor[15:0] */
-#define PSCI_VERSION_1_1	0x10001
+#define PSCI_VERSION_MAJOR_SHIFT                16
+#define PSCI_VERSION_MINOR_MASK                 \
+	                ((1U << PSCI_VERSION_MAJOR_SHIFT) - 1)
+#define PSCI_VERSION_MAJOR_MASK                 ~PSCI_VERSION_MINOR_MASK
+#define PSCI_VERSION_MAJOR(ver)                 \
+	                (((ver) & PSCI_VERSION_MAJOR_MASK) >> PSCI_VERSION_MAJOR_SHIFT)
+#define PSCI_VERSION_MINOR(ver)                 \
+	                ((ver) & PSCI_VERSION_MINOR_MASK)
+#define PSCI_VERSION(maj, min)                                          \
+	        ((((maj) << PSCI_VERSION_MAJOR_SHIFT) & PSCI_VERSION_MAJOR_MASK) | \
+		          ((min) & PSCI_VERSION_MINOR_MASK))
 
 struct trap_context;
 
