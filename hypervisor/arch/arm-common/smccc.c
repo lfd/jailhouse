@@ -66,20 +66,24 @@ static inline long handle_arch_features(u32 id)
 	}
 }
 
-static long handle_arch(struct trap_context *ctx)
+static enum trap_return handle_arch(struct trap_context *ctx)
 {
-	u32 function_id = ctx->regs[0];
+	unsigned long *ret = &ctx->regs[0];
 
-	switch (function_id) {
+	switch (*ret) {
 	case SMCCC_VERSION:
-		return ARM_SMCCC_VERSION_1_1;
+		*ret = ARM_SMCCC_VERSION_1_1;
+		break;
 
 	case SMCCC_ARCH_FEATURES:
-		return handle_arch_features(ctx->regs[1]);
+		*ret = handle_arch_features(ctx->regs[1]);
+		break;
 
 	default:
-		return ARM_SMCCC_NOT_SUPPORTED;
+		return TRAP_UNHANDLED;
 	}
+
+	return TRAP_HANDLED;
 }
 
 enum trap_return handle_smc(struct trap_context *ctx)
@@ -87,11 +91,12 @@ enum trap_return handle_smc(struct trap_context *ctx)
 	unsigned long *regs = ctx->regs;
 	u32 *stats = this_cpu_public()->stats;
 
+	arch_skip_instruction(ctx);
+
 	switch (SMCCC_GET_OWNER(regs[0])) {
 	case ARM_SMCCC_OWNER_ARCH:
 		stats[JAILHOUSE_CPU_STAT_VMEXITS_SMCCC]++;
-		regs[0] = handle_arch(ctx);
-		break;
+		return handle_arch(ctx);
 
 	case ARM_SMCCC_OWNER_SIP:
 		stats[JAILHOUSE_CPU_STAT_VMEXITS_SMCCC]++;
@@ -106,8 +111,6 @@ enum trap_return handle_smc(struct trap_context *ctx)
 		return TRAP_UNHANDLED;
 
 	}
-
-	arch_skip_instruction(ctx);
 
 	return TRAP_HANDLED;
 }
