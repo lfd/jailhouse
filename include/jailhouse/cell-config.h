@@ -178,6 +178,22 @@ struct jailhouse_pci_device {
 
 #define JAILHOUSE_PCICAPS_WRITE		0x0001
 
+#define PCI_CAP_ID_PM			0x01 /* Power Management */
+#define PCI_CAP_ID_VPD			0x03 /* Vital Product Data */
+#define PCI_CAP_ID_MSI			0x05 /* Message Signalled Interrupts */
+#define PCI_CAP_ID_HT			0x08 /* HyperTransport */
+#define PCI_CAP_ID_VNDR			0x09 /* Vendor-Specific */
+#define PCI_CAP_ID_DBG			0x0A /* Debug port */
+#define PCI_CAP_ID_SSVID		0x0D /* Bridge subsystem vendor/device ID */
+#define PCI_CAP_ID_SECDEV		0x0F /* Secure Device */
+#define PCI_CAP_ID_EXP			0x10 /* PCI Express */
+#define PCI_CAP_ID_MSIX			0x11 /* MSI-X */
+#define PCI_CAP_ID_SATA			0x12 /* SATA Data/Index Conf. */
+#define PCI_CAP_ID_AF			0x13 /* PCI Advanced Features */
+
+#define PCI_EXT_CAP_ID_ERR		0x01 /* Advanced Error Reporting */
+#define PCI_EXT_CAP_ID_DSN		0x03 /* Device Serial Number */
+
 struct jailhouse_pci_capability {
 	__u16 id;
 	__u16 start;
