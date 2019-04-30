@@ -49,7 +49,7 @@ struct {
 	struct jailhouse_irqchip irqchips[2];
 	struct jailhouse_pio pio_regions[10];
 	struct jailhouse_pci_device pci_devices[37];
-	struct jailhouse_pci_capability pci_caps[80];
+	struct jailhouse_pci_capability pci_caps[81];
 } __attribute__((packed)) config = {
 	.header = {
 		.signature = JAILHOUSE_SYSTEM_SIGNATURE,
@@ -850,7 +850,7 @@ struct {
 				0xffffffff, 0xffffc000, 0xffffffff,
 			},
 			.caps_start = 40,
-			.num_caps = 9,
+			.num_caps = 10,
 			.num_msi_vectors = 1,
 			.msi_64bits = 1,
 			.msi_maskable = 0,
@@ -868,7 +868,7 @@ struct {
 				0xffffff00, 0xffff8000, 0xfffffffc,
 				0x00000000, 0x00000000, 0x00000000,
 			},
-			.caps_start = 49,
+			.caps_start = 50,
 			.num_caps = 4,
 			.num_msi_vectors = 32,
 			.msi_64bits = 1,
@@ -884,7 +884,7 @@ struct {
 				0xf0000000, 0xffffffff, 0xfffe0000,
 				0xffffffff, 0xffffff00, 0x00000000,
 			},
-			.caps_start = 53,
+			.caps_start = 54,
 			.num_caps = 5,
 			.num_msi_vectors = 1,
 			.msi_64bits = 1,
@@ -900,7 +900,7 @@ struct {
 				0xffffc000, 0xffffffff, 0x00000000,
 				0x00000000, 0x00000000, 0x00000000,
 			},
-			.caps_start = 53,
+			.caps_start = 54,
 			.num_caps = 5,
 			.num_msi_vectors = 1,
 			.msi_64bits = 1,
@@ -916,7 +916,7 @@ struct {
 				0x00000000, 0x00000000, 0x00000000,
 				0x00000000, 0x00000000, 0x00000000,
 			},
-			.caps_start = 58,
+			.caps_start = 59,
 			.num_caps = 5,
 		},
 		/* PCIDevice: 07:00.2 */
@@ -929,7 +929,7 @@ struct {
 				0x00000000, 0x00000000, 0xfff00000,
 				0x00000000, 0x00000000, 0xffffe000,
 			},
-			.caps_start = 63,
+			.caps_start = 64,
 			.num_caps = 6,
 			.num_msi_vectors = 2,
 			.msi_64bits = 1,
@@ -948,7 +948,7 @@ struct {
 				0xfff00000, 0xffffffff, 0x00000000,
 				0x00000000, 0x00000000, 0x00000000,
 			},
-			.caps_start = 63,
+			.caps_start = 64,
 			.num_caps = 6,
 			.num_msi_vectors = 8,
 			.msi_64bits = 1,
@@ -967,7 +967,7 @@ struct {
 				0x00000000, 0x00000000, 0x00000000,
 				0x00000000, 0x00000000, 0x00000000,
 			},
-			.caps_start = 58,
+			.caps_start = 59,
 			.num_caps = 5,
 		},
 		/* PCIDevice: 08:00.2 */
@@ -980,7 +980,7 @@ struct {
 				0x00000000, 0x00000000, 0x00000000,
 				0x00000000, 0x00000000, 0xfffff000,
 			},
-			.caps_start = 69,
+			.caps_start = 70,
 			.num_caps = 6,
 			.num_msi_vectors = 16,
 			.msi_64bits = 1,
@@ -996,7 +996,7 @@ struct {
 				0xffff8000, 0x00000000, 0x00000000,
 				0x00000000, 0x00000000, 0x00000000,
 			},
-			.caps_start = 75,
+			.caps_start = 76,
 			.num_caps = 5,
 			.num_msi_vectors = 1,
 			.msi_64bits = 1,
@@ -1272,7 +1272,7 @@ struct {
 			.id = PCI_CAP_ID_EXP,
 			.start = 0x70,
 			.len = 0x3c,
-			.flags = 0,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		{
 			.id = PCI_CAP_ID_MSIX,
@@ -1309,6 +1309,12 @@ struct {
 			.start = 0x178,
 			.len = 0x4,
 			.flags = 0,
+		},
+		{
+			.id = 0x7fff | JAILHOUSE_PCI_EXT_CAP,
+			.start = 0x70f,
+			.len = 1,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		/* PCIDevice: 04:00.0 */
 		{
