@@ -22,6 +22,8 @@ import struct
 import os
 import fnmatch
 
+from .pci_defs import PCI_CAP_ID, PCI_EXT_CAP_ID
+
 root_dir = "/"
 
 def set_root_dir(dir):
@@ -368,7 +370,7 @@ def parse_ivrs(pcidevices, ioapics):
                 if d.bdf() == iommu_bdf:
                     # Extract MSI capability offset
                     for c in d.caps:
-                        if c.id == 0x05:
+                        if c.id == PCI_CAP_ID.MSI:
                             msi_cap_ofs = c.start
                     # We must not map IOMMU to the cells
                     del pcidevices[i]
@@ -580,11 +582,12 @@ class PCICapability:
             msix_address = 0
             f.seek(cap)
             (id, next) = struct.unpack('<BB', f.read(2))
-            if id == 0x01:  # Power Management
+            id = PCI_CAP_ID(id)
+            if id == PCI_CAP_ID.PM:
                 # this cap can be handed out completely
                 len = 8
                 flags = PCICapability.RW
-            elif id == 0x05:  # MSI
+            elif id == PCI_CAP_ID.MSI:
                 # access will be moderated by hypervisor
                 len = 10
                 (msgctl,) = struct.unpack('<H', f.read(2))
@@ -593,7 +596,7 @@ class PCICapability:
                 if (msgctl & (1 << 8)) != 0:  # per-vector masking support
                     len += 10
                 flags = PCICapability.RW
-            elif id == 0x10:  # Express
+            elif id == PCI_CAP_ID.EXP:
                 len = 20
                 (cap_reg,) = struct.unpack('<H', f.read(2))
                 if (cap_reg & 0xf) >= 2:  # v2 capability
@@ -601,7 +604,7 @@ class PCICapability:
                 # access side effects still need to be analyzed
                 flags = PCICapability.RD
                 has_extended_caps = True
-            elif id == 0x11:  # MSI-X
+            elif id == PCI_CAP_ID.MSIX:
                 # access will be moderated by hypervisor
                 len = 12
                 (table,) = struct.unpack('<xxI', f.read(6))
@@ -637,8 +640,9 @@ class PCICapability:
                           'Extended Capability ID %x' % id)
                     continue
 
+                id = PCI_EXT_CAP_ID(id)
                 next = version_next >> 4
-                if id == 0x0010:  # SR-IOV
+                if id == PCI_EXT_CAP_ID.SRIOV:
                     len = 64
                     # access side effects still need to be analyzed
                     flags = PCICapability.RD
@@ -648,7 +652,6 @@ class PCICapability:
                     flags = PCICapability.RD
                 f.seek(cap + 4)
                 content = f.read(len - 4)
-                id |= PCICapability.JAILHOUSE_PCI_EXT_CAP
                 caps.append(PCICapability(id, cap, len, flags, content, 0))
 
         f.close()
@@ -674,9 +677,9 @@ class PCIDevice:
         self.msix_region_size = 0
         self.msix_address = 0
         for c in caps:
-            if c.id in (0x05, 0x11):
+            if c.id in (PCI_CAP_ID.MSI, PCI_CAP_ID.MSIX):
                 msg_ctrl = struct.unpack('<H', c.content[:2])[0]
-                if c.id == 0x05:  # MSI
+                if c.id == PCI_CAP_ID.MSI:
                     self.num_msi_vectors = 1 << ((msg_ctrl >> 1) & 0x7)
                     self.msi_64bits = (msg_ctrl >> 7) & 1
                 else:  # MSI-X
