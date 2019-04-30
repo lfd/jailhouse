@@ -1214,7 +1214,7 @@ struct {
 			.id = PCI_CAP_ID_EXP,
 			.start = 0x58,
 			.len = 60,
-			.flags = 0,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		{
 			.id = PCI_CAP_ID_MSI,
@@ -1282,7 +1282,7 @@ struct {
 			.id = PCI_CAP_ID_EXP,
 			.start = 0x58,
 			.len = 60,
-			.flags = 0,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		{
 			.id = PCI_CAP_ID_MSI,
@@ -1354,8 +1354,8 @@ struct {
 		{
 			.id = PCI_EXT_CAP_ID_ERR | JAILHOUSE_PCI_EXT_CAP,
 			.start = 0x100,
-			.len = 4,
-			.flags = 0,
+			.len = 20,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		{
 			.id = PCI_EXT_CAP_ID_SECPCI | JAILHOUSE_PCI_EXT_CAP,
@@ -1450,7 +1450,7 @@ struct {
 			.id = PCI_CAP_ID_EXP,
 			.start = 0x80,
 			.len = 60,
-			.flags = 0,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		{
 			.id = PCI_CAP_ID_SSVID,
@@ -1461,8 +1461,8 @@ struct {
 		{
 			.id = PCI_EXT_CAP_ID_ERR | JAILHOUSE_PCI_EXT_CAP,
 			.start = 0x100,
-			.len = 4,
-			.flags = 0,
+			.len = 20,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		{
 			.id = PCI_EXT_CAP_ID_SECPCI | JAILHOUSE_PCI_EXT_CAP,
@@ -1504,8 +1504,8 @@ struct {
 		{
 			.id = PCI_EXT_CAP_ID_ERR | JAILHOUSE_PCI_EXT_CAP,
 			.start = 0x100,
-			.len = 4,
-			.flags = 0,
+			.len = 20,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		{
 			.id = PCI_EXT_CAP_ID_VC | JAILHOUSE_PCI_EXT_CAP,
