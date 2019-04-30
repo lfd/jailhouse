@@ -49,7 +49,7 @@ struct {
 	struct jailhouse_irqchip irqchips[2];
 	__u8 pio_bitmap[0x2000];
 	struct jailhouse_pci_device pci_devices[37];
-	struct jailhouse_pci_capability pci_caps[95];
+	struct jailhouse_pci_capability pci_caps[96];
 } __attribute__((packed)) config = {
 	.header = {
 		.signature = JAILHOUSE_SYSTEM_SIGNATURE,
@@ -1001,7 +1001,7 @@ struct {
 				0xffffffff, 0xffffc000, 0xffffffff,
 			},
 			.caps_start = 47,
-			.num_caps = 9,
+			.num_caps = 10,
 			.num_msi_vectors = 1,
 			.msi_64bits = 1,
 			.msi_maskable = 0,
@@ -1493,7 +1493,7 @@ struct {
 			.id = PCI_CAP_ID_EXP,
 			.start = 0x70,
 			.len = 60,
-			.flags = 0,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		{
 			.id = PCI_CAP_ID_MSIX,
@@ -1530,6 +1530,12 @@ struct {
 			.start = 0x178,
 			.len = 4,
 			.flags = 0,
+		},
+		{
+			.id = 0x7fff | JAILHOUSE_PCI_EXT_CAP,
+			.start = 0x70f,
+			.len = 1,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		/* PCIDevice: 04:00.0 */
 		{
