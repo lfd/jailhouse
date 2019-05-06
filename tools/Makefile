@@ -66,7 +66,7 @@ HAS_PYTHON_MAKO := \
 	&& echo yes)
 
 ifeq ($(strip $(HAS_PYTHON_MAKO)), yes)
-always += jailhouse-config-collect
+always += jailhouse-config-collect ../pyjailhouse/pci_cap_ids.py
 HELPERS += jailhouse-config-collect
 
 else  # !HAS_PYTHON_MAKO
@@ -98,6 +98,11 @@ define cmd_gen_man
 	sed 's/$${VERSION}/$(shell cat $(src)/../VERSION)/g' $< > $@
 endef
 
+quiet_cmd_gen_pci_cap_ids = GEN     $@
+define cmd_gen_pci_cap_ids
+	$^ $(src)/../include/jailhouse/cell-config.h > $@
+endef
+
 targets += jailhouse.o
 
 $(obj)/jailhouse: $(obj)/jailhouse.o
@@ -114,8 +119,13 @@ always += jailhouse-gcov-extract
 $(obj)/jailhouse-gcov-extract: $(obj)/jailhouse-gcov-extract.o
 	$(call if_changed,ld)
 
-$(obj)/jailhouse-config-collect: $(src)/jailhouse-config-create $(src)/jailhouse-config-collect.tmpl
+$(obj)/jailhouse-config-collect: $(src)/jailhouse-config-create \
+	$(src)/jailhouse-config-collect.tmpl \
+	$(src)/../pyjailhouse/pci_cap_ids.py
 	$(call if_changed,gen_collect)
+
+$(src)/../pyjailhouse/pci_cap_ids.py: $(src)/gen_pci_cap_ids.sh
+	$(call if_changed,gen_pci_cap_ids)
 
 targets += $(MAN8_PAGES)
 always +=  $(MAN8_PAGES)
