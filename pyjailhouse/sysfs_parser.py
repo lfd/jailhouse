@@ -97,8 +97,8 @@ def input_listdir(dir, wildcards):
 
 
 def parse_iomem(pcidevices):
-    (regions, dmar_regions) = IOMemRegionTree.parse_iomem_tree(
-        IOMemRegionTree.parse_iomem_file())
+    (regions, dmar_regions) = IOMapTree.parse_iomem_tree(
+        IOMapTree.parse_iomap_file('/proc/iomem', MemRegion))
 
     rom_region = MemRegion(0xc0000, 0xdffff, 'ROMs')
     add_rom_region = False
@@ -795,7 +795,7 @@ class IOAPIC:
         return (self.iommu << 16) | self.bdf
 
 
-class IOMemRegionTree:
+class IOMapTree:
     def __init__(self, region, level):
         self.region = region
         self.level = level
@@ -847,22 +847,22 @@ class IOMemRegionTree:
         return [before_kernel, kernel_region, after_kernel]
 
     @staticmethod
-    def parse_iomem_line(line):
+    def parse_iomap_line(line, io_type):
         a = line.split(':', 1)
         level = int(a[0].count(' ') / 2) + 1
         region = a[0].split('-', 1)
         a[1] = a[1].strip()
-        return level, MemRegion(int(region[0], 16), int(region[1], 16), a[1])
+        return level, io_type(int(region[0], 16), int(region[1], 16), a[1])
 
     @staticmethod
-    def parse_iomem_file():
-        root = IOMemRegionTree(None, 0)
-        f = input_open('/proc/iomem')
+    def parse_iomap_file(file_path, io_type):
+        root = IOMapTree(None, 0)
+        f = input_open(file_path)
         lastlevel = 0
         lastnode = root
         for line in f:
-            (level, r) = IOMemRegionTree.parse_iomem_line(line)
-            t = IOMemRegionTree(r, level)
+            (level, r) = IOMapTree.parse_iomap_line(line, io_type)
+            t = IOMapTree(r, level)
             if (t.level > lastlevel):
                 t.parent = lastnode
             if (t.level == lastlevel):
@@ -894,8 +894,7 @@ class IOMemRegionTree:
 
             # if the tree continues recurse further down ...
             if (len(tree.children) > 0):
-                regions.extend(
-                    IOMemRegionTree.find_regions_by_name(tree, name))
+                regions.extend(IOMapTree.find_regions_by_name(tree, name))
 
         return regions
 
@@ -925,16 +924,15 @@ class IOMemRegionTree:
 
             # generally blacklisted, with a few exceptions
             if (s.lower() == 'reserved'):
-                regions.extend(
-                    IOMemRegionTree.find_regions_by_name(tree, 'HPET'))
+                regions.extend(IOMapTree.find_regions_by_name(tree, 'HPET'))
                 dmar_regions.extend(
-                    IOMemRegionTree.find_regions_by_name(tree, 'dmar'))
+                    IOMapTree.find_regions_by_name(tree, 'dmar'))
                 continue
 
             # if the tree continues recurse further down ...
             if (len(tree.children) > 0):
                 (temp_regions, temp_dmar_regions) = \
-                    IOMemRegionTree.parse_iomem_tree(tree)
+                    IOMapTree.parse_iomem_tree(tree)
                 regions.extend(temp_regions)
                 dmar_regions.extend(temp_dmar_regions)
                 continue
