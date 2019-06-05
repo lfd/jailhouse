@@ -147,6 +147,54 @@ def parse_iomem(pcidevices):
     return ret, dmar_regions
 
 
+def parse_ioports():
+    regions = IOMapTree.parse_ioports_tree(
+        IOMapTree.parse_iomap_file('/proc/ioports', PortRegion))
+
+    tmp = [
+        # static regions
+        PortRegion(0x0, 0x3f, ''),
+        PortRegion(0x40, 0x43, 'PIT', allowed=True),
+        PortRegion(0x60, 0x61, 'NMI', allowed=True, comments=["HACK!"]), # NMI status/control
+        PortRegion(0x64, 0x64, 'NMI', allowed=True, comments=["HACK!"]), # ditto
+        PortRegion(0x70, 0x71, 'RTC', allowed=True),
+        PortRegion(0x3b0, 0x3df, 'VGA', allowed=True),
+        PortRegion(0xd00, 0xffff, 'PCI bus', allowed=True),
+    ]
+
+    pm_timer_base = None
+    for r in regions:
+        if r.typestr == 'ACPI PM_TMR':
+            pm_timer_base = r.start
+
+        tmp.append(r)
+
+    tmp.sort(key=lambda r: r.start)
+    ret = [tmp[0]]
+
+    # adjust overlapping regions
+    for r in tmp[1:]:
+        prev = ret[-1]
+
+        # combine multiple regions under the same bit mask
+        if prev.aligned_stop() >= r.aligned_start():
+            if r.stop > prev.stop:
+                n = prev
+                while n.neighbor is not None:
+                    n = n.neighbor
+                n.neighbor = r
+            continue
+
+        # forbid access to unrecognized regions
+        if prev.aligned_stop() - r.aligned_start() > 0:
+            ret.append(
+                PortRegion(prev.aligned_stop() + 1, r.aligned_start() - 1, ''))
+
+        ret.append(r)
+
+    return (ret, pm_timer_base)
+
+
 def parse_pcidevices():
     int_src_cnt = 0
     devices = []
@@ -779,6 +827,84 @@ class MemRegion:
         return 'JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE'
 
 
+class PortRegion:
+    def __init__(self, start, stop, typestr, comments=None, allowed=False):
+        self.start = start
+        self.stop = stop
+        self.typestr = typestr or ''
+        self.comments = comments or []
+        self.allowed = allowed
+        self.neighbor = None
+
+    def __str__(self):
+        # as in MemRegion this method is purely for C comment generation
+
+        # remove consecutive duplicates
+        neighbor = self.neighbor
+        stop = self.stop
+        ns = ''
+        while neighbor:
+            if self.typestr != neighbor.typestr \
+              or self.comments != neighbor.comments:
+                ns += ', ' + str(neighbor)
+                break
+
+            stop = neighbor.stop
+            neighbor = neighbor.neighbor
+
+        s = ''
+        # pretty print single ports
+        if self.start == stop:
+            s += '%5s' % ''
+        else:
+            s += '%04x-' % self.start
+
+        s += '%04x' % stop
+
+        if self.typestr:
+            s += ' : ' + self.typestr
+
+        if self.comments:
+            s += ' (' + ', '.join(c for c in self.comments) + ')'
+
+        s += ns
+        return s
+
+    # used in root-cell-config.c.tmpl
+    def is_combined(self):
+        neighbor = self.neighbor
+        while neighbor:
+            if self.typestr != neighbor.typestr:
+                return True
+
+            neighbor = neighbor.neighbor
+
+        return False
+
+    def size(self):
+        return self.stop - self.start
+
+    def aligned_start(self):
+        return self.start - self.start % 8
+
+    def aligned_stop(self):
+        return self.stop + (7 - self.stop % 8)
+
+    def bits(self):
+        # in this method: 0 = disallowed,
+        # in config: 0 = allowed
+        if self.allowed:
+            bits = ((1 << (self.size() + 1)) - 1) << \
+                (self.start - self.aligned_start())
+        else:
+            bits = 0
+
+        if self.neighbor:
+            bits |= ~self.neighbor.bits()
+
+        return ~bits & 0xFF
+
+
 class IOAPIC:
     def __init__(self, id, address, gsi_base, iommu=0, bdf=0):
         self.id = id
@@ -941,6 +1067,30 @@ class IOMapTree:
             regions.append(r)
 
         return regions, dmar_regions
+
+    # recurse down the tree
+    @staticmethod
+    def parse_ioports_tree(tree):
+        regions = []
+
+        for tree in tree.children:
+            r = tree.region
+
+            if len(tree.children) > 0:
+                regions.extend(IOMapTree.parse_ioports_tree(tree))
+                continue
+
+            # split in byte sized regions
+            while r.size() > 8:
+                # byte-align r.stop
+                sub = PortRegion(r.start, r.start + 7 - r.start % 8, r.typestr)
+                regions.append(sub)
+                r.start = sub.stop + 1
+
+            # add all remaining leaves
+            regions.append(r)
+
+        return regions
 
 
 class IOMMUConfig:
