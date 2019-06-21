@@ -1,3 +1,12 @@
+/* serial port mapping
+ * ttyS0 @0x3f8		(irq = 4)
+ * ttyS1 @0x2f8		(irq = 3)
+ * ttyS4 @0x20c0	(irq = 16)
+ * ttyS5 @0x20c8	(irq = 16)
+ * ttyS6 @0x40c0	(irq = 31)
+ * ttyS7 @0x40c8	(irq = 31)
+ */
+
 #define HYPERVISOR_BASE 	0x100000000ULL /* @4GiB */
 #define JAILHOUSE_RESERVED_SIZE 0x200000000ULL /* 8GiB */
 #define JAILHOUSE_RESERVED_END	(HYPERVISOR_BASE + JAILHOUSE_RESERVED_SIZE)
@@ -9,3 +18,6 @@
 
 #define INMATE_BASE		(IVSHMEM_BASE + IVSHMEM_SIZE)
 #define INMATE_SIZE		(JAILHOUSE_RESERVED_END - INMATE_BASE) /* = 8GiB - 6MiB - 1MiB */
+
+#define DACTALES_BASE		INMATE_BASE
+#define DACTALES_SIZE		(512 * 1024 * 1024)
