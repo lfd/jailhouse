@@ -42,6 +42,8 @@
 #include <jailhouse/types.h>
 #include <jailhouse/cell-config.h>
 
+#include "dell.h"
+
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
@@ -56,8 +58,8 @@ struct {
 		.revision = JAILHOUSE_CONFIG_REVISION,
 		.flags = JAILHOUSE_SYS_VIRTUAL_DEBUG_CONSOLE,
 		.hypervisor_memory = {
-			.phys_start = 0x100000000,
-			.size = 0x600000,
+			.phys_start = HYPERVISOR_BASE,
+			.size = HYPERVISOR_SIZE,
 		},
 		.debug_console = {
 			.address = 0x3f8,
@@ -623,11 +625,11 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
-		/* MemRegion: 100600000-1051fffff : JAILHOUSE Inmate Memory */
+		/* MemRegion: HYPERVISOR_END-IVSHMEM_BASE: JAILHOUSE Inmate Memory */
 		{
-			.phys_start = 0x100600000,
-			.virt_start = 0x100600000,
-			.size = 0x4c00000,
+			.phys_start = INMATE_BASE,
+			.virt_start = INMATE_BASE,
+			.size = INMATE_SIZE,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
 		},
 	},
