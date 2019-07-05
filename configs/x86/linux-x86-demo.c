@@ -127,7 +127,7 @@ struct {
 	.irqchips = {
 		/* IOAPIC */ {
 			.address = 0xfec00000,
-			.id = 0xff00,
+			.id = 0xa0,
 			.pin_bitmap = {
 				(1 << 3) | (1 << 4),
 			},
