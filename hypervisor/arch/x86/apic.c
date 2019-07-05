@@ -350,7 +350,7 @@ void apic_clear(void)
 
 	/* Finally, reset the TPR again and disable the APIC */
 	apic_ops.write(APIC_REG_TPR, 0);
-	apic_ops.write(APIC_REG_SVR, 0xff);
+	//apic_ops.write(APIC_REG_SVR, 0xff);
 }
 
 static void apic_send_ipi(unsigned int target_cpu_id, u32 orig_icr_hi,
