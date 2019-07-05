@@ -340,7 +340,7 @@ void apic_clear(void)
 
 	/* Finally, reset the TPR again and disable the APIC */
 	apic_ops.write(APIC_REG_TPR, 0);
-	apic_ops.write(APIC_REG_SVR, 0xff);
+	//apic_ops.write(APIC_REG_SVR, 0xff);
 }
 
 static bool apic_valid_ipi_mode(u32 lo_val)
