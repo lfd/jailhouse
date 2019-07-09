@@ -3502,7 +3502,7 @@ struct {
 			.id = PCI_CAP_ID_VPD,
 			.start = 0x50,
 			.len = 0x2,
-			.flags = 0,
+			.flags = JAILHOUSE_PCICAPS_WRITE,
 		},
 		{
 			.id = PCI_CAP_ID_MSI,
