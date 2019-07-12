@@ -76,6 +76,13 @@ out_err:
 	return NULL;
 }
 
+static inline void vcpu_get_cell_io_bitmap(struct cell *cell,
+					   struct vcpu_io_bitmap *iobm)
+{
+	iobm->data = cell->arch.io_bitmap;
+	iobm->size = vcpu_vendor_get_io_bitmap_pages() * PAGE_SIZE;
+}
+
 int vcpu_cell_init(struct cell *cell)
 {
 	const unsigned int io_bitmap_pages = vcpu_vendor_get_io_bitmap_pages();
@@ -97,7 +104,7 @@ int vcpu_cell_init(struct cell *cell)
 		return err;
 	}
 
-	vcpu_vendor_get_cell_io_bitmap(cell, &cell_iobm);
+	vcpu_get_cell_io_bitmap(cell, &cell_iobm);
 
 	/* initialize io bitmap to trap all accesses */
 	memset(cell_iobm.data, -1, cell_iobm.size);
@@ -115,7 +122,7 @@ int vcpu_cell_init(struct cell *cell)
 		 * Shrink PIO access of root cell corresponding to new cell's
 		 * access rights.
 		 */
-		vcpu_vendor_get_cell_io_bitmap(&root_cell, &root_cell_iobm);
+		vcpu_get_cell_io_bitmap(&root_cell, &root_cell_iobm);
 		pio_bitmap = jailhouse_cell_pio_bitmap(cell->config);
 		for (b = root_cell_iobm.data; pio_bitmap_size > 0;
 		     b++, pio_bitmap++, pio_bitmap_size--)
@@ -143,7 +150,7 @@ void vcpu_cell_exit(struct cell *cell)
 	struct vcpu_io_bitmap root_cell_iobm;
 	u8 *b;
 
-	vcpu_vendor_get_cell_io_bitmap(&root_cell, &root_cell_iobm);
+	vcpu_get_cell_io_bitmap(&root_cell, &root_cell_iobm);
 
 	if (root_cell.config->pio_bitmap_size < pio_bitmap_size)
 		pio_bitmap_size = root_cell.config->pio_bitmap_size;
