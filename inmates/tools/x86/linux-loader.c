@@ -34,6 +34,7 @@ struct setup_data {
 	u32	apic_khz;
 	u8	standard_ioapic;
 	u8	cpu_ids[SMP_MAX_CPUS];
+	u32	flags;
 } __attribute__((packed));
 
 /* We use the cmdline section for zero page and setup data. */
@@ -58,6 +59,7 @@ void inmate_main(void)
 	setup_data->tsc_khz = comm_region->tsc_khz;
 	setup_data->apic_khz = comm_region->apic_khz;
 	setup_data->num_cpus = comm_region->num_cpus;
+	setup_data->flags = comm_region->flags;
 
 	smp_wait_for_all_cpus();
 	memcpy(setup_data->cpu_ids, smp_cpu_ids, SMP_MAX_CPUS);

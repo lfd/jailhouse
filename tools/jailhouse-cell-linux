@@ -761,10 +761,10 @@ class X86ZeroPage:
 def x86_gen_setup_data(config):
     SETUP_TYPE_JAILHOUSE = 6
     MAX_CPUS = 255
-    SETUP_DATA_VERSION = 1
+    SETUP_DATA_VERSION = 2
     standard_ioapic = 0
     setup_data_hdr_struct = '8xII'
-    setup_data_struct = ('HH12x8xB%ux' % MAX_CPUS)
+    setup_data_struct = ('HH12x8xB%ux4x' % MAX_CPUS)
 
     for irqchip in config.irqchips:
         if irqchip.is_standard():
