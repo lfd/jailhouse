@@ -20,6 +20,13 @@
 #include <asm/iommu.h>
 #include <asm/vcpu.h>
 
+static const u16 pcuart_base[] = {
+	0x3f8,
+	0x2f8,
+	0x3e8,
+	0x2e8,
+};
+
 struct exception_frame {
 	u64 vector;
 	u64 error;
@@ -92,7 +99,7 @@ void arch_cell_destroy(struct cell *cell)
 void arch_cell_reset(struct cell *cell)
 {
 	struct jailhouse_comm_region *comm_region = &cell->comm_page.comm_region;
-	unsigned int cpu;
+	unsigned int cpu, i;
 
 	comm_region->pm_timer_address =
 		system_config->platform_info.x86.pm_timer_address;
@@ -103,6 +110,11 @@ void arch_cell_reset(struct cell *cell)
 		comm_region->num_cpus++;
 	comm_region->tsc_khz = system_config->platform_info.x86.tsc_khz;
 	comm_region->apic_khz = system_config->platform_info.x86.apic_khz;
+
+	for (i = 0; i < ARRAY_SIZE(pcuart_base); i++)
+		if (cell->arch.io_bitmap[pcuart_base[i] / 8] == 0)
+			comm_region->flags |=
+				JAILHOUSE_COMM_FLAG_PERMIT_PCUART(i);
 
 	ioapic_cell_reset(cell);
 }

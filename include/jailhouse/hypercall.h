@@ -116,7 +116,10 @@
 	volatile __u32 msg_to_cell;					\
 	/** Reply code sent from cell to hypervisor. */			\
 	volatile __u32 reply_from_cell;					\
-	/** Holds information special flags */				\
+	/** Holds information of special flags, such as default inmate	\
+	  * debug output. Generic flags use bits 0-7, architecture 	\
+	  * specific flags use bits 8-15.				\
+	  **/								\
 	volatile __u32 flags;						\
 	/** Debug console that may be accessed by the inmate */		\
 	struct jailhouse_console console;

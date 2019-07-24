@@ -95,6 +95,8 @@ extern bool jailhouse_use_vmcall;
 #include <jailhouse/hypercall.h>
 #endif
 
+#define JAILHOUSE_COMM_FLAG_PERMIT_PCUART(n)	((1 << 8) << (n))
+
 /** Communication region between hypervisor and a cell. */
 struct jailhouse_comm_region {
 	COMM_REGION_GENERIC_HEADER;
