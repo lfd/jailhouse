@@ -107,13 +107,11 @@ struct {
 			.address = 0xfec00000,
 			.id = 0x3f0f8,
 			.pin_bitmap = {
-				(1 << 4),
 			},
 		},
 	},
 
 	.pio_regions = {
-		PIO_RANGE(0x3f8, 8),
 		PIO_RANGE(0x4000, 8),
 	},
 
