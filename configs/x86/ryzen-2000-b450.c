@@ -45,7 +45,7 @@
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[40];
+	struct jailhouse_memory mem_regions[39];
 	struct jailhouse_irqchip irqchips[2];
 	__u8 pio_bitmap[0x2000];
 	struct jailhouse_pci_device pci_devices[37];
@@ -115,19 +115,19 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
-		/* MemRegion: 01200000-03ffffff : Kernel */
+		/* MemRegion: 01200000-02ffffff : Kernel */
 		{
 			.phys_start = 0x1200000,
 			.virt_start = 0x1200000,
-			.size = 0x2e00000,
+			.size = 0x1e00000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
-		/* MemRegion: 04000000-09cfffff : System RAM */
+		/* MemRegion: 03000000-09cfffff : System RAM */
 		{
-			.phys_start = 0x4000000,
-			.virt_start = 0x4000000,
-			.size = 0x5d00000,
+			.phys_start = 0x3000000,
+			.virt_start = 0x3000000,
+			.size = 0x6d00000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
@@ -162,43 +162,43 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
-		/* MemRegion: 3f200000-d2bf0017 : System RAM */
+		/* MemRegion: 3f200000-d337c017 : System RAM */
 		{
 			.phys_start = 0x3f200000,
 			.virt_start = 0x3f200000,
-			.size = 0x939f1000,
+			.size = 0x9417d000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
-		/* MemRegion: d2bf0018-d2c0e657 : System RAM */
+		/* MemRegion: d337c018-d339a657 : System RAM */
 		{
-			.phys_start = 0xd2bf0018,
-			.virt_start = 0xd2bf0018,
+			.phys_start = 0xd337c018,
+			.virt_start = 0xd337c018,
 			.size = 0x1f000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
-		/* MemRegion: d2c0e658-d2c0f017 : System RAM */
+		/* MemRegion: d339a658-d339b017 : System RAM */
 		{
-			.phys_start = 0xd2c0e658,
-			.virt_start = 0xd2c0e658,
+			.phys_start = 0xd339a658,
+			.virt_start = 0xd339a658,
 			.size = 0x1000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
-		/* MemRegion: d2c0f018-d2c1d057 : System RAM */
+		/* MemRegion: d339b018-d33a9057 : System RAM */
 		{
-			.phys_start = 0xd2c0f018,
-			.virt_start = 0xd2c0f018,
+			.phys_start = 0xd339b018,
+			.virt_start = 0xd339b018,
 			.size = 0xf000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
-		/* MemRegion: d2c1d058-dbf5efff : System RAM */
+		/* MemRegion: d33a9058-dbf5efff : System RAM */
 		{
-			.phys_start = 0xd2c1d058,
-			.virt_start = 0xd2c1d058,
-			.size = 0x9342000,
+			.phys_start = 0xd33a9058,
+			.virt_start = 0xd33a9058,
+			.size = 0x8bb6000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA,
 		},
@@ -349,13 +349,6 @@ struct {
 			.phys_start = 0xfe940000,
 			.virt_start = 0xfe940000,
 			.size = 0x4000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-		/* MemRegion: feb00000-feb00007 : SB800 TCO */
-		{
-			.phys_start = 0xfeb00000,
-			.virt_start = 0xfeb00000,
-			.size = 0x1000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
 		},
 		/* MemRegion: fed00000-fed003ff : HPET 0 */
