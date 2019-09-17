@@ -147,6 +147,51 @@ def parse_iomem(pcidevices):
     return ret, dmar_regions
 
 
+def parse_ioports():
+    tree = IORegionTree.parse_io_file('/proc/ioports', PortRegion)
+
+    pm_timer_base = tree.find_regions_by_name('ACPI PM_TMR')
+    if len(pm_timer_base) != 1:
+        raise RuntimeError('Found %u entries for ACPI PM_TMR (expected 1)' %
+                           len(pm_timer_base))
+    pm_timer_base = pm_timer_base[0].start
+
+    leaves = tree.get_leaves()
+
+    # Never expose PCI config space ports to the user
+    leaves = list(filter(lambda p: p.start != 0xcf8, leaves))
+
+    r_pci = PortRegion(0xd00, 0xffff, 'HACK: PCI bus', True)
+
+    permitted = [
+        PortRegion(0x40, 0x43, 'PIT', True),
+        PortRegion(0x60, 0x60, 'HACK: NMI status/control', True),
+        PortRegion(0x61, 0x61, 'HACK: NMI status/control', True),
+        PortRegion(0x64, 0x64, 'I8042', True),
+        PortRegion(0x70, 0x71, 'RTC', True),
+        PortRegion(0x3b0, 0x3df, 'VGA', True),
+        r_pci,
+    ]
+
+    # Allow devices which overlap with permitted list
+    ret = []
+    for r in leaves:
+        for p in permitted:
+            if p.start == r.start and r.stop <= p.stop:
+                r.permit = p.permit
+                permitted.remove(p)
+                break
+
+        if r.start < r_pci.start:
+            ret.append(r)
+
+    # Append remains of permitted regions
+    ret += permitted
+    ret.sort(key=lambda r: r.start)
+
+    return ret, pm_timer_base
+
+
 def parse_pcidevices():
     int_src_cnt = 0
     devices = []
@@ -806,6 +851,20 @@ class MemRegion:
             s += p + '\t\tJAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA'
             return s
         return 'JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE'
+
+
+class PortRegion:
+    def __init__(self, start, stop, typestr, permit=False):
+        self.start = start
+        self.stop = stop
+        self.typestr = typestr or ''
+        self.permit = permit
+
+    def __str__(self):
+        return self.typestr
+
+    def size(self):
+        return self.stop - self.start + 1
 
 
 class IOAPIC:
