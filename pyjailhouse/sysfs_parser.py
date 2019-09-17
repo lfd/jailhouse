@@ -831,6 +831,17 @@ class IORegionTree:
         self.parent = None
         self.children = []
 
+    def get_leaves(self):
+        leaves = []
+
+        if len(self.children):
+            for child in self.children:
+                leaves.extend(child.get_leaves())
+        elif self.region is not None:
+            leaves.append(self.region)
+
+        return leaves
+
     # find specific regions in tree
     def find_regions_by_name(self, name):
         regions = []
