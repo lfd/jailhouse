@@ -869,14 +869,15 @@ class IOMemRegionTree:
         self.parent = None
         self.children = []
 
-    def regions_split_by_kernel(self):
-        kernel = [x for x in self.children if
+    @staticmethod
+    def regions_split_by_kernel(tree):
+        kernel = [x for x in tree.children if
                   x.region.typestr.startswith('Kernel ')]
 
         if len(kernel) == 0:
-            return [self.region]
+            return [tree.region]
 
-        r = self.region
+        r = tree.region
         s = r.typestr
 
         kernel_start = kernel[0].region.start
@@ -938,8 +939,8 @@ class IOMemRegionTree:
             # System RAM on the first level will be added completely,
             # if they don't contain the kernel itself, if they do,
             # we split them
-            if (tree.level == 1 and s == 'System RAM'):
-                regions.extend(tree.regions_split_by_kernel())
+            if tree.level == 1 and s == 'System RAM':
+                regions.extend(IOMemRegionTree.regions_split_by_kernel(tree))
                 continue
 
             # blacklisted on all levels, covers both APIC and IOAPIC
