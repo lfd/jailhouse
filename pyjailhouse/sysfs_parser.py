@@ -866,6 +866,14 @@ class PortRegion:
     def size(self):
         return self.stop - self.start + 1
 
+    def overlaps(self, other):
+        interval_start = max(self.start, other.start)
+        interval_end = min(self.start + self.size(), other.start + other.size())
+
+        if interval_start < interval_end:
+            return True
+        return False
+
 
 class IOAPIC:
     def __init__(self, id, address, gsi_base, iommu=0, bdf=0):
