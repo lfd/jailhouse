@@ -890,6 +890,14 @@ class IORegionTree:
         self.parent = None
         self.children = []
 
+    def __str__(self):
+        ret = ''
+        if self.region:
+            ret += (self.level - 1) * 2 * ' ' + str(self.region) + '\n'
+        for c in self.children:
+            ret += str(c)
+        return ret
+
     def get_leaves(self):
         leaves = []
 
