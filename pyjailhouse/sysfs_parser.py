@@ -161,35 +161,27 @@ def parse_ioports():
     # Never expose PCI config space ports to the user
     leaves = list(filter(lambda p: p.start != 0xcf8, leaves))
 
-    r_pci = PortRegion(0xd00, 0xffff, 'HACK: PCI bus', True)
+    static_regions = [PortRegion(0xd00, 0xffff, 'HACK: PCI bus', True),
+                      PortRegion(0x3b0, 0x3df, 'VGA', True)]
+
+    leaves += static_regions
 
     permitted = [
-        PortRegion(0x40, 0x43, 'PIT', True),
-        PortRegion(0x60, 0x60, 'HACK: NMI status/control', True),
-        PortRegion(0x61, 0x61, 'HACK: NMI status/control', True),
-        PortRegion(0x64, 0x64, 'I8042', True),
-        PortRegion(0x70, 0x71, 'RTC', True),
-        PortRegion(0x3b0, 0x3df, 'VGA', True),
-        r_pci,
+        0x40, # PIT
+        0x60, # keyboard
+        0x61, # HACK: NMI status/control
+        0x64, # I8042
+        0x70, # RTC
+        0x3b0, # VGA
     ]
 
-    # Allow devices which overlap with permitted list
-    ret = []
     for r in leaves:
-        for p in permitted:
-            if p.start == r.start and r.stop <= p.stop:
-                r.permit = p.permit
-                permitted.remove(p)
-                break
+        if r.start in permitted:
+                r.permit = True
 
-        if r.start < r_pci.start:
-            ret.append(r)
+    leaves.sort(key=lambda r: r.start)
 
-    # Append remains of permitted regions
-    ret += permitted
-    ret.sort(key=lambda r: r.start)
-
-    return ret, pm_timer_base
+    return leaves, pm_timer_base
 
 
 def parse_pcidevices():
