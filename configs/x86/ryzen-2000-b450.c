@@ -47,7 +47,7 @@ struct {
 	__u64 cpus[1];
 	struct jailhouse_memory mem_regions[38];
 	struct jailhouse_irqchip irqchips[2];
-	struct jailhouse_pio pio_regions[10];
+	struct jailhouse_pio pio_regions[9];
 	struct jailhouse_pci_device pci_devices[37];
 	struct jailhouse_pci_capability pci_caps[80];
 } __attribute__((packed)) config = {
@@ -424,7 +424,7 @@ struct {
 		/* Port I/O: 03b0-03df : PCI Bus 0000:00 */
 		/* PIO_RANGE(0x3b0, 0x30), */
 		/* Port I/O: 03f8-03ff : serial */
-		PIO_RANGE(0x3f8, 0x8),
+		/* PIO_RANGE(0x3f8, 0x8), // used for Jailhouse only */
 		/* Port I/O: 040b-040b : pnp 00:05 */
 		/* PIO_RANGE(0x40b, 0x1), */
 		/* Port I/O: 04d0-04d1 : pnp 00:05 */
