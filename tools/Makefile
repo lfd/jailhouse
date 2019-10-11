@@ -103,16 +103,17 @@ targets += jailhouse.o
 $(obj)/jailhouse: $(obj)/jailhouse.o
 	$(call if_changed,ld)
 
-CFLAGS_jailhouse-gcov-extract.o	:= -I$(src)/../hypervisor/include \
-	-I$(src)/../hypervisor/arch/$(SRCARCH)/include
-# just change ldflags not cflags, we are not profiling the tool
-LDFLAGS_jailhouse-gcov-extract := -lgcov -fprofile-arcs
+#
+#CFLAGS_jailhouse-gcov-extract.o	:= -I$(src)/../hypervisor/include \
+#	-I$(src)/../hypervisor/arch/$(SRCARCH)/include
+## just change ldflags not cflags, we are not profiling the tool
+#LDFLAGS_jailhouse-gcov-extract := -lgcov -fprofile-arcs
 
-targets += jailhouse-gcov-extract.o
-always += jailhouse-gcov-extract
+#targets += jailhouse-gcov-extract.o
+#always += jailhouse-gcov-extract
 
-$(obj)/jailhouse-gcov-extract: $(obj)/jailhouse-gcov-extract.o
-	$(call if_changed,ld)
+#$(obj)/jailhouse-gcov-extract: $(obj)/jailhouse-gcov-extract.o
+#	$(call if_changed,ld)
 
 $(obj)/jailhouse-config-collect: $(src)/jailhouse-config-create $(src)/jailhouse-config-collect.tmpl
 	$(call if_changed,gen_collect)
