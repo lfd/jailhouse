@@ -30,6 +30,8 @@
 #define JAILHOUSE_DEVICE	"/dev/jailhouse"
 #define JAILHOUSE_CELLS		"/sys/devices/jailhouse/cells/"
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
 enum shutdown_load_mode {LOAD, SHUTDOWN};
 
 struct extension {
@@ -53,12 +55,12 @@ static const struct extension extensions[] = {
 	  "                 [--mem-hv MEM_HV] FILE" },
 	{ "config", "collect", "FILE.TAR" },
 	{ "hardware", "check", "" },
-	{ NULL }
 };
 
 static void __attribute__((noreturn)) help(char *prog, int exit_status)
 {
 	const struct extension *ext;
+	size_t i;
 
 	printf("Usage: %s { COMMAND | --help | --version }\n"
 	       "\nAvailable commands:\n"
@@ -74,7 +76,7 @@ static void __attribute__((noreturn)) help(char *prog, int exit_status)
 	       "   cell shutdown { ID | [--name] NAME }\n"
 	       "   cell destroy { ID | [--name] NAME }\n",
 	       basename(prog));
-	for (ext = extensions; ext->cmd; ext++)
+	for (i = 0, ext = extensions; i < ARRAY_SIZE(extensions); i++, ext++)
 		printf("   %s %s %s\n", ext->cmd, ext->subcmd, ext->help);
 
 	exit(exit_status);
@@ -85,11 +87,12 @@ static void call_extension_script(const char *cmd, int argc, char *argv[])
 	const struct extension *ext;
 	char new_path[PATH_MAX];
 	char script[64];
+	size_t i;
 
 	if (argc < 3)
 		return;
 
-	for (ext = extensions; ext->cmd; ext++) {
+	for (i = 0, ext = extensions; i < ARRAY_SIZE(extensions); i++, ext++) {
 		if (strcmp(ext->cmd, cmd) != 0 ||
 		    strcmp(ext->subcmd, argv[2]) != 0)
 			continue;
