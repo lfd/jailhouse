@@ -13,7 +13,7 @@
 #
 # asm-defines.h generation code derived from linux/Kbuild:
 #
-# Copyright (c) Linux kernel developers, 2014
+# Copyright (c) Linux kernel developers, 2014,2017
 #
 
 -include $(GEN_CONFIG_MK)
@@ -47,11 +47,13 @@ clean-files += *.gcda arch/*/.*.gcda
 
 clean-dirs := arch/$(SRCARCH)/include/generated
 
+# Use [:space:] because LLVM's integrated assembler inserts <tab> around
+# the .ascii directive whereas GCC keeps the <space> as-is.
 define sed-y
-	"/^=>/{s:=>#\(.*\):/* \1 */:; \
-	s:^=>\([^ ]*\) [\$$#]*\([-0-9]*\) \(.*\):#define \1 \2 /* \3 */:; \
-	s:^=>\([^ ]*\) [\$$#]*\([^ ]*\) \(.*\):#define \1 \2 /* \3 */:; \
-	s:=>::; p;}"
+	's:^[[:space:]]*\.ascii[[:space:]]*"\(.*\)".*:\1:; \
+	/^->/{s:->#\(.*\):/* \1 */:; \
+	s:^->\([^ ]*\) [\$$#]*\([^ ]*\) \(.*\):#define \1 \2 /* \3 */:; \
+	s:->::; p;}'
 endef
 
 quiet_cmd_defines = GEN     $@
