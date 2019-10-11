@@ -77,6 +77,7 @@ void inmate_main(void)
 	 * register width (rax, eax, ax)
 	 */
 
+#if 0
 	/* MOVZXB (48 0f b6), 8-bit data, 64-bit address, clear bits 8-63 */
 	asm volatile("movzxb (%%rax), %%rax"
 		: "=a" (reg64) : "a" (mmio_reg));
@@ -163,6 +164,7 @@ void inmate_main(void)
 	asm volatile("movzxw (%%eax), %%eax"
 		: "=a" (reg64) : "a" (mmio_reg));
 	EXPECT_EQUAL(reg64, pattern & 0xffff);
+#endif
 
 	/* MOVZXW (67 66 0f b7), 16-bit data, preserve bits 16-63, 32-bit address,
 	 * AD SZ prefix, OP SZ prefix. See also 66 0f b7: not an official
@@ -183,10 +185,12 @@ void inmate_main(void)
 	EXPECT_EQUAL(reg64, (u32)pattern);
 
 	reg64 = 0ULL;
+#if 0
 	/* MEM_TO_AX (a1), 64-bit data, 32-bit address, AD SZ override prefix */
 	asm volatile("addr32 mov 0x101ff8, %%rax"
 		: "=a" (reg64) : "a" (0));
 	EXPECT_EQUAL(reg64, pattern);
+#endif
 
 	printk("MMIO read test %s\n\n", all_passed ? "passed" : "FAILED");
 
