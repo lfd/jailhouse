@@ -735,6 +735,10 @@ class PCICapability:
                 # this cap can be handed out completely
                 len = 8
                 flags = PCICapability.RW
+            elif id == PCI_CAP_ID.VPD:
+                len = 8
+                # access side effects still ned to be analyzed
+                flags = PCICapability.RW
             elif id == PCI_CAP_ID.MSI:
                 # access will be moderated by hypervisor
                 len = 10
