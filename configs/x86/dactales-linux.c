@@ -25,7 +25,7 @@
 struct {
 	struct jailhouse_cell_desc cell;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[6];
+	struct jailhouse_memory mem_regions[9];
 	struct jailhouse_cache cache_regions[0];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pio pio_regions[2];
@@ -53,6 +53,8 @@ struct {
 	},
 
 	.mem_regions = {
+		/* IVSHMEM shared memory region */
+		JAILHOUSE_SHMEM_NET_REGIONS(IVSHMEM_BASE, 1),
 		/* low RAM */ {
 			.phys_start = DACTALES_LOW_BASE,
 			.virt_start = 0,
@@ -88,14 +90,6 @@ struct {
 			.virt_start = 0xab001000,
 			.size = 0x1000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-		/* IVSHMEM shared memory region */
-		{
-			.phys_start = IVSHMEM_BASE,
-			.virt_start = IVSHMEM_BASE,
-			.size = IVSHMEM_SIZE,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_ROOTSHARED,
 		},
 	},
 
@@ -140,12 +134,11 @@ struct {
 			.type = JAILHOUSE_PCI_TYPE_IVSHMEM,
 			.domain = 0x0,
 			.bdf = 0x08,
-			.bar_mask = {
-				0xffffff00, 0xffffffff, 0x00000000,
-				0x00000000, 0xffffffe0, 0xffffffff,
-			},
-			.num_msix_vectors = 1,
-			.shmem_region = 5,
+			.bar_mask = JAILHOUSE_IVSHMEM_BAR_MASK_MSIX,
+			.num_msix_vectors = 2,
+			.shmem_regions_start = 0,
+			.shmem_dev_id = 1,
+			.shmem_peers = 2,
 			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
 		},
 	},
