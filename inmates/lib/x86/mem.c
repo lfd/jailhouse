@@ -85,3 +85,53 @@ void map_range(void *start, unsigned long size, enum map_type map_type)
 		vaddr += HUGE_PAGE_SIZE;
 	}
 }
+
+void map_range_4k(void *start, unsigned long size, enum map_type map_type)
+{
+	unsigned long pt_addr, *pt_entry, *pt;
+	unsigned long vaddr = (unsigned long)start;
+
+	pt_addr = read_cr3();
+
+	size += (vaddr & ~PAGE_MASK) + PAGE_SIZE - 1;
+	size &= PAGE_MASK;
+	while (size > 0) {
+#ifdef __x86_64__
+		pt_addr &= PAGE_MASK;
+		pt = (unsigned long *)pt_addr;
+
+		pt_entry = &pt[(vaddr >> 39) & 0x1ff];
+		if (*pt_entry & PG_PRESENT) {
+			pt = (unsigned long *)(*pt_entry & PAGE_MASK);
+		} else {
+			pt = alloc(PAGE_SIZE, PAGE_SIZE);
+			*pt_entry = (unsigned long)pt | PG_RW | PG_PRESENT;
+		}
+
+		pt_entry = &pt[(vaddr >> 30) & 0x1ff];
+		if (*pt_entry & PG_PRESENT) {
+			pt = (unsigned long *)(*pt_entry & PAGE_MASK);
+		} else {
+			pt = alloc(PAGE_SIZE, PAGE_SIZE);
+			*pt_entry = (unsigned long)pt | PG_RW | PG_PRESENT;
+		}
+
+		pt_entry = &pt[(vaddr >> 21) & 0x1ff];
+		if (*pt_entry & PG_PRESENT) {
+			pt = (unsigned long *)(*pt_entry & PAGE_MASK);
+		} else {
+			pt = alloc(PAGE_SIZE, PAGE_SIZE);
+			*pt_entry = (unsigned long)pt | PG_RW | PG_PRESENT;
+		}
+
+		pt_entry = &pt[(vaddr >> 12) & 0x1ff];
+		*pt_entry = (vaddr & PAGE_MASK) |
+			(map_type == MAP_UNCACHED ? PG_PCD : 0) |
+			PG_RW | PG_PRESENT;
+#else
+#error not yet implemented
+#endif
+		size -= PAGE_SIZE;
+		vaddr += PAGE_SIZE;
+	}
+}

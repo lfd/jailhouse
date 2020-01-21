@@ -121,6 +121,7 @@ bool cmdline_parse_bool(const char *param, bool default_value);
 enum map_type { MAP_CACHED, MAP_UNCACHED };
 
 void map_range(void *start, unsigned long size, enum map_type map_type);
+void map_range_4k(void *start, unsigned long size, enum map_type map_type);
 
 typedef void(*irq_handler_t)(unsigned int);
 
