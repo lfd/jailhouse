@@ -221,7 +221,7 @@ void inmate_main(void)
 	if ((bar & 0x6) == 0x4)
 		bar |= (u64)pci_read_config(bdf, PCI_CFG_BAR + 4, 4) << 32;
 	mmiobar = (void *)(bar & ~0xfUL);
-	map_range(mmiobar, 128 * 1024, MAP_UNCACHED);
+	map_range(mmiobar, 128 * 1024, PG_RW, MAP_UNCACHED);
 	printk("MMIO register BAR at %p\n", mmiobar);
 
 	pci_write_config(bdf, PCI_CFG_COMMAND,

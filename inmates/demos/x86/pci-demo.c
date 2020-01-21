@@ -60,7 +60,7 @@ void inmate_main(void)
 	if ((bar & 0x6) == 0x4)
 		bar |= (u64)pci_read_config(bdf, PCI_CFG_BAR + 4, 4) << 32;
 	hdbar = (void *)(bar & ~0xfUL);
-	map_range(hdbar, PAGE_SIZE, MAP_UNCACHED);
+	map_range(hdbar, PAGE_SIZE, PG_RW, MAP_UNCACHED);
 	printk("HDBAR at %p\n", hdbar);
 
 	pci_msi_set_vector(bdf, IRQ_VECTOR);

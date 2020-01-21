@@ -52,7 +52,7 @@ void inmate_main(void)
 
 	kernel = (void *)(unsigned long)boot.params.kernel_alignment;
 
-	map_range(kernel, boot.params.init_size, MAP_CACHED);
+	map_range(kernel, boot.params.init_size, PG_RW, MAP_CACHED);
 
 	setup_data = (struct setup_data *)boot.params.setup_data;
 	setup_data->pm_timer_address = comm_region->pm_timer_address;

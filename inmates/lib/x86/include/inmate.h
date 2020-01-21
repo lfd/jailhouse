@@ -56,6 +56,11 @@
 #define PAGE_MASK		(~(PAGE_SIZE - 1))
 #define HUGE_PAGE_MASK		(~(HUGE_PAGE_SIZE - 1))
 
+#define PG_PRESENT	0x01
+#define PG_RW		0x02
+#define PG_PS		0x80
+#define PG_PCD		0x10
+
 #define X2APIC_ID		0x802
 #define X2APIC_ICR		0x830
 

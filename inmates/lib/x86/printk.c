@@ -65,7 +65,7 @@ void arch_console_init(struct uart_chip *chip)
 
 	if (cmdline_parse_bool("con-is-mmio", CON_IS_MMIO(console->flags))) {
 #ifdef __x86_64__
-		map_range((void *)chip->base, 0x1000, MAP_UNCACHED);
+		map_range((void *)chip->base, 0x1000, PG_RW, MAP_UNCACHED);
 #endif
 
 		if (cmdline_parse_bool("con-regdist-1",

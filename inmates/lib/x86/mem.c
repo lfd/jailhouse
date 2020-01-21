@@ -39,12 +39,7 @@
 #include <inmate.h>
 #include <asm/regs.h>
 
-#define PG_PRESENT	0x01
-#define PG_RW		0x02
-#define PG_PS		0x80
-#define PG_PCD		0x10
-
-void map_range(void *start, unsigned long size, enum map_type map_type)
+void map_range(void *start, unsigned long size, unsigned long flags, enum map_type map_type)
 {
 	unsigned long pt_addr, *pt_entry, *pt;
 	unsigned long vaddr = (unsigned long)start;
@@ -77,7 +72,7 @@ void map_range(void *start, unsigned long size, enum map_type map_type)
 		pt_entry = &pt[(vaddr >> 21) & 0x1ff];
 		*pt_entry = (vaddr & HUGE_PAGE_MASK) |
 			(map_type == MAP_UNCACHED ? PG_PCD : 0) |
-			PG_PS | PG_RW | PG_PRESENT;
+			PG_PS | flags | PG_PRESENT;
 #else
 #error not yet implemented
 #endif
@@ -86,7 +81,7 @@ void map_range(void *start, unsigned long size, enum map_type map_type)
 	}
 }
 
-void map_range_4k(void *start, unsigned long size, enum map_type map_type)
+void map_range_4k(void *start, unsigned long size, unsigned long flags, enum map_type map_type)
 {
 	unsigned long pt_addr, *pt_entry, *pt;
 	unsigned long vaddr = (unsigned long)start;
@@ -127,7 +122,7 @@ void map_range_4k(void *start, unsigned long size, enum map_type map_type)
 		pt_entry = &pt[(vaddr >> 12) & 0x1ff];
 		*pt_entry = (vaddr & PAGE_MASK) |
 			(map_type == MAP_UNCACHED ? PG_PCD : 0) |
-			PG_RW | PG_PRESENT;
+			flags | PG_PRESENT;
 #else
 #error not yet implemented
 #endif

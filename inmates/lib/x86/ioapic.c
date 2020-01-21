@@ -45,7 +45,7 @@
 
 void ioapic_init(void)
 {
-	map_range(IOAPIC_BASE, PAGE_SIZE, MAP_UNCACHED);
+	map_range(IOAPIC_BASE, PAGE_SIZE, PG_RW, MAP_UNCACHED);
 }
 
 void ioapic_pin_set_vector(unsigned int pin,

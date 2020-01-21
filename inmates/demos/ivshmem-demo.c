@@ -124,7 +124,7 @@ static void init_device(struct ivshmem_dev_data *d)
 	pci_write_config(d->bdf, PCI_CFG_COMMAND,
 			 (PCI_CMD_MEM | PCI_CMD_MASTER), 2);
 
-	map_range((void *)BAR_BASE, 2 * PAGE_SIZE, MAP_UNCACHED);
+	map_range((void *)BAR_BASE, 2 * PAGE_SIZE, PG_RW, MAP_UNCACHED);
 
 	d->id = mmio_read32(&d->registers->id);
 	printk("IVSHMEM: ID is %d\n", d->id);
@@ -159,7 +159,7 @@ static void init_device(struct ivshmem_dev_data *d)
 
 	size = d->state_table_sz + d->rw_section_sz +
 		max_peers * d->out_section_sz;
-	map_range((void *)baseaddr, size, MAP_CACHED);
+	map_range((void *)baseaddr, size, PG_RW, MAP_CACHED);
 
 	d->msix_cap = pci_find_cap(d->bdf, PCI_CAP_MSIX);
 	vectors = d->msix_cap > 0 ? MAX_VECTORS : 1;
