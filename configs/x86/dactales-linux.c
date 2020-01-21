@@ -46,6 +46,12 @@ struct {
 		.num_pio_regions = ARRAY_SIZE(config.pio_regions),
 		.num_pci_devices = ARRAY_SIZE(config.pci_devices),
 		.num_pci_caps = ARRAY_SIZE(config.pci_caps),
+
+		.console = {
+			.type = JAILHOUSE_CON_TYPE_8250,
+			.flags = JAILHOUSE_CON_ACCESS_PIO,
+			.address = 0x3f8,
+		},
 	},
 
 	.cpus = {
@@ -106,6 +112,7 @@ struct {
 	},
 
 	.pio_regions = {
+		PIO_RANGE(0x3f8, 8),
 		PIO_RANGE(0x4000, 8),
 	},
 
