@@ -54,6 +54,7 @@
 #define JAILHOUSE_X86		0
 #define JAILHOUSE_ARM		1
 #define JAILHOUSE_ARM64		2
+#define JAILHOUSE_RISCV64	3
 
 /*
  * Incremented on any layout or semantic change of system or cell config.
