@@ -23,6 +23,10 @@
 #define JAILHOUSE_ARCHITECTURE	JAILHOUSE_ARM
 #elif defined(CONFIG_ARM64)
 #define JAILHOUSE_ARCHITECTURE	JAILHOUSE_ARM64
+#elif defined(CONFIG_RISCV)
+#define JAILHOUSE_ARCHITECTURE	JAILHOUSE_RISCV64
+#else
+#error	Unsupported architecure!
 #endif
 
 extern struct mutex jailhouse_lock;
