@@ -47,7 +47,7 @@ struct {
 	__u64 cpus[1];
 	struct jailhouse_memory mem_regions[38];
 	struct jailhouse_irqchip irqchips[2];
-	struct jailhouse_pio pio_regions[10];
+	struct jailhouse_pio pio_regions[12];
 	struct jailhouse_pci_device pci_devices[37];
 	struct jailhouse_pci_capability pci_caps[81];
 } __attribute__((packed)) config = {
@@ -438,9 +438,9 @@ struct {
 		/* Port I/O: 0804-0805 : ACPI PM1a_CNT_BLK */
 		/* PIO_RANGE(0x804, 0x2), */
 		/* Port I/O: 0808-080b : ACPI PM_TMR */
-		/* PIO_RANGE(0x808, 0x4), */
+		PIO_RANGE(0x808, 0x4),
 		/* Port I/O: 0810-0815 : ACPI CPU throttle */
-		/* PIO_RANGE(0x810, 0x6), */
+		PIO_RANGE(0x810, 0x6),
 		/* Port I/O: 0820-0827 : ACPI GPE0_BLK */
 		/* PIO_RANGE(0x820, 0x8), */
 		/* Port I/O: 0900-090f : pnp 00:05 */
