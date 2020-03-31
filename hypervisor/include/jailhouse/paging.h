@@ -96,7 +96,7 @@ typedef pt_entry_t page_table_t;
 struct paging {
 	/** Page size of terminal entries in this level or 0 if none are
 	 * supported. */
-	unsigned int page_size;
+	unsigned long page_size;
 
 	/**
 	 * Get entry in given table corresponding to virt address.
