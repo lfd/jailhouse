@@ -53,17 +53,26 @@ class JAILHOUSE_MEM(ExtendedEnum, int):
 class MemRegion:
     _BIN_FMT = struct.Struct('QQQQ')
 
-    def __init__(self, region_struct):
-        (self.phys_start,
-         self.virt_start,
-         self.size,
-         self.flags) = MemRegion._BIN_FMT.unpack_from(region_struct)
+    def __init__(self):
+        self.phys_start = 0
+        self.virt_start = 0
+        self.size = 0
+        self.flags = 0
 
     def __str__(self):
         return ("  phys_start: 0x%016x\n" % self.phys_start) + \
                ("  virt_start: 0x%016x\n" % self.virt_start) + \
                ("  size:       0x%016x\n" % self.size) + \
                ("  flags:      " + flag_str(JAILHOUSE_MEM, self.flags))
+
+    @classmethod
+    def parse(cls, data):
+        self = cls()
+        (self.phys_start,
+         self.virt_start,
+         self.size,
+         self.flags) = cls._BIN_FMT.unpack_from(data)
+        return self
 
     def is_ram(self):
         return ((self.flags & (JAILHOUSE_MEM.READ |
@@ -109,12 +118,22 @@ class CacheRegion:
 class Irqchip:
     _BIN_FMT = struct.Struct('QIIQQ')
 
-    def __init__(self, irqchip_struct):
+    def __init__(self):
+        self.address = 0
+        self.id = 0
+        self.pin_base = 0
+        self.pin_bitmap_lo = 0
+        self.pin_bitmap_hi = 0
+
+    @classmethod
+    def parse(cls, data):
+        self = cls()
         (self.address,
          self.id,
          self.pin_base,
          self.pin_bitmap_lo,
-         self.pin_bitmap_hi) = Irqchip._BIN_FMT.unpack_from(irqchip_struct)
+         self.pin_bitmap_hi) = cls._BIN_FMT.unpack_from(data)
+        return self
 
     def is_standard(self):
         return self.address == 0xfec00000
@@ -123,16 +142,31 @@ class Irqchip:
 class PIORegion:
     _BIN_FMT = struct.Struct('HH')
 
-    def __init__(self, pio_struct):
-        (self.base, self.length) = PIORegion._BIN_FMT.unpack_from(pio_struct)
+    def __init__(self):
+        self.base = 0
+        self.length = 0
+
+    @classmethod
+    def parse(cls, data):
+        self = cls()
+        (self.base, self.length) = cls._BIN_FMT.unpack_from(data)
+        return self
 
 
 class CellConfig:
     _BIN_FMT = struct.Struct('=6sH32s4xIIIIIIIIIIQ8x32x')
 
-    def __init__(self, data, root_cell=False):
-        self.data = data
+    def __init__(self):
+        self.name = ""
+        self.memory_regions = []
+        self.irqchips = []
+        self.pio_regions = []
+        self.vpci_irq_base = 0
+        self.cpu_reset_address = 0
 
+    @classmethod
+    def parse(cls, data, root_cell=False):
+        self = cls()
         try:
             (signature,
              revision,
@@ -147,8 +181,7 @@ class CellConfig:
              self.num_pci_caps,
              self.num_stream_ids,
              self.vpci_irq_base,
-             self.cpu_reset_address) = \
-                CellConfig._BIN_FMT.unpack_from(self.data)
+             self.cpu_reset_address) = cls._BIN_FMT.unpack_from(data)
             if not root_cell:
                 if signature != b'JHCELL':
                     raise RuntimeError('Not a cell configuration')
@@ -156,29 +189,26 @@ class CellConfig:
                     raise RuntimeError('Configuration file revision mismatch')
             self.name = str(name.decode().strip('\0'))
 
-            mem_region_offs = CellConfig._BIN_FMT.size + self.cpu_set_size
-            self.memory_regions = []
+            mem_region_offs = cls._BIN_FMT.size + self.cpu_set_size
             for n in range(self.num_memory_regions):
-                self.memory_regions.append(
-                    MemRegion(self.data[mem_region_offs:]))
+                self.memory_regions.append(MemRegion.parse(data[mem_region_offs:]))
                 mem_region_offs += MemRegion._BIN_FMT.size
 
             irqchip_offs = mem_region_offs + \
                 self.num_cache_regions * CacheRegion._BIN_FMT.size
-            self.irqchips = []
             for n in range(self.num_irqchips):
-                self.irqchips.append(
-                    Irqchip(self.data[irqchip_offs:]))
+                self.irqchips.append(Irqchip.parse(data[irqchip_offs:]))
                 irqchip_offs += Irqchip._BIN_FMT.size
 
             pioregion_offs = irqchip_offs
-            self.pio_regions = []
             for n in range(self.num_pio_regions):
-                self.pio_regions.append(PIORegion(self.data[pioregion_offs:]))
+                self.pio_regions.append(PIORegion.parse(data[pioregion_offs:]))
                 pioregion_offs += PIORegion._BIN_FMT.size
         except struct.error:
             raise RuntimeError('Not a %scell configuration' %
                                ('root ' if root_cell else ''))
+
+        return self
 
 
 class SystemConfig:
@@ -186,23 +216,28 @@ class SystemConfig:
     # ...followed by MemRegion as hypervisor memory
     _BIN_FMT_CONSOLE_AND_PLATFORM = struct.Struct('32x12x224x44x')
 
-    def __init__(self, data):
-        self.data = data
+    def __init__(self):
+        self.hypervisor_memory = MemRegion()
+        self.root_cell = CellConfig()
 
+    @classmethod
+    def parse(cls, data):
+        self = cls()
         try:
-            (signature, revision) = SystemConfig._BIN_FMT.unpack_from(self.data)
+            (signature, revision) = cls._BIN_FMT.unpack_from(data)
 
             if signature != b'JHSYST':
                 raise RuntimeError('Not a root cell configuration')
             if revision != _CONFIG_REVISION:
                 raise RuntimeError('Configuration file revision mismatch')
 
-            offs = SystemConfig._BIN_FMT.size
-            self.hypervisor_memory = MemRegion(self.data[offs:])
+            offs = cls._BIN_FMT.size
+            self.hypervisor_memory = MemRegion.parse(data[offs:])
 
             offs += MemRegion._BIN_FMT.size
             offs += SystemConfig._BIN_FMT_CONSOLE_AND_PLATFORM.size
         except struct.error:
             raise RuntimeError('Not a root cell configuration')
 
-        self.root_cell = CellConfig(self.data[offs:], root_cell=True)
+        self.root_cell = CellConfig.parse(data[offs:], root_cell=True)
+        return self
