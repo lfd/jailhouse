@@ -51,15 +51,13 @@ class JAILHOUSE_MEM(ExtendedEnum, int):
 
 
 class MemRegion:
-    _REGION_FORMAT = 'QQQQ'
-    SIZE = struct.calcsize(_REGION_FORMAT)
+    _BIN_FMT = struct.Struct('QQQQ')
 
     def __init__(self, region_struct):
         (self.phys_start,
          self.virt_start,
          self.size,
-         self.flags) = \
-            struct.unpack_from(MemRegion._REGION_FORMAT, region_struct)
+         self.flags) = MemRegion._BIN_FMT.unpack_from(region_struct)
 
     def __str__(self):
         return ("  phys_start: 0x%016x\n" % self.phys_start) + \
@@ -105,37 +103,32 @@ class MemRegion:
 
 
 class CacheRegion:
-    _REGION_FORMAT = 'IIBxH'
-    SIZE = struct.calcsize(_REGION_FORMAT)
+    _BIN_FMT = struct.Struct('IIBxH')
 
 
 class Irqchip:
-    _IRQCHIP_FORMAT = 'QIIQQ'
-    SIZE = struct.calcsize(_IRQCHIP_FORMAT)
+    _BIN_FMT = struct.Struct('QIIQQ')
 
     def __init__(self, irqchip_struct):
         (self.address,
          self.id,
          self.pin_base,
          self.pin_bitmap_lo,
-         self.pin_bitmap_hi) = \
-            struct.unpack_from(self._IRQCHIP_FORMAT, irqchip_struct)
+         self.pin_bitmap_hi) = Irqchip._BIN_FMT.unpack_from(irqchip_struct)
 
     def is_standard(self):
         return self.address == 0xfec00000
 
 
 class PIORegion:
-    _REGION_FORMAT = 'HH'
-    SIZE = struct.calcsize(_REGION_FORMAT)
+    _BIN_FMT = struct.Struct('HH')
 
     def __init__(self, pio_struct):
-        (self.base, self.length) = struct.unpack_from(self._REGION_FORMAT,
-                                                      pio_struct)
+        (self.base, self.length) = PIORegion._BIN_FMT.unpack_from(pio_struct)
 
 
 class CellConfig:
-    _HEADER_FORMAT = '=6sH32s4xIIIIIIIIIIQ8x32x'
+    _BIN_FMT = struct.Struct('=6sH32s4xIIIIIIIIIIQ8x32x')
 
     def __init__(self, data, root_cell=False):
         self.data = data
@@ -155,7 +148,7 @@ class CellConfig:
              self.num_stream_ids,
              self.vpci_irq_base,
              self.cpu_reset_address) = \
-                struct.unpack_from(CellConfig._HEADER_FORMAT, self.data)
+                CellConfig._BIN_FMT.unpack_from(self.data)
             if not root_cell:
                 if signature != b'JHCELL':
                     raise RuntimeError('Not a cell configuration')
@@ -163,55 +156,52 @@ class CellConfig:
                     raise RuntimeError('Configuration file revision mismatch')
             self.name = str(name.decode().strip('\0'))
 
-            mem_region_offs = struct.calcsize(CellConfig._HEADER_FORMAT) + \
-                self.cpu_set_size
+            mem_region_offs = CellConfig._BIN_FMT.size + self.cpu_set_size
             self.memory_regions = []
             for n in range(self.num_memory_regions):
                 self.memory_regions.append(
                     MemRegion(self.data[mem_region_offs:]))
-                mem_region_offs += MemRegion.SIZE
+                mem_region_offs += MemRegion._BIN_FMT.size
 
             irqchip_offs = mem_region_offs + \
-                self.num_cache_regions * CacheRegion.SIZE
+                self.num_cache_regions * CacheRegion._BIN_FMT.size
             self.irqchips = []
             for n in range(self.num_irqchips):
                 self.irqchips.append(
                     Irqchip(self.data[irqchip_offs:]))
-                irqchip_offs += Irqchip.SIZE
+                irqchip_offs += Irqchip._BIN_FMT.size
 
             pioregion_offs = irqchip_offs
             self.pio_regions = []
             for n in range(self.num_pio_regions):
                 self.pio_regions.append(PIORegion(self.data[pioregion_offs:]))
-                pioregion_offs += PIORegion.SIZE
+                pioregion_offs += PIORegion._BIN_FMT.size
         except struct.error:
             raise RuntimeError('Not a %scell configuration' %
                                ('root ' if root_cell else ''))
 
 
 class SystemConfig:
-    _HEADER_FORMAT = '=6sH4x'
+    _BIN_FMT = struct.Struct('=6sH4x')
     # ...followed by MemRegion as hypervisor memory
-    _CONSOLE_AND_PLATFORM_FORMAT = '32x12x224x44x'
+    _BIN_FMT_CONSOLE_AND_PLATFORM = struct.Struct('32x12x224x44x')
 
     def __init__(self, data):
         self.data = data
 
         try:
-            (signature,
-             revision) = \
-                struct.unpack_from(SystemConfig._HEADER_FORMAT, self.data)
+            (signature, revision) = SystemConfig._BIN_FMT.unpack_from(self.data)
 
             if signature != b'JHSYST':
                 raise RuntimeError('Not a root cell configuration')
             if revision != _CONFIG_REVISION:
                 raise RuntimeError('Configuration file revision mismatch')
 
-            offs = struct.calcsize(SystemConfig._HEADER_FORMAT)
+            offs = SystemConfig._BIN_FMT.size
             self.hypervisor_memory = MemRegion(self.data[offs:])
 
-            offs += struct.calcsize(MemRegion._REGION_FORMAT)
-            offs += struct.calcsize(SystemConfig._CONSOLE_AND_PLATFORM_FORMAT)
+            offs += MemRegion._BIN_FMT.size
+            offs += SystemConfig._BIN_FMT_CONSOLE_AND_PLATFORM.size
         except struct.error:
             raise RuntimeError('Not a root cell configuration')
 
