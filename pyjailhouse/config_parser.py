@@ -22,6 +22,47 @@ from .extendedenum import ExtendedEnum
 _CONFIG_REVISION = 13
 
 
+class CStruct:
+    def _slots(self):
+        attrs = []
+        all_attr = [getattr(cls, '__slots__', ())
+                    for cls in type(self).__mro__]
+        for cls in all_attr:
+            num = getattr(self, '_BIN_FIELD_NUM', 0)
+            if len(cls) < num:
+                continue
+
+            for i in range(num):
+                attrs += [cls[i]]
+
+        return attrs
+
+    @classmethod
+    def parse(cls, data):
+        obj, data = cls.parse_class(cls, data)
+        return obj, data
+
+    @staticmethod
+    def parse_class(cls, data):
+        obj = cls()
+        slots = obj._slots()
+        if len(slots) > 0:
+            data_tuple = cls._BIN_FMT.unpack_from(data)
+            for assigment in zip(slots, data_tuple):
+                setattr(obj, *assigment)
+
+        return obj, data[cls._BIN_FMT.size:]
+
+    @staticmethod
+    def parse_array(cls, num, data):
+        array = []
+        for i in range(num):
+            obj, data = cls.parse(data)
+            array += [obj]
+
+        return array, data
+
+
 def flag_str(enum_class, value, separator=' | '):
     flags = []
     while value:
@@ -50,7 +91,9 @@ class JAILHOUSE_MEM(ExtendedEnum, int):
     }
 
 
-class MemRegion:
+class MemRegion(CStruct):
+    __slots__ = 'phys_start', 'virt_start', 'size', 'flags',
+    _BIN_FIELD_NUM = len(__slots__)
     _BIN_FMT = struct.Struct('QQQQ')
 
     def __init__(self):
@@ -64,15 +107,6 @@ class MemRegion:
                ("  virt_start: 0x%016x\n" % self.virt_start) + \
                ("  size:       0x%016x\n" % self.size) + \
                ("  flags:      " + flag_str(JAILHOUSE_MEM, self.flags))
-
-    @classmethod
-    def parse(cls, data):
-        self = cls()
-        (self.phys_start,
-         self.virt_start,
-         self.size,
-         self.flags) = cls._BIN_FMT.unpack_from(data)
-        return self
 
     def is_ram(self):
         return ((self.flags & (JAILHOUSE_MEM.READ |
@@ -111,11 +145,15 @@ class MemRegion:
             self.virt_address_in_region(region.virt_start)
 
 
-class CacheRegion:
+class CacheRegion(CStruct):
+    __slots__ = 'start', 'size', 'type', 'flags',
+    _BIN_FIELD_NUM = len(__slots__)
     _BIN_FMT = struct.Struct('IIBxH')
 
 
-class Irqchip:
+class Irqchip(CStruct):
+    __slots__ = 'address', 'id', 'pin_base', 'pin_bitmap_lo', 'pin_bitmap_hi',
+    _BIN_FIELD_NUM = len(__slots__)
     _BIN_FMT = struct.Struct('QIIQQ')
 
     def __init__(self):
@@ -125,36 +163,29 @@ class Irqchip:
         self.pin_bitmap_lo = 0
         self.pin_bitmap_hi = 0
 
-    @classmethod
-    def parse(cls, data):
-        self = cls()
-        (self.address,
-         self.id,
-         self.pin_base,
-         self.pin_bitmap_lo,
-         self.pin_bitmap_hi) = cls._BIN_FMT.unpack_from(data)
-        return self
-
     def is_standard(self):
         return self.address == 0xfec00000
 
 
-class PIORegion:
+class PIORegion(CStruct):
+    __slots__ = 'base', 'length',
+    _BIN_FIELD_NUM = len(__slots__)
     _BIN_FMT = struct.Struct('HH')
 
     def __init__(self):
         self.base = 0
         self.length = 0
 
-    @classmethod
-    def parse(cls, data):
-        self = cls()
-        (self.base, self.length) = cls._BIN_FMT.unpack_from(data)
-        return self
 
-
-class CellConfig:
-    _BIN_FMT = struct.Struct('=6sH32s4xIIIIIIIIIIQ8x32x')
+class CellConfig(CStruct):
+    # slots with a '_' prefix in name are private
+    __slots__ = 'name', '_flags', '_cpu_sets', \
+                'memory_regions', 'cache_regions', 'irqchips', 'pio_regions', \
+                '_pci_devices', '_pci_caps', '_stream_ids', \
+                'vpci_irq_base', 'cpu_reset_address',
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT_HDR = struct.Struct('=6sH')
+    _BIN_FMT = struct.Struct('=32s4xIIIIIIIIIIQ8x32x')
 
     def __init__(self):
         self.name = ""
@@ -166,55 +197,41 @@ class CellConfig:
 
     @classmethod
     def parse(cls, data, root_cell=False):
-        self = cls()
         try:
-            (signature,
-             revision,
-             name,
-             self.flags,
-             self.cpu_set_size,
-             self.num_memory_regions,
-             self.num_cache_regions,
-             self.num_irqchips,
-             self.num_pio_regions,
-             self.num_pci_devices,
-             self.num_pci_caps,
-             self.num_stream_ids,
-             self.vpci_irq_base,
-             self.cpu_reset_address) = cls._BIN_FMT.unpack_from(data)
             if not root_cell:
+                (signature, revision) = cls._BIN_FMT_HDR.unpack_from(data)
                 if signature != b'JHCELL':
                     raise RuntimeError('Not a cell configuration')
                 if revision != _CONFIG_REVISION:
                     raise RuntimeError('Configuration file revision mismatch')
-            self.name = str(name.decode().strip('\0'))
+                data = data[cls._BIN_FMT_HDR.size:]
 
-            mem_region_offs = cls._BIN_FMT.size + self.cpu_set_size
-            for n in range(self.num_memory_regions):
-                self.memory_regions.append(MemRegion.parse(data[mem_region_offs:]))
-                mem_region_offs += MemRegion._BIN_FMT.size
+            self, data = cls.parse_class(cls, data)
+            self.name = self.name.decode().strip('\0')
+            data = data[self._cpu_sets:] # skip CPU set
 
-            irqchip_offs = mem_region_offs + \
-                self.num_cache_regions * CacheRegion._BIN_FMT.size
-            for n in range(self.num_irqchips):
-                self.irqchips.append(Irqchip.parse(data[irqchip_offs:]))
-                irqchip_offs += Irqchip._BIN_FMT.size
+            self.memory_regions, data = \
+                cls.parse_array(MemRegion, self.memory_regions, data)
+            self.cache_regions, data = \
+                cls.parse_array(CacheRegion, self.cache_regions, data)
+            self.irqchips, data = \
+                cls.parse_array(Irqchip, self.irqchips, data)
+            self.pio_regions, data = \
+                cls.parse_array(PIORegion, self.pio_regions, data)
 
-            pioregion_offs = irqchip_offs
-            for n in range(self.num_pio_regions):
-                self.pio_regions.append(PIORegion.parse(data[pioregion_offs:]))
-                pioregion_offs += PIORegion._BIN_FMT.size
+            return self
         except struct.error:
             raise RuntimeError('Not a %scell configuration' %
                                ('root ' if root_cell else ''))
 
-        return self
 
-
-class SystemConfig:
-    _BIN_FMT = struct.Struct('=6sH4x')
+class SystemConfig(CStruct):
+    _BIN_FMT = struct.Struct('=4x')
     # ...followed by MemRegion as hypervisor memory
     _BIN_FMT_CONSOLE_AND_PLATFORM = struct.Struct('32x12x224x44x')
+
+    # constructed fields
+    __slots__ = 'hypervisor_memory', 'root_cell',
 
     def __init__(self):
         self.hypervisor_memory = MemRegion()
@@ -222,22 +239,20 @@ class SystemConfig:
 
     @classmethod
     def parse(cls, data):
-        self = cls()
         try:
-            (signature, revision) = cls._BIN_FMT.unpack_from(data)
-
+            hdr_fmt = CellConfig._BIN_FMT_HDR
+            (signature, revision) = hdr_fmt.unpack_from(data)
             if signature != b'JHSYST':
                 raise RuntimeError('Not a root cell configuration')
             if revision != _CONFIG_REVISION:
                 raise RuntimeError('Configuration file revision mismatch')
 
-            offs = cls._BIN_FMT.size
-            self.hypervisor_memory = MemRegion.parse(data[offs:])
+            self, data = cls.parse_class(cls, data[hdr_fmt.size:])
+            self.hypervisor_memory, data = MemRegion.parse(data)
 
-            offs += MemRegion._BIN_FMT.size
-            offs += SystemConfig._BIN_FMT_CONSOLE_AND_PLATFORM.size
+            offs = cls._BIN_FMT_CONSOLE_AND_PLATFORM.size
+            offs += CellConfig._BIN_FMT_HDR.size # skip header inside rootcell
+            self.root_cell = CellConfig.parse(data[offs:], root_cell=True)
+            return self
         except struct.error:
             raise RuntimeError('Not a root cell configuration')
-
-        self.root_cell = CellConfig.parse(data[offs:], root_cell=True)
-        return self
