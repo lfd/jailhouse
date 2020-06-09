@@ -196,8 +196,9 @@ class CellConfig(CStruct):
                 '_pci_devices', '_pci_caps', '_stream_ids', \
                 'vpci_irq_base', 'cpu_reset_address',
     _BIN_FIELD_NUM = len(__slots__)
-    _BIN_FMT_HDR = struct.Struct('=6sH')
     _BIN_FMT = struct.Struct('=32s4xIIIIIIIIIIQ8x32x')
+    _BIN_FMT_HDR = struct.Struct('=6sH')
+    _BIN_SIGNATURE = b'JHCELL'
 
     def __init__(self):
         self.name = ""
@@ -208,38 +209,27 @@ class CellConfig(CStruct):
         self.cpu_reset_address = 0
 
     @classmethod
-    def parse(cls, stream, root_cell=False):
-        try:
-            if not root_cell:
-                (signature, revision) = cls._BIN_FMT_HDR.unpack_from(
-                        stream.read(cls._BIN_FMT_HDR.size))
-                if signature != b'JHCELL':
-                    raise RuntimeError('Not a cell configuration')
-                if revision != _CONFIG_REVISION:
-                    raise RuntimeError('Configuration file revision mismatch')
+    def parse(cls, stream):
+        self = cls.parse_class(cls, stream)
+        self.name = self.name.decode().strip('\0')
+        stream.seek(self._cpu_sets, io.SEEK_CUR) # skip CPU set
 
-            self = cls.parse_class(cls, stream)
-            self.name = self.name.decode().strip('\0')
-            stream.seek(self._cpu_sets, io.SEEK_CUR) # skip CPU set
+        self.memory_regions = \
+            cls.parse_array(MemRegion, self.memory_regions, stream)
+        self.cache_regions = \
+            cls.parse_array(CacheRegion, self.cache_regions, stream)
+        self.irqchips = cls.parse_array(Irqchip, self.irqchips, stream)
+        self.pio_regions = \
+            cls.parse_array(PIORegion, self.pio_regions, stream)
 
-            self.memory_regions = \
-                cls.parse_array(MemRegion, self.memory_regions, stream)
-            self.cache_regions = \
-                cls.parse_array(CacheRegion, self.cache_regions, stream)
-            self.irqchips = cls.parse_array(Irqchip, self.irqchips, stream)
-            self.pio_regions = \
-                cls.parse_array(PIORegion, self.pio_regions, stream)
-
-            return self
-        except struct.error:
-            raise RuntimeError('Not a %scell configuration' %
-                               ('root ' if root_cell else ''))
+        return self
 
 
 class SystemConfig(CStruct):
     _BIN_FMT = struct.Struct('=4x')
     # ...followed by MemRegion as hypervisor memory
     _BIN_FMT_CONSOLE_AND_PLATFORM = struct.Struct('32x12x224x44x')
+    _BIN_SIGNATURE = b'JHSYST'
 
     # constructed fields
     __slots__ = 'hypervisor_memory', 'root_cell',
@@ -250,22 +240,39 @@ class SystemConfig(CStruct):
 
     @classmethod
     def parse(cls, stream):
-        try:
-            hdr_fmt = CellConfig._BIN_FMT_HDR
-            (signature, revision) = \
-                hdr_fmt.unpack_from(stream.read(hdr_fmt.size))
-            if signature != b'JHSYST':
-                raise RuntimeError('Not a root cell configuration')
-            if revision != _CONFIG_REVISION:
-                raise RuntimeError('Configuration file revision mismatch')
+        self = cls.parse_class(cls, stream)
+        self.hypervisor_memory = MemRegion.parse(stream)
 
-            self = cls.parse_class(cls, stream)
-            self.hypervisor_memory = MemRegion.parse(stream)
+        offs = cls._BIN_FMT_CONSOLE_AND_PLATFORM.size
+        offs += CellConfig._BIN_FMT_HDR.size # skip header inside rootcell
+        stream.seek(offs, io.SEEK_CUR)
+        self.root_cell = CellConfig.parse(stream)
+        return self
 
-            offs = cls._BIN_FMT_CONSOLE_AND_PLATFORM.size
-            offs += hdr_fmt.size # skip header inside rootcell
-            stream.seek(offs, io.SEEK_CUR)
-            self.root_cell = CellConfig.parse(stream, True)
-            return self
-        except struct.error:
-            raise RuntimeError('Not a root cell configuration')
+
+def parse(stream, config_expect=None):
+    fmt = CellConfig._BIN_FMT_HDR
+
+    try:
+        (signature, revision) = fmt.unpack_from(stream.read(fmt.size))
+    except struct.error:
+        raise RuntimeError('Not a Jailhouse configuration')
+
+    if config_expect == None:
+        # Try probing
+        if signature == CellConfig._BIN_SIGNATURE:
+            config_expect = CellConfig
+        elif signature == SystemConfig._BIN_SIGNATURE:
+            config_expect = SystemConfig
+        else:
+            raise RuntimeError('Not a Jailhouse configuration')
+    elif config_expect._BIN_SIGNATURE != signature:
+        raise RuntimeError("Not a '%s' configuration" % config_expect.__name__)
+
+    if revision != _CONFIG_REVISION:
+        raise RuntimeError('Configuration file revision mismatch')
+
+    try:
+        return config_expect.parse(stream)
+    except struct.error:
+        raise RuntimeError('Configuration unreadable')
