@@ -15,6 +15,7 @@
 # to change the generated C-code.
 
 import struct
+import io
 
 from .extendedenum import ExtendedEnum
 
@@ -38,29 +39,30 @@ class CStruct:
         return attrs
 
     @classmethod
-    def parse(cls, data):
-        obj, data = cls.parse_class(cls, data)
-        return obj, data
+    def parse(cls, stream):
+        obj = cls.parse_class(cls, stream)
+        return obj
 
     @staticmethod
-    def parse_class(cls, data):
+    def parse_class(cls, stream):
+        fmt = cls._BIN_FMT
+        data_tuple = fmt.unpack_from(stream.read(fmt.size))
         obj = cls()
         slots = obj._slots()
         if len(slots) > 0:
-            data_tuple = cls._BIN_FMT.unpack_from(data)
             for assigment in zip(slots, data_tuple):
                 setattr(obj, *assigment)
 
-        return obj, data[cls._BIN_FMT.size:]
+        return obj
 
     @staticmethod
-    def parse_array(cls, num, data):
+    def parse_array(cls, num, stream):
         array = []
         for i in range(num):
-            obj, data = cls.parse(data)
+            obj = cls.parse(stream)
             array += [obj]
 
-        return array, data
+        return array
 
 
 def flag_str(enum_class, value, separator=' | '):
@@ -196,28 +198,27 @@ class CellConfig(CStruct):
         self.cpu_reset_address = 0
 
     @classmethod
-    def parse(cls, data, root_cell=False):
+    def parse(cls, stream, root_cell=False):
         try:
             if not root_cell:
-                (signature, revision) = cls._BIN_FMT_HDR.unpack_from(data)
+                (signature, revision) = cls._BIN_FMT_HDR.unpack_from(
+                        stream.read(cls._BIN_FMT_HDR.size))
                 if signature != b'JHCELL':
                     raise RuntimeError('Not a cell configuration')
                 if revision != _CONFIG_REVISION:
                     raise RuntimeError('Configuration file revision mismatch')
-                data = data[cls._BIN_FMT_HDR.size:]
 
-            self, data = cls.parse_class(cls, data)
+            self = cls.parse_class(cls, stream)
             self.name = self.name.decode().strip('\0')
-            data = data[self._cpu_sets:] # skip CPU set
+            stream.seek(self._cpu_sets, io.SEEK_CUR) # skip CPU set
 
-            self.memory_regions, data = \
-                cls.parse_array(MemRegion, self.memory_regions, data)
-            self.cache_regions, data = \
-                cls.parse_array(CacheRegion, self.cache_regions, data)
-            self.irqchips, data = \
-                cls.parse_array(Irqchip, self.irqchips, data)
-            self.pio_regions, data = \
-                cls.parse_array(PIORegion, self.pio_regions, data)
+            self.memory_regions = \
+                cls.parse_array(MemRegion, self.memory_regions, stream)
+            self.cache_regions = \
+                cls.parse_array(CacheRegion, self.cache_regions, stream)
+            self.irqchips = cls.parse_array(Irqchip, self.irqchips, stream)
+            self.pio_regions = \
+                cls.parse_array(PIORegion, self.pio_regions, stream)
 
             return self
         except struct.error:
@@ -238,21 +239,23 @@ class SystemConfig(CStruct):
         self.root_cell = CellConfig()
 
     @classmethod
-    def parse(cls, data):
+    def parse(cls, stream):
         try:
             hdr_fmt = CellConfig._BIN_FMT_HDR
-            (signature, revision) = hdr_fmt.unpack_from(data)
+            (signature, revision) = \
+                hdr_fmt.unpack_from(stream.read(hdr_fmt.size))
             if signature != b'JHSYST':
                 raise RuntimeError('Not a root cell configuration')
             if revision != _CONFIG_REVISION:
                 raise RuntimeError('Configuration file revision mismatch')
 
-            self, data = cls.parse_class(cls, data[hdr_fmt.size:])
-            self.hypervisor_memory, data = MemRegion.parse(data)
+            self = cls.parse_class(cls, stream)
+            self.hypervisor_memory = MemRegion.parse(stream)
 
             offs = cls._BIN_FMT_CONSOLE_AND_PLATFORM.size
-            offs += CellConfig._BIN_FMT_HDR.size # skip header inside rootcell
-            self.root_cell = CellConfig.parse(data[offs:], root_cell=True)
+            offs += hdr_fmt.size # skip header inside rootcell
+            stream.seek(offs, io.SEEK_CUR)
+            self.root_cell = CellConfig.parse(stream, True)
             return self
         except struct.error:
             raise RuntimeError('Not a root cell configuration')
