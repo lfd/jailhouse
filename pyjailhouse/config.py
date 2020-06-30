@@ -251,7 +251,7 @@ class Console(CStruct):
     _BIN_FMT = struct.Struct('=QIHHIIQ')
 
 
-class CellConfig(CStruct):
+class Cell(CStruct):
     # slots with a '_' prefix in name are private
     __slots__ = 'name', 'flags', 'cpu_set', \
                 'memory_regions', 'cache_regions', 'irqchips', 'pio_regions', \
@@ -488,7 +488,7 @@ class PlattformInfo(CStruct):
         return self
 
 
-class SystemConfig(CStruct):
+class System(CStruct):
     __slots__ = 'flags',
     _BIN_FIELD_NUM = len(__slots__)
     _BIN_FMT = struct.Struct('I')
@@ -503,10 +503,10 @@ class SystemConfig(CStruct):
         self.hypervisor_memory = MemRegion()
         self.debug_console = Console()
         self.platform_info = PlattformInfo()
-        self.root_cell = CellConfig()
+        self.root_cell = Cell()
 
     def save(self, stream):
-        hdr_fmt = CellConfig._BIN_FMT_HDR
+        hdr_fmt = Cell._BIN_FMT_HDR
         stream.write(hdr_fmt.pack(self._BIN_SIGNATURE, _CONFIG_REVISION))
         super(self.__class__, self).save(stream)
         self.hypervisor_memory.save(stream)
@@ -522,13 +522,13 @@ class SystemConfig(CStruct):
         self.debug_console = Console.parse(stream)
         self.platform_info = PlattformInfo.parse(stream)
         # skip header inside rootcell
-        stream.seek(CellConfig._BIN_FMT_HDR.size, io.SEEK_CUR)
-        self.root_cell = CellConfig.parse(stream)
+        stream.seek(Cell._BIN_FMT_HDR.size, io.SEEK_CUR)
+        self.root_cell = Cell.parse(stream)
         return self
 
 
 def parse(stream, config_expect=None):
-    fmt = CellConfig._BIN_FMT_HDR
+    fmt = Cell._BIN_FMT_HDR
 
     try:
         (signature, revision) = fmt.unpack_from(stream.read(fmt.size))
@@ -537,10 +537,10 @@ def parse(stream, config_expect=None):
 
     if config_expect == None:
         # Try probing
-        if signature == CellConfig._BIN_SIGNATURE:
-            config_expect = CellConfig
-        elif signature == SystemConfig._BIN_SIGNATURE:
-            config_expect = SystemConfig
+        if signature == Cell._BIN_SIGNATURE:
+            config_expect = Cell
+        elif signature == System._BIN_SIGNATURE:
+            config_expect = System
         else:
             raise RuntimeError('Not a Jailhouse configuration')
     elif config_expect._BIN_SIGNATURE != signature:

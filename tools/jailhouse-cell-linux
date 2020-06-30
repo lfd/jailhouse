@@ -19,7 +19,7 @@ import sys
 # Imports from directory containing this must be done before the following
 sys.path[0] = os.path.dirname(os.path.abspath(__file__)) + "/.."
 from pyjailhouse.cell import JailhouseCell
-import pyjailhouse.config_parser as config_parser
+import pyjailhouse.config as config
 
 libexecdir = None
 
@@ -719,7 +719,7 @@ except IOError as e:
 arch = resolve_arch(args.arch)
 
 try:
-    config = config_parser.parse(args.config, config_parser.CellConfig)
+    config = config.parse(args.config, config.Cell)
 except RuntimeError as e:
     print(str(e) + ": " + args.config.name, file=sys.stderr)
     exit(1)
