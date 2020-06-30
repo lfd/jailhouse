@@ -189,31 +189,77 @@ class PIORegion(CStruct):
         self.length = 0
 
 
+class PciDevice(CStruct):
+    __slots__ = 'type', 'iommu', 'domain', 'bdf', 'bar_mask', '_caps_start', \
+                '_caps_num', 'num_msi_vectors', 'msi_bits', \
+                'num_msix_vectors', 'msix_region_size', 'msix_address', \
+                'shmem_regions_start', 'shmem_dev_id', 'shmem_peers', \
+                'shmem_protocol'
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT_BAR_MASK = struct.Struct('6I')
+    _BIN_FMT = struct.Struct('BBHH%usHHBBHHQIBBH' % _BIN_FMT_BAR_MASK.size)
+
+    # constructed fields
+    __slots__ += 'caps',
+
+    TYPE_DEVICE = 1
+    TYPE_BRIDGE = 2
+    TYPE_IVSHMEM = 3
+
+    @classmethod
+    def parse(cls, stream):
+        self = cls.parse_class(cls, stream)
+        self.bar_mask = cls._BIN_FMT_BAR_MASK.unpack_from(self.bar_mask)
+        return self
+
+
+class PciCapability(CStruct):
+    __slots__ = 'id', 'start', 'len', 'flags'
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT = struct.Struct('=HHHH')
+
+
+class Console(CStruct):
+    __slots__ = 'address', 'size', 'type', 'flags', 'divider', 'gate_nr', \
+                'clock_reg'
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT = struct.Struct('=QIHHIIQ')
+
+
 class CellConfig(CStruct):
     # slots with a '_' prefix in name are private
-    __slots__ = 'name', '_flags', 'cpu_set', \
+    __slots__ = 'name', 'flags', 'cpu_set', \
                 'memory_regions', 'cache_regions', 'irqchips', 'pio_regions', \
-                '_pci_devices', '_pci_caps', '_stream_ids', \
+                'pci_devices', '_pci_caps', 'stream_ids', \
                 'vpci_irq_base', 'cpu_reset_address',
     _BIN_FIELD_NUM = len(__slots__)
-    _BIN_FMT = struct.Struct('=32s4xIIIIIIIIIIQ8x32x')
+    _BIN_FMT = struct.Struct('=32s4xIIIIIIIIIIQ8x')
     _BIN_FMT_HDR = struct.Struct('=6sH')
-    _BIN_FMT_CPU = struct.Struct('=Q')
+    _BIN_FMT_CPU = struct.Struct('Q')
+    _BIN_FMT_STREAM_ID = struct.Struct('I')
     _BIN_SIGNATURE = b'JHCELL'
+
+    # constructed fields
+    __slots__ += 'console',
 
     def __init__(self):
         self.name = ""
+        self.flags = 0
         self.cpu_set = set()
         self.memory_regions = []
         self.irqchips = []
         self.pio_regions = []
+        self.pci_devices = []
+        self.stream_ids = []
         self.vpci_irq_base = 0
         self.cpu_reset_address = 0
+        self.console = Console()
 
     @classmethod
     def parse(cls, stream):
         self = cls.parse_class(cls, stream)
         self.name = self.name.decode().strip('\0')
+        self.console = Console.parse(stream)
 
         cpu_fmt = cls._BIN_FMT_CPU
         cpu_set_num = int(self.cpu_set / cpu_fmt.size)
@@ -232,30 +278,138 @@ class CellConfig(CStruct):
         self.pio_regions = \
             cls.parse_array(PIORegion, self.pio_regions, stream)
 
+        self.pci_devices = cls.parse_array(PciDevice, self.pci_devices, stream)
+        pci_caps = cls.parse_array(PciCapability, self._pci_caps, stream)
+        for pci_dev in self.pci_devices:
+            start = pci_dev._caps_start
+            end = start + pci_dev._caps_num
+            pci_dev.caps = pci_caps[start:end]
+
+        sid_fmt = cls._BIN_FMT_STREAM_ID
+        sid_num = self.stream_ids
+        self.stream_ids = []
+        for i in range(sid_num):
+            self.stream_ids += [sid_fmt.unpack_from(stream.read(sid_fmt.size))]
+
+        return self
+
+
+class IommuAmd(CStruct):
+    __slots__ = 'bdf', 'base_cap', 'msi_cap', 'features'
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT = struct.Struct('=HBBI')
+
+
+class IommuPvu(CStruct):
+    __slots__ = 'tlb_base', 'tlb_size'
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT = struct.Struct('=QI')
+
+
+class Iommu(CStruct):
+    __slots__ = 'type', 'base', 'size',
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT = struct.Struct('=IQI')
+
+    # constructed fields
+    __slots__ += 'subtype',
+
+    _MAX_UNITS = 8
+
+    TYPE_AMD = 1
+    TYPE_INTEL = 2
+    TYPE_SMMUV3 = 3
+    TYPE_PVU = 4
+
+    @classmethod
+    def parse(cls, stream):
+        self = cls.parse_class(cls, stream)
+        sub_cls = None
+        if self.type == cls.TYPE_AMD:
+            sub_cls = IommuAmd
+        elif self.type == cls.TYPE_PVU:
+            sub_cls = IommuPvu
+
+        if sub_cls:
+            self.subtype = sub_cls.parse(stream)
+
+        # skip rest of the C union, if needed
+        skip = max(IommuAmd._BIN_FMT.size, IommuPvu._BIN_FMT.size) \
+            - (sub_cls._BIN_FMT.size if sub_cls else 0)
+        stream.seek(skip, io.SEEK_CUR)
+        return self
+
+
+class PlattformInfoArm(CStruct):
+    __slots__ = 'maintenance_irq', 'gic_version', \
+                'gicd_base', 'gicc_base', 'gich_base', 'gicv_base', 'gicr_base',
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT = struct.Struct('=BB2xQQQQQ')
+
+
+class PlattformInfoX86(CStruct):
+    __slots__ = 'pm_timer_address', 'vtd_interrupt_limit', 'apic_mode', \
+                'tsc_khz', 'apic_khz',
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT = struct.Struct('=HIB1xII')
+
+
+class PlattformInfo(CStruct):
+    __slots__ = 'pci_mmconfig_base', 'pci_mmconfig_end_bus', \
+                'pci_is_virtual', 'pci_domain',
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT = struct.Struct('=QBBH')
+
+    # constructed fields
+    __slots__ += 'iommus', 'arch_info',
+
+    def __init__(self, arch_info_cls=PlattformInfoX86):
+        self.pci_mmconfig_base = 0
+        self.pci_mmconfig_end_bus = 0
+        self.pci_is_virtual = 0
+        self.pci_domain = 0
+        self.iommus = []
+        self.arch_info = arch_info_cls()
+
+    @classmethod
+    def parse(cls, stream, arch_info_cls=PlattformInfoX86):
+        self = cls.parse_class(cls, stream)
+        self.iommus = cls.parse_array(Iommu, Iommu._MAX_UNITS, stream)
+        self.arch_info = arch_info_cls.parse(stream)
+
+        # skip rest of the C union, if needed
+        skip = \
+            max(PlattformInfoArm._BIN_FMT.size, PlattformInfoX86._BIN_FMT.size)\
+            - arch_info_cls._BIN_FMT.size
+        stream.seek(skip, io.SEEK_CUR)
         return self
 
 
 class SystemConfig(CStruct):
-    _BIN_FMT = struct.Struct('=4x')
-    # ...followed by MemRegion as hypervisor memory
-    _BIN_FMT_CONSOLE_AND_PLATFORM = struct.Struct('32x12x224x44x')
+    __slots__ = 'flags',
+    _BIN_FIELD_NUM = len(__slots__)
+    _BIN_FMT = struct.Struct('I')
     _BIN_SIGNATURE = b'JHSYST'
 
     # constructed fields
-    __slots__ = 'hypervisor_memory', 'root_cell',
+    __slots__ += 'hypervisor_memory', 'debug_console', 'platform_info', \
+                 'root_cell',
 
     def __init__(self):
+        self.flags = 0
         self.hypervisor_memory = MemRegion()
+        self.debug_console = Console()
+        self.platform_info = PlattformInfo()
         self.root_cell = CellConfig()
 
     @classmethod
     def parse(cls, stream):
         self = cls.parse_class(cls, stream)
         self.hypervisor_memory = MemRegion.parse(stream)
-
-        offs = cls._BIN_FMT_CONSOLE_AND_PLATFORM.size
-        offs += CellConfig._BIN_FMT_HDR.size # skip header inside rootcell
-        stream.seek(offs, io.SEEK_CUR)
+        self.debug_console = Console.parse(stream)
+        self.platform_info = PlattformInfo.parse(stream)
+        # skip header inside rootcell
+        stream.seek(CellConfig._BIN_FMT_HDR.size, io.SEEK_CUR)
         self.root_cell = CellConfig.parse(stream)
         return self
 
