@@ -191,17 +191,19 @@ class PIORegion(CStruct):
 
 class CellConfig(CStruct):
     # slots with a '_' prefix in name are private
-    __slots__ = 'name', '_flags', '_cpu_sets', \
+    __slots__ = 'name', '_flags', 'cpu_set', \
                 'memory_regions', 'cache_regions', 'irqchips', 'pio_regions', \
                 '_pci_devices', '_pci_caps', '_stream_ids', \
                 'vpci_irq_base', 'cpu_reset_address',
     _BIN_FIELD_NUM = len(__slots__)
     _BIN_FMT = struct.Struct('=32s4xIIIIIIIIIIQ8x32x')
     _BIN_FMT_HDR = struct.Struct('=6sH')
+    _BIN_FMT_CPU = struct.Struct('=Q')
     _BIN_SIGNATURE = b'JHCELL'
 
     def __init__(self):
         self.name = ""
+        self.cpu_set = set()
         self.memory_regions = []
         self.irqchips = []
         self.pio_regions = []
@@ -212,7 +214,15 @@ class CellConfig(CStruct):
     def parse(cls, stream):
         self = cls.parse_class(cls, stream)
         self.name = self.name.decode().strip('\0')
-        stream.seek(self._cpu_sets, io.SEEK_CUR) # skip CPU set
+
+        cpu_fmt = cls._BIN_FMT_CPU
+        cpu_set_num = int(self.cpu_set / cpu_fmt.size)
+        self.cpu_set = set()
+        for set_idx in range(cpu_set_num):
+            cpu_bits = cpu_fmt.unpack_from(stream.read(cpu_fmt.size))
+            for bit in range(cpu_fmt.size * 8):
+                if cpu_bits[0] & (1 << bit) > 0:
+                    self.cpu_set.add(bit)
 
         self.memory_regions = \
             cls.parse_array(MemRegion, self.memory_regions, stream)

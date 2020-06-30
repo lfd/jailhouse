@@ -65,6 +65,7 @@ for cfg in args.cellcfgs:
 
 ret=0
 
+# Memory checks
 print("Overlapping memory regions inside cell:", end='')
 found=False
 for cell in cells:
@@ -98,5 +99,32 @@ for cell in cells:
             found=True
             ret=1
 print("\n" if found else " None")
+
+# CPU checks
+print("Overlapping CPUs between cells:", end='')
+found = False
+for cell in non_root_cells:
+    cell_idx = cells.index(cell)
+    for cell2 in cells[cell_idx + 1:]:
+        overlap = cell.cpu_set & cell2.cpu_set
+        if overlap:
+            print("\n\nIn cell '%s' and '%s' following CPUs overlap: %s" %
+                  (cell.name, cell2.name, str(overlap)), end='')
+            found = True
+            ret = 1
+print("\n" if found else " None")
+
+print("CPUs not in root cell CPU set:", end='')
+found = False
+for cell in non_root_cells:
+    diff = cell.cpu_set - root_cell.cpu_set
+    if diff:
+        print("\n\nIn cell '%s': %s" % (cell.name, str(diff)), end='')
+        found = True
+        ret = 1
+if found:
+    print("\nNote: root cell CPU set: %s\n" % str(root_cell.cpu_set))
+else:
+    print(" None")
 
 exit(ret)
