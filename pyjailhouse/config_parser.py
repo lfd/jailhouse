@@ -154,19 +154,29 @@ class CacheRegion(CStruct):
 
 
 class Irqchip(CStruct):
-    __slots__ = 'address', 'id', 'pin_base', 'pin_bitmap_lo', 'pin_bitmap_hi',
+    __slots__ = 'address', 'id', 'pin_base',
     _BIN_FIELD_NUM = len(__slots__)
-    _BIN_FMT = struct.Struct('QIIQQ')
+    _BIN_FMT = struct.Struct('QII')
+    _BIN_FMT_PIN_MAP = struct.Struct('4I')
+
+    # constructed fields
+    __slots__ += 'pin_bitmap',
 
     def __init__(self):
         self.address = 0
         self.id = 0
         self.pin_base = 0
-        self.pin_bitmap_lo = 0
-        self.pin_bitmap_hi = 0
+        self.pin_bitmap = [0,0,0,0]
 
     def is_standard(self):
         return self.address == 0xfec00000
+
+    @classmethod
+    def parse(cls, stream):
+        self = cls.parse_class(cls, stream)
+        pin_fmt = cls._BIN_FMT_PIN_MAP
+        self.pin_bitmap = pin_fmt.unpack_from(stream.read(pin_fmt.size))
+        return self
 
 
 class PIORegion(CStruct):
