@@ -926,6 +926,11 @@ static int cpu_get_info(struct per_cpu *cpu_data, unsigned long cpu_id,
 		return -EINVAL;
 }
 
+static int __attribute__((noinline)) hypervisor_detention(struct per_cpu *cpu_data)
+{
+	return -ENOSYS;
+}
+
 /**
  * Handle hypercall invoked by a cell.
  * @param code		Hypercall code.
@@ -945,6 +950,8 @@ long hypercall(unsigned long code, unsigned long arg1, unsigned long arg2)
 	switch (code) {
 	case JAILHOUSE_HC_DISABLE:
 		return hypervisor_disable(cpu_data);
+	case JAILHOUSE_HC_DETENTION:
+		return hypervisor_detention(cpu_data);
 	case JAILHOUSE_HC_CELL_CREATE:
 		return cell_create(cpu_data, arg1);
 	case JAILHOUSE_HC_CELL_START:
