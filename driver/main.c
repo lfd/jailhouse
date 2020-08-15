@@ -659,6 +659,26 @@ static void leave_hypervisor(void *info)
 	atomic_inc(&call_done);
 }
 
+static int jailhouse_cmd_detention(void)
+{
+	int err;
+
+	if (mutex_lock_interruptible(&jailhouse_lock) != 0)
+		return -EINTR;
+
+	if (!jailhouse_enabled) {
+		err = -EINVAL;
+		goto unlock_out;
+	}
+
+	err = jailhouse_call(JAILHOUSE_HC_DETENTION);
+
+unlock_out:
+	mutex_unlock(&jailhouse_lock);
+
+	return err;
+}
+
 static int jailhouse_cmd_disable(void)
 {
 	int err;
@@ -739,6 +759,9 @@ static long jailhouse_ioctl(struct file *file, unsigned int ioctl,
 		break;
 	case JAILHOUSE_DISABLE:
 		err = jailhouse_cmd_disable();
+		break;
+	case JAILHOUSE_DETENTION:
+		err = jailhouse_cmd_detention();
 		break;
 	case JAILHOUSE_CELL_CREATE:
 		err = jailhouse_cmd_cell_create(

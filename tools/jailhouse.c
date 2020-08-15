@@ -569,6 +569,12 @@ int main(int argc, char *argv[])
 		if (err)
 			perror("JAILHOUSE_DISABLE");
 		close(fd);
+	} else if (strcmp(argv[1], "detention") == 0) {
+		fd = open_dev();
+		err = ioctl(fd, JAILHOUSE_DETENTION);
+		if (err)
+			perror("JAILHOUSE_DETENTION");
+		close(fd);
 	} else if (strcmp(argv[1], "cell") == 0) {
 		err = cell_management(argc, argv);
 	} else if (strcmp(argv[1], "console") == 0) {
