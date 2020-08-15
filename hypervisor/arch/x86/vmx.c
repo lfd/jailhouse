@@ -189,7 +189,7 @@ static bool vmx_define_cr_restrictions(unsigned int cr_idx,
 		cr_required1[cr_idx] == required1;
 }
 
-static int vmx_check_features(void)
+static int __management vmx_check_features(void)
 {
 	unsigned long vmx_proc_ctrl, vmx_proc_ctrl2, ept_cap;
 	unsigned long vmx_pin_ctrl, vmx_basic, maybe1, required1;
@@ -606,7 +606,7 @@ static bool vmcs_setup(void)
 	return ok;
 }
 
-int vcpu_init(struct per_cpu *cpu_data)
+int __management vcpu_init(struct per_cpu *cpu_data)
 {
 	unsigned long feature_ctrl, mask;
 	u32 revision_id;
@@ -693,7 +693,7 @@ void vcpu_exit(struct per_cpu *cpu_data)
 	cpu_data->linux_cr4 &= ~X86_CR4_VMXE;
 }
 
-void __attribute__((noreturn)) vcpu_activate_vmm(void)
+void __attribute__((noreturn)) __management vcpu_activate_vmm(void)
 {
 	/* We enter Linux at the point arch_entry would return to as well.
 	 * rax is cleared to signal success to the caller. */
@@ -715,7 +715,7 @@ void __attribute__((noreturn)) vcpu_activate_vmm(void)
 	panic_stop();
 }
 
-void __attribute__((noreturn)) vcpu_deactivate_vmm(void)
+void __attribute__((noreturn)) __management vcpu_deactivate_vmm(void)
 {
 	/* use common per-cpu area - mandatory after arch_cpu_restore */
 	struct per_cpu *cpu_data = per_cpu(this_cpu_id());

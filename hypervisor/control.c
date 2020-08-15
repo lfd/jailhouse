@@ -93,7 +93,7 @@ bool cpu_id_valid(unsigned long cpu_id)
  * @see arch_reset_cpu
  * @see arch_park_cpu
  */
-static void suspend_cpu(unsigned int cpu_id)
+static void __management suspend_cpu(unsigned int cpu_id)
 {
 	struct public_per_cpu *target_data = public_per_cpu(cpu_id);
 	bool target_suspended;
@@ -123,7 +123,7 @@ static void suspend_cpu(unsigned int cpu_id)
 	}
 }
 
-void resume_cpu(unsigned int cpu_id)
+void __management resume_cpu(unsigned int cpu_id)
 {
 	struct public_per_cpu *target_data = public_per_cpu(cpu_id);
 
@@ -139,7 +139,7 @@ void resume_cpu(unsigned int cpu_id)
  * Suspend all CPUs assigned to the cell except the one executing
  * the function (if it is in the cell's CPU set) to prevent races.
  */
-static void cell_suspend(struct cell *cell)
+static void __management cell_suspend(struct cell *cell)
 {
 	unsigned int cpu;
 
@@ -147,7 +147,7 @@ static void cell_suspend(struct cell *cell)
 		suspend_cpu(cpu);
 }
 
-static void cell_resume(struct cell *cell)
+static void __management cell_resume(struct cell *cell)
 {
 	unsigned int cpu;
 
@@ -169,8 +169,8 @@ static void cell_resume(struct cell *cell)
  *	   in failed state.
  *	   Returns false on request denial or invalid replies.
  */
-static bool cell_exchange_message(struct cell *cell, u32 message,
-				  enum msg_type type)
+static bool __management cell_exchange_message(struct cell *cell, u32 message,
+					       enum msg_type type)
 {
 	u64 timeout = cell->config->msg_reply_timeout;
 
@@ -209,7 +209,7 @@ static bool cell_exchange_message(struct cell *cell, u32 message,
 	}
 }
 
-static bool cell_reconfig_ok(struct cell *excluded_cell)
+static bool __management cell_reconfig_ok(struct cell *excluded_cell)
 {
 	struct cell *cell;
 
@@ -221,7 +221,7 @@ static bool cell_reconfig_ok(struct cell *excluded_cell)
 	return true;
 }
 
-static void cell_reconfig_completed(void)
+static void __management cell_reconfig_completed(void)
 {
 	struct cell *cell;
 
@@ -238,7 +238,7 @@ static void cell_reconfig_completed(void)
  *
  * @note Uninitialized fields of the cell data structure must be zeroed.
  */
-int cell_init(struct cell *cell)
+int __management cell_init(struct cell *cell)
 {
 	const unsigned long *config_cpu_set =
 		jailhouse_cell_cpu_set(cell->config);
@@ -267,7 +267,7 @@ int cell_init(struct cell *cell)
 	return err;
 }
 
-static void cell_exit(struct cell *cell)
+static void __management cell_exit(struct cell *cell)
 {
 	mmio_cell_exit(cell);
 
@@ -283,7 +283,7 @@ static void cell_exit(struct cell *cell)
  * @see arch_config_commit
  * @see pci_config_commit
  */
-void config_commit(struct cell *cell_added_removed)
+void __management config_commit(struct cell *cell_added_removed)
 {
 	arch_flush_cell_vcpu_caches(&root_cell);
 	if (cell_added_removed && cell_added_removed != &root_cell)
@@ -361,7 +361,7 @@ static int remap_to_root_cell(const struct jailhouse_memory *mem,
 	return err;
 }
 
-static void cell_destroy_internal(struct cell *cell)
+static void __management cell_destroy_internal(struct cell *cell)
 {
 	const struct jailhouse_memory *mem;
 	unsigned int cpu, n;
@@ -402,7 +402,7 @@ static void cell_destroy_internal(struct cell *cell)
 	cell_exit(cell);
 }
 
-static int cell_create(struct per_cpu *cpu_data, unsigned long config_address)
+static int __management cell_create(struct per_cpu *cpu_data, unsigned long config_address)
 {
 	unsigned long cfg_page_offs = config_address & PAGE_OFFS_MASK;
 	unsigned int cfg_pages, cell_pages, cpu, n;
@@ -575,15 +575,15 @@ err_resume:
 	return err;
 }
 
-static bool cell_shutdown_ok(struct cell *cell)
+static bool __management cell_shutdown_ok(struct cell *cell)
 {
 	return cell_exchange_message(cell, JAILHOUSE_MSG_SHUTDOWN_REQUEST,
 				     MSG_REQUEST);
 }
 
-static int cell_management_prologue(enum management_task task,
-				    struct per_cpu *cpu_data, unsigned long id,
-				    struct cell **cell_ptr)
+static int __management
+cell_management_prologue(enum management_task task, struct per_cpu *cpu_data,
+			 unsigned long id, struct cell **cell_ptr)
 {
 	/* We do not support management commands over non-root cells. */
 	if (cpu_data->public.cell != &root_cell)
@@ -617,7 +617,7 @@ static int cell_management_prologue(enum management_task task,
 	return 0;
 }
 
-static int cell_start(struct per_cpu *cpu_data, unsigned long id)
+static int __management cell_start(struct per_cpu *cpu_data, unsigned long id)
 {
 	struct jailhouse_comm_region *comm_region;
 	const struct jailhouse_memory *mem;
@@ -680,7 +680,7 @@ out_resume:
 	return err;
 }
 
-static int cell_set_loadable(struct per_cpu *cpu_data, unsigned long id)
+static int __management cell_set_loadable(struct per_cpu *cpu_data, unsigned long id)
 {
 	const struct jailhouse_memory *mem;
 	unsigned int cpu, n;
@@ -726,7 +726,7 @@ out_resume:
 	return err;
 }
 
-static int cell_destroy(struct per_cpu *cpu_data, unsigned long id)
+static int __management cell_destroy(struct per_cpu *cpu_data, unsigned long id)
 {
 	struct cell *cell, *previous;
 	int err;
@@ -755,7 +755,7 @@ static int cell_destroy(struct per_cpu *cpu_data, unsigned long id)
 	return 0;
 }
 
-static int cell_get_state(struct per_cpu *cpu_data, unsigned long id)
+static int __management cell_get_state(struct per_cpu *cpu_data, unsigned long id)
 {
 	struct cell *cell;
 
@@ -788,7 +788,7 @@ static int cell_get_state(struct per_cpu *cpu_data, unsigned long id)
 /**
  * Perform all CPU-unrelated hypervisor shutdown steps.
  */
-void shutdown(void)
+void __management shutdown(void)
 {
 	struct unit *unit;
 
@@ -799,7 +799,7 @@ void shutdown(void)
 		unit->shutdown();
 }
 
-static int hypervisor_disable(struct per_cpu *cpu_data)
+static int __management hypervisor_disable(struct per_cpu *cpu_data)
 {
 	static volatile unsigned int waiting_cpus;
 	static bool do_common_shutdown;
@@ -883,7 +883,7 @@ static int hypervisor_disable(struct per_cpu *cpu_data)
 	return 0;
 }
 
-static long hypervisor_get_info(struct per_cpu *cpu_data, unsigned long type)
+static long __management hypervisor_get_info(struct per_cpu *cpu_data, unsigned long type)
 {
 	switch (type) {
 	case JAILHOUSE_INFO_MEM_POOL_SIZE:
@@ -901,7 +901,7 @@ static long hypervisor_get_info(struct per_cpu *cpu_data, unsigned long type)
 	}
 }
 
-static int cpu_get_info(struct per_cpu *cpu_data, unsigned long cpu_id,
+static int __management cpu_get_info(struct per_cpu *cpu_data, unsigned long cpu_id,
 			unsigned long type)
 {
 	if (!cpu_id_valid(cpu_id))
@@ -969,7 +969,7 @@ static int __attribute__((noinline)) hypervisor_detention(struct per_cpu *cpu_da
  *
  * @note If @c arg1 and @c arg2 are valid depends on the hypercall code.
  */
-long hypercall(unsigned long code, unsigned long arg1, unsigned long arg2)
+long __management hypercall(unsigned long code, unsigned long arg1, unsigned long arg2)
 {
 	struct per_cpu *cpu_data = this_cpu_data();
 

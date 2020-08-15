@@ -174,7 +174,7 @@ void vcpu_cell_exit(struct cell *cell)
 	vcpu_vendor_cell_exit(cell);
 }
 
-void vcpu_handle_hypercall(void)
+void __management vcpu_handle_hypercall(void)
 {
 	union registers *guest_regs = &this_cpu_data()->guest_regs;
 	u16 cs_attr = vcpu_vendor_get_cs_attr();

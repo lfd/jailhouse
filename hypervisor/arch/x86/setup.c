@@ -201,7 +201,7 @@ int arch_cpu_init(struct per_cpu *cpu_data)
 	return vcpu_init(cpu_data);
 }
 
-void __attribute__((noreturn)) arch_cpu_activate_vmm(void)
+void __attribute__((noreturn)) __management arch_cpu_activate_vmm(void)
 {
 	unsigned int cpu_id = this_cpu_id();
 

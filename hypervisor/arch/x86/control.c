@@ -81,12 +81,12 @@ void arch_flush_cell_vcpu_caches(struct cell *cell)
 		}
 }
 
-void arch_cell_destroy(struct cell *cell)
+void __management arch_cell_destroy(struct cell *cell)
 {
 	vcpu_cell_exit(cell);
 }
 
-void arch_cell_reset(struct cell *cell)
+void __management arch_cell_reset(struct cell *cell)
 {
 	struct jailhouse_comm_region *comm_region = &cell->comm_page.comm_region;
 	unsigned int cpu;
@@ -102,13 +102,13 @@ void arch_cell_reset(struct cell *cell)
 	ioapic_cell_reset(cell);
 }
 
-void arch_config_commit(struct cell *cell_added_removed)
+void __management arch_config_commit(struct cell *cell_added_removed)
 {
 	iommu_config_commit(cell_added_removed);
 	ioapic_config_commit(cell_added_removed);
 }
 
-void arch_prepare_shutdown(void)
+void __management arch_prepare_shutdown(void)
 {
 	ioapic_prepare_handover();
 	iommu_prepare_shutdown();
