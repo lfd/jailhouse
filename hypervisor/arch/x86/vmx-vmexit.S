@@ -36,6 +36,8 @@ vmx_vmexit:
 	mov $LOCAL_CPU_BASE_ASM,%rdi
 	call vcpu_handle_exit
 
+	.globl fast_vmresume
+fast_vmresume:
 	pop %r15
 	pop %r14
 	pop %r13

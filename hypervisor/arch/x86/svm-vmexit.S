@@ -39,6 +39,9 @@ svm_vmentry:
 	mov $LOCAL_CPU_BASE_ASM,%rdi
 	push %rax
 	call vcpu_handle_exit
+
+	.globl fast_vmresume
+fast_vmresume:
 	pop %rax
 
 	pop %r15
