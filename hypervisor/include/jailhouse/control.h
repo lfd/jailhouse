@@ -20,6 +20,7 @@
 
 extern volatile unsigned long panic_in_progress;
 extern unsigned long panic_cpu;
+extern bool detention;
 
 /**
  * @defgroup Control Control Subsystem

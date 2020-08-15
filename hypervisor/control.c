@@ -34,6 +34,7 @@ struct cell root_cell;
 static spinlock_t shutdown_lock;
 static unsigned int num_cells = 1;
 
+bool detention;
 volatile unsigned long panic_in_progress;
 unsigned long panic_cpu = -1;
 

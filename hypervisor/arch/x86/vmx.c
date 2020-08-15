@@ -1162,6 +1162,11 @@ void vcpu_handle_exit(struct per_cpu *cpu_data)
 		vcpu_handle_cpuid();
 		return;
 	case EXIT_REASON_VMCALL:
+		if (detention) {
+			vcpu_skip_emulated_instruction(X86_INST_LEN_HYPERCALL);
+			cpu_data->guest_regs.rax = -ENOSYS;
+			return;
+		}
 		vcpu_handle_hypercall();
 		return;
 	case EXIT_REASON_CR_ACCESS:
