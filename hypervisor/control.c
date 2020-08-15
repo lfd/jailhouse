@@ -929,7 +929,34 @@ static int cpu_get_info(struct per_cpu *cpu_data, unsigned long cpu_id,
 
 static int __attribute__((noinline)) hypervisor_detention(struct per_cpu *cpu_data)
 {
-	return -ENOSYS;
+	const long unsigned int mgmt_pages =
+		PAGES(__management_end - __management_start);
+
+	if (cpu_data->public.cell != &root_cell)
+		return -EPERM;
+
+	printk("Detention!\n");
+	detention = true;
+
+	/* Overwrite the pages */
+	memset(__management_start, 0, mgmt_pages * PAGE_SIZE);
+
+	/* TBD: Remove paging, ... */
+
+	/*
+	 * Our stacktrace is:
+	 * vmx_vmexit
+	 *   vcpu_handle_exit
+	 *     vcpu_handle_hypercall
+	 *       hypercall
+	 *         detention
+	 * and lost hypercall and vcpu_handle_exit routines. Luckily, we have
+	 * nothing left to clean up. We can directly jump back to fast_vmresume.
+	 * But before, we need to clean up four stack frames.
+	 */
+	asm volatile("mov %%rsp, %0\n"
+		     "jmp fast_vmresume\n" :: "r"(&cpu_data->guest_regs));
+	__builtin_unreachable();
 }
 
 /**

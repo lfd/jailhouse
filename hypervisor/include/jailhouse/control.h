@@ -18,6 +18,8 @@
 #define SHUTDOWN_NONE			0
 #define SHUTDOWN_STARTED		1
 
+extern u8 __management_start[], __management_end[];
+
 extern volatile unsigned long panic_in_progress;
 extern unsigned long panic_cpu;
 extern bool detention;

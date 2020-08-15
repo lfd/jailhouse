@@ -21,6 +21,8 @@
 
 typedef enum { true = 1, false = 0 } bool;
 
+#define __management __attribute__((section(".management"), noinline))
+
 /** Describes a CPU set. */
 struct cpu_set {
 	/** Maximum CPU ID expressible with this set. */

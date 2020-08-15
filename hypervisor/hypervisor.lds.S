@@ -26,7 +26,14 @@ SECTIONS
 		*(.text)
 	}
 
-	. = ALIGN(16);
+	. = ALIGN(PAGE_SIZE);
+	.management	: {
+		__management_start = .;
+		*(.management)
+		__management_end = .;
+	}
+
+	. = ALIGN(PAGE_SIZE);
 	.rodata		: { *(.rodata) }
 
 	. = ALIGN(16);

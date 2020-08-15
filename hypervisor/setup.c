@@ -50,6 +50,7 @@ static void init_early(unsigned int cpu_id)
 	printk("\nInitializing Jailhouse hypervisor %s on CPU %d\n",
 	       JAILHOUSE_VERSION, cpu_id);
 	printk("Code location: %p\n", __text_start);
+	printk("Management size: 0x%lx\n", __management_end - __management_start);
 
 	gcov_init();
 
