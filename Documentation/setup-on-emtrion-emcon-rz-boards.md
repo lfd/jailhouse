@@ -92,7 +92,7 @@ cp configs/arm/emtrion-rzg1**x**-linux-demo.cell /jailhouse/configs
 cp configs/arm/dts/inmate-emtrion-emconrzg1**x**.dtb /jailhouse/configs
 
 We assume that these files are available in the path /jailhouse/configs on the RootFS of the
-root cell. Make sure you have installed Python on the emCON-RZ/G1x board.
+root cell. Make sure you have installed Python 3 on the emCON-RZ/G1x board.
 
 Then we can start the linux inmate executing the following command line in the root cell:
 

@@ -19,7 +19,7 @@ compiler:
 addons:
   apt:
     packages:
-      - python-mako
+      - python3-mako
       - gcc-8
       - gcc-8-arm-linux-gnueabihf
       - libc6-dev-armhf-cross
