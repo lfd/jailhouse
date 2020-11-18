@@ -918,27 +918,24 @@ class IORegion(object):
 
     def start_str(self):
         # This method is used in root-cell-config.c.tmpl
-
-        # Python 2 appends a 'L' to hexadecimal format of large integers,
-        # therefore .strip('L') is necessary.
-        return hex(self.start).strip('L')
+        return hex(self.start)
 
     def size_str(self):
         # Comments from start_str() apply here as well.
-        return hex(self.size()).strip('L')
+        return hex(self.size())
 
 
 class MemRegion(IORegion):
     def __init__(self, start, stop, typestr, comments=None):
-        super(MemRegion, self).__init__(start, stop, typestr, comments)
+        super().__init__(start, stop, typestr, comments)
 
     def __str__(self):
         return 'MemRegion: %08x-%08x : %s' % \
-            (self.start, self.stop, super(MemRegion, self).__str__())
+            (self.start, self.stop, super().__str__())
 
     def size(self):
         # round up to full PAGE_SIZE
-        return int((super(MemRegion, self).size() + 0xfff) / 0x1000) * 0x1000
+        return int((super().size() + 0xfff) / 0x1000) * 0x1000
 
     def is_ram(self):
         return (self.typestr == 'System RAM' or
@@ -957,12 +954,12 @@ class MemRegion(IORegion):
 
 class PortRegion(IORegion):
     def __init__(self, start, stop, typestr, permit=False, comments=None):
-        super(PortRegion, self).__init__(start, stop, typestr, comments)
+        super().__init__(start, stop, typestr, comments)
         self.permit = permit
 
     def __str__(self):
         return 'Port I/O: %04x-%04x : %s' % \
-            (self.start, self.stop, super(PortRegion, self).__str__())
+            (self.start, self.stop, super().__str__())
 
 
 class IOAPIC:

@@ -181,7 +181,7 @@ struct {
 			.msi_maskable = ${d.msi_maskable},
 			.num_msix_vectors = ${d.num_msix_vectors},
 			.msix_region_size = ${hex(d.msix_region_size)},
-			.msix_address = ${hex(d.msix_address).strip('L')},
+			.msix_address = ${hex(d.msix_address)},
 		},
 		% endfor
 	},
