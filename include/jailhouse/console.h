@@ -51,6 +51,7 @@
 #define JAILHOUSE_CON_TYPE_IMX		0x0008
 #define JAILHOUSE_CON_TYPE_IMX_LPUART	0x0009
 #define JAILHOUSE_CON_TYPE_SCIF		0x000a
+#define JAILHOUSE_CON_TYPE_RISCV_SBI	0x000b
 
 /* Flags: bit 0 is used to select PIO (cleared) or MMIO (set) access */
 #define JAILHOUSE_CON_ACCESS_PIO	0x0000
