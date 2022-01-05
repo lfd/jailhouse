@@ -69,10 +69,3 @@ void arch_park_cpu(unsigned int cpu_id)
 void arch_send_event(struct public_per_cpu *target_data)
 {
 }
-
-// Likely misplaced
-#include <jailhouse/processor.h>
-unsigned int cpu_by_phys_processor_id(u64 phys_id)
-{
-	return -1;
-}
