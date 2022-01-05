@@ -174,6 +174,11 @@ elif sysconfig.arch == 'x86':
     for irqchip in root_cell.irqchips:
         arch_resources.append(ResourceRegion(irqchip.address, 0x1000,
                                              "IOAPIC"))
+elif sysconfig.arch == 'riscv64':
+    arch_resources = []
+    arch_resources.append(ResourceRegion(sysconfig.riscv_plic_base_address,
+                                         sysconfig.riscv_plic_size, "PLIC"))
+
 for cell in cells:
     for mem in cell.memory_regions:
         idx = cell.memory_regions.index(mem)
