@@ -332,6 +332,8 @@ struct jailhouse_pio {
 #define SYS_FLAGS_VIRTUAL_DEBUG_CONSOLE(flags) \
 	!!((flags) & JAILHOUSE_SYS_VIRTUAL_DEBUG_CONSOLE)
 
+#define JAILHOUSE_RISCV_PLIC		0
+
 /**
  * General descriptor of the system.
  */
@@ -370,6 +372,17 @@ struct jailhouse_system {
 				u64 gicv_base;
 				u64 gicr_base;
 			} __attribute__((packed)) arm;
+			struct {
+				struct {
+					u16 max_irq;
+					u8 type;
+					u8 _res;
+					u64 base_address;
+					u32 size;
+					u32 max_priority;
+					s16 hart_to_context[32];
+				} __attribute__((packed)) irqchip;
+			} __attribute__((packed)) riscv;
 		} __attribute__((packed));
 	} __attribute__((packed)) platform_info;
 	struct jailhouse_cell_desc root_cell;
