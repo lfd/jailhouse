@@ -23,8 +23,9 @@ _CONFIG_REVISION = 15
 JAILHOUSE_X86 = 0
 JAILHOUSE_ARM = 1
 JAILHOUSE_ARM64 = 2
+JAILHOUSE_RISCV64 = 3
 
-JAILHOUSE_ARCH_MAX = 2
+JAILHOUSE_ARCH_MAX = 3
 
 
 def convert_arch(arch):
@@ -34,6 +35,7 @@ def convert_arch(arch):
         JAILHOUSE_X86: 'x86',
         JAILHOUSE_ARM: 'arm',
         JAILHOUSE_ARM64: 'arm64',
+        JAILHOUSE_RISCV64: 'riscv64',
     }[arch]
 
 
@@ -269,6 +271,8 @@ class SystemConfig:
     _NUM_IOMMUS = 8
     _ARCH_ARM_FORMAT = '=BB2xQQQQQ'
     _ARCH_X86_FORMAT = '=HBxIII28x'
+    _ARCH_RISCV_FORMAT = '=HBxQII'
+    _ARCH_RISCV_FORMAT_HTC = '=32H'
 
     def __init__(self, data):
         self.data = data
@@ -318,8 +322,19 @@ class SystemConfig:
                  self.x86_tsc_khz,
                  self.x86_apic_khz) = \
                      struct.unpack_from(self._ARCH_X86_FORMAT, self.data[offs:])
-
-            offs += struct.calcsize(self._ARCH_ARM_FORMAT)
+            elif self.arch == 'riscv64':
+                (self.riscv_irqchip_max_irq,
+                 self.riscv_irqchip_type,
+                 self.riscv_irqchip_base_address,
+                 self.riscv_irqchip_size,
+                 self.riscv_irqchip_max_priority) = \
+                     struct.unpack_from(self._ARCH_RISCV_FORMAT,
+                                        self.data[offs:])
+                self.riscv_plic_hart_to_context = \
+                     struct.unpack_from(self._ARCH_RISCV_FORMAT_HTC,
+                                        self.data[offs:])
+            offs += struct.calcsize(self._ARCH_RISCV_FORMAT)
+            offs += struct.calcsize(self._ARCH_RISCV_FORMAT_HTC)
         except struct.error:
             raise RuntimeError('Not a root cell configuration')
 
