@@ -19,7 +19,7 @@ import struct
 from .extendedenum import ExtendedEnum
 
 # Keep the whole file in sync with include/jailhouse/cell-config.h.
-_CONFIG_REVISION = 14
+_CONFIG_REVISION = 15
 
 
 def flag_str(enum_class, value, separator=' | '):
@@ -245,6 +245,8 @@ class SystemConfig:
     _NUM_IOMMUS = 8
     _ARCH_ARM_FORMAT = '=BB2xQQQQQ'
     _ARCH_X86_FORMAT = '=HBxIII28x'
+    _ARCH_RISCV_FORMAT = '=QIHI'
+    _ARCH_RISCV_FORMAT_HTC = '=32H'
 
     def __init__(self, data, arch):
         self.data = data
@@ -294,8 +296,17 @@ class SystemConfig:
                  self.x86_tsc_khz,
                  self.x86_apic_khz) = \
                      struct.unpack_from(self._ARCH_X86_FORMAT, self.data[offs:])
-
-            offs += struct.calcsize(self._ARCH_ARM_FORMAT)
+            elif arch == 'riscv64':
+                (self.riscv_plic_base_address,
+                 self.riscv_plic_size,
+                 self.riscv_plic_max_irq,
+                 self.riscv_plic_max_priority) = \
+                self.riscv_plic_hart_to_context = \
+                     struct.unpack_from(self._ARCH_RISCV_FORMAT, self.data[offs:])
+                self.riscv_plic_hart_to_context = \
+                     struct.unpack_from(self._ARCH_RISCV_FORMAT_HTC, self.data[offs:])
+            offs += struct.calcsize(self._ARCH_RISCV_FORMAT)
+            offs += struct.calcsize(self._ARCH_RISCV_FORMAT_HTC)
         except struct.error:
             raise RuntimeError('Not a root cell configuration')
 
