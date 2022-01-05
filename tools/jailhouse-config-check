@@ -61,9 +61,11 @@ if not arch:
         arch = 'arm'
     elif arch_str == 'aarch64':
         arch = 'arm64'
+    elif arch_str == 'riscv64':
+        arch = 'riscv64'
     else:
         arch = None
-if not arch in ('x86', 'arm', 'arm64'):
+if not arch in ('x86', 'arm', 'arm64', "riscv64"):
     print('Unsupported architecture', file=sys.stderr)
     exit(1)
 
@@ -188,6 +190,11 @@ elif arch == 'x86':
     for irqchip in root_cell.irqchips:
         arch_resources.append(ResourceRegion(irqchip.address, 0x1000,
                                              "IOAPIC"))
+elif arch in ('riscv64'):
+    arch_resources = []
+    arch_resources.append(ResourceRegion(sysconfig.riscv_plic_base_address,
+                                         sysconfig.riscv_plic_size. "PLIC"))
+ 
 for cell in cells:
     for mem in cell.memory_regions:
         idx = cell.memory_regions.index(mem)
