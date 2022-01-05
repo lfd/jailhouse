@@ -11,4 +11,5 @@
  */
 
 #define MAX_CPUS	__riscv_xlen
+#define MAX_IRQS	1024
 #define BITS_PER_LONG	64
