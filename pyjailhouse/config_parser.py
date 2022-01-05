@@ -271,7 +271,7 @@ class SystemConfig:
     _NUM_IOMMUS = 8
     _ARCH_ARM_FORMAT = '=BB2xQQQQQ'
     _ARCH_X86_FORMAT = '=HBxIII28x'
-    _ARCH_RISCV_FORMAT = '=HBxQII'
+    _ARCH_RISCV_FORMAT = '=HBxQII2x2x8x8x'
     _ARCH_RISCV_FORMAT_HTC = '=32H'
 
     def __init__(self, data):
