@@ -10,6 +10,9 @@
  * the COPYING file in the top-level directory.
  */
 
+#ifndef _JAILHOUSE_HEADER_H
+#define _JAILHOUSE_HEADER_H
+
 #include <asm/jailhouse_header.h>
 
 #define JAILHOUSE_SIGNATURE	"JAILHOUS"
@@ -94,3 +97,5 @@ struct jailhouse_header {
 };
 
 #endif /* !__ASSEMBLY__ */
+
+#endif /* _JAILHOUSE_HEADER_H */
