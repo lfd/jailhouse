@@ -4,13 +4,15 @@
  * Copyright (c) Siemens AG, 2020
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Konrad Schwarz <konrad.schwarz@siemens.com>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
  */
 
 #include <jailhouse/entry.h>
+#include <asm/processor.h>
+#include <asm/setup.h>
 
 int arch_init_early(void)
 {
@@ -20,6 +22,12 @@ int arch_init_early(void)
 int arch_cpu_init(struct per_cpu *cpu_data)
 {
 	return -ENOSYS;
+}
+
+void __attribute__((noreturn))
+riscv_deactivate_vmm(union registers *regs, int errcode, bool from_ecall)
+{
+	while (1);
 }
 
 void __attribute__((noreturn)) arch_cpu_activate_vmm(void)
