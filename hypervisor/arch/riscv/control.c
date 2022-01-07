@@ -11,6 +11,8 @@
  */
 
 #include <jailhouse/control.h>
+#include <jailhouse/printk.h>
+#include <asm/sbi.h>
 
 int arch_cell_create(struct cell *cell)
 {
@@ -68,4 +70,16 @@ void arch_park_cpu(unsigned int cpu_id)
 
 void arch_send_event(struct public_per_cpu *target_data)
 {
+	struct sbiret result;
+
+	target_data->ipi_cause = IPI_CAUSE_MGMT;
+	memory_barrier();
+
+	result = sbi_send_ipi(1UL << (target_data->phys_id % BITS_PER_LONG),
+			      target_data->phys_id / BITS_PER_LONG);
+	if (result.error != SBI_SUCCESS) {
+		printk("IPI send to HART %lu failed: %ld\n",
+		       target_data->phys_id, result.error);
+		panic_stop();
+	}
 }
