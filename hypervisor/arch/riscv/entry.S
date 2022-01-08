@@ -354,3 +354,63 @@ virtual_arch_entry:
 	mv	a1, a0
 	mv	a0, sp
 	j	riscv_deactivate_vmm
+
+
+.global __riscv_deactivate_vmm
+__riscv_deactivate_vmm:
+	/*
+	 * From now on, we can safely access stack variables, but we must not
+	 * use any absolute addresses
+	 */
+	csr_from_csr	satp, CSR_VSATP, a5;
+	sfence.vma
+	/* From here on, Linux's paging is active. */
+
+	/* Restore S-mode CSRs from VS-mode */
+	csr_from_csr	stval, CSR_VSTVAL, a5
+	csr_from_csr	scause, CSR_VSCAUSE, a5
+	csr_from_csr	sscratch, CSR_VSSCRATCH, a5
+	csr_from_csr	sie, CSR_VSIE, a5
+	csr_from_csr	stvec, CSR_VSTVEC, a5
+	csr_from_csr	sstatus, CSR_VSSTATUS, a5
+
+	/*
+	 * We came from an ecall, so we may clobber a0-a7. That's just fine, we
+	 * can use them as scratch.
+	 */
+	/* scratch setup */
+	csrr	a2, sepc
+	addi	a2, a2, 4 /* ecall */
+
+	/* restore original sepc */
+	csrr a3, CSR_VSEPC
+	csrw sepc, a3
+
+	/* restore registers */
+	ld ra, 8(a0)
+	ld sp, 16(a0)
+	ld gp, 24(a0)
+	ld tp, 32(a0)
+	ld t0, 40(a0)
+	ld t1, 48(a0)
+	ld t2, 56(a0)
+	ld s0, 64(a0)
+	ld s1, 72(a0)
+	/* Skip clobbers a0 - a7 */
+	ld s2, 144(a0)
+	ld s3, 152(a0)
+	ld s4, 160(a0)
+	ld s5, 168(a0)
+	ld s6, 176(a0)
+	ld s7, 184(a0)
+	ld s8, 192(a0)
+	ld s9, 200(a0)
+	ld s10, 208(a0)
+	ld s11, 216(a0)
+	ld t3, 224(a0)
+	ld t4, 232(a0)
+	ld t5, 240(a0)
+	ld t6, 248(a0)
+	mv a0, a1
+	/* And we're done. */
+	jalr zero, a2, 0
