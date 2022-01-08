@@ -6,10 +6,10 @@ visible hypervisor memory, globally visible I/O memory remappings and CPU-
 specific remappings of hypervisor memory as well as cell memory pages.
 
 Cells are not mapped as a whole into the hypervisor address space. Only
-explicitely shared pages and pages that are temporarily mapped, e.g. during
-MMIO instruction parsing, are visible by the hypervisor during runtime.
-Furthermore, the visibility is limited to the CPU that create it because they
-are only added to the CPU-specifc mapping.
+explicitly shared pages and pages that are temporarily mapped, e.g. during
+MMIO instruction parsing, are visible to the hypervisor during runtime.
+Furthermore, their visibility is limited to the CPU that creates the mapping
+because they are only added to the CPU-specific mapping.
 
 
 Common memory region
@@ -23,9 +23,9 @@ Prior to enabling the hypervisor and after disabling it, this region is also
 mapped into the address space of Linux that acts as root cell. The virtual
 address of this mapping is identical to the one used by the hypervisor when the
 architecture set JAILHOUSE_BORROW_ROOT_PT (currently x86 and ARM), on other,
-this addressed can differ.
+this address can differ.
 
-The commom memory region contains an array of per-CPU data structures, one for
+The common memory region contains an array of per-CPU data structures, one for
 each configured CPU. Each per-CPU data structure consists of a private part and
 a public part. The public part will remain visible for all CPUs throughout the
 hypervisor operation. The private part, however, is only visible during setup
@@ -112,15 +112,19 @@ Size: PAGE_SIZE * NUM_REMAP_BITMAP_PAGES * PAGE_SIZE * 8
         |                                      |
         +--------------------------------------+ - higher address
 
+The architecture-independent code assumes that the I/O mememory remapping
+region is described by the same top-level PTE as the common memory region
+(JAILHOUSE_BASE).
+
 
 CPU-specific remapping region
 -----------------------------
 
-This region is differently mapped for each CPU. It consistes of a virtual
+This region is mapped differently for each CPU. It consists of a virtual
 address range that is used for temporarily mapping individual pages of the cell
 that runs on the same CPU.
 
-Futhermore, the private per-CPU data which is hidden from the common memory
+Furthermore, the private per-CPU data which is hidden from the common memory
 region is made available at fixed virtual address here. This allows to
 dereference CPU local data quickly and generically. Moreover, it hides cell-
 private data that the hypervisor may collect on VM exit, e.g. register content,
