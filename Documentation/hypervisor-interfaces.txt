@@ -13,8 +13,8 @@ Detection
 ---------
 
 This interface is useful for cell code that should work not only inside a
-Jailhouse cell. The ABI is architecture specific. So far, it is only available
-for x86.
+Jailhouse cell. The ABI is architecture specific and not available for
+all processor architectures.
 
 
 x86 ABI
@@ -51,6 +51,18 @@ Result in EAX:  0
           EBX:  0
           ECX:  0
           EDX:  0
+
+
+RISC-V ABI
+- - - - - -
+
+Jailhouse adhers to the Supervisor Binary Interface (SBI) defined in
+https://github.com/riscv/riscv-sbi-doc/blob/master/riscv-sbi.adoc
+That is, it provides the SBI to guests (as well as using the system
+provided SBI).
+
+The sbi_get_impl_id() function returns 'JHOU', 0x4a484f55.
+The get_sbi_impl_version() function returns the version of the Jailhouse SBI.
 
 
 Hypercalls
