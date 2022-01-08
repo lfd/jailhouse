@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2020
+ * Copyright (c) OTH Regensburg, 2022-2024
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,6 +36,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "sbi_ecall.h"
+
 /* CPU statistics, RISC-V-specific part */
 #define JAILHOUSE_CPU_STAT_VMEXITS_SBI_IPI	JAILHOUSE_GENERIC_CPU_STATS
 #define JAILHOUSE_CPU_STAT_VMEXITS_SBI_RFENCE	JAILHOUSE_GENERIC_CPU_STATS + 1
@@ -46,31 +48,68 @@
 #define JAILHOUSE_CPU_STAT_VMEXITS_VIRQ		JAILHOUSE_GENERIC_CPU_STATS + 6
 #define JAILHOUSE_NUM_CPU_STATS			JAILHOUSE_GENERIC_CPU_STATS + 7
 
+#define ASCII32(C, POS)	(C << ((POS) * 8))
+#define JAILHOUSE_EID		\
+	ASCII32('J', 3) |	\
+	ASCII32('H', 2) |	\
+	ASCII32('O', 1) |	\
+	ASCII32('U', 0)
+
 #ifndef __ASSEMBLY__
 
-static inline __u32 jailhouse_call(__u32 num)
-{
-	return -ENOSYS;
-}
-
-static inline __u32 jailhouse_call_arg1(__u32 num, __u32 arg1)
-{
-	return -ENOSYS;
-}
-
-static inline __u32 jailhouse_call_arg2(__u32 num, __u32 arg1, __u32 arg2)
-{
-	return -ENOSYS;
-}
-
 struct jailhouse_comm_region {
-        COMM_REGION_GENERIC_HEADER;
+	COMM_REGION_GENERIC_HEADER;
+
+	__u64 timebase_frequency;
 } __attribute__((packed));
+
+static inline unsigned long jailhouse_call(unsigned long num)
+{
+	struct sbiret ret;
+
+	ret = sbi_ecall(JAILHOUSE_EID, num, 0, 0, 0, 0, 0, 0);
+
+	return ret.error;
+}
+
+static inline unsigned long
+jailhouse_call_arg1(unsigned long num, unsigned long arg1)
+{
+	struct sbiret ret;
+
+	ret = sbi_ecall(JAILHOUSE_EID, num, arg1, 0, 0, 0, 0, 0);
+
+	return ret.error;
+}
+
+static inline unsigned long
+jailhouse_call_arg2(unsigned long num, unsigned long arg1, unsigned long arg2)
+{
+	struct sbiret ret;
+
+	ret = sbi_ecall(JAILHOUSE_EID, num, arg1, arg2, 0, 0, 0, 0);
+
+	return ret.error;
+}
 
 static inline void
 jailhouse_send_msg_to_cell(struct jailhouse_comm_region *comm_region,
 			   __u32 msg)
 {
+	comm_region->reply_from_cell = JAILHOUSE_MSG_NONE;
+	/* ensure reply was cleared before sending new message */
+	asm volatile("fence rw, rw" : : : "memory");
+	comm_region->msg_to_cell = msg;
+}
+
+static inline void
+jailhouse_send_reply_from_cell(struct jailhouse_comm_region *comm_region,
+			       __u32 reply)
+{
+	comm_region->msg_to_cell = JAILHOUSE_MSG_NONE;
+	/* ensure message was cleared before sending reply */
+	asm volatile("fence rw, rw" : : : "memory");
+	comm_region->reply_from_cell = reply;
 }
 
 #endif /* !__ASSEMBLY__ */
