@@ -106,6 +106,11 @@ unsigned int next_cpu(unsigned int cpu, struct cpu_set *cpu_set,
 	     (counter) < (config)->num_memory_regions;			\
 	     (mem)++, (counter)++)
 
+#define for_each_irqchip(chip, config, counter)				\
+	for ((chip) = jailhouse_cell_irqchips(config), (counter) = 0;	\
+	     (counter) < (config)->num_irqchips;			\
+	     (chip)++, (counter)++)
+
 /**
  * Check if the CPU is assigned to the specified cell.
  * @param cell		Cell the CPU may belong to.
