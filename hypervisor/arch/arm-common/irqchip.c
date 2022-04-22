@@ -24,11 +24,6 @@
 #include <asm/irqchip.h>
 #include <asm/smccc.h>
 
-#define for_each_irqchip(chip, config, counter)				\
-	for ((chip) = jailhouse_cell_irqchips(config), (counter) = 0;	\
-	     (counter) < (config)->num_irqchips;			\
-	     (chip)++, (counter)++)
-
 spinlock_t dist_lock;
 
 void *gicd_base;
