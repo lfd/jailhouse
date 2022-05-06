@@ -1,7 +1,7 @@
 #
 # Jailhouse, a Linux-based partitioning hypervisor
 #
-# Copyright (c) Siemens AG, 2015, 2016
+# Copyright (c) Siemens AG, 2013, 2014
 #
 # Authors:
 #  Jan Kiszka <jan.kiszka@siemens.com>
@@ -36,11 +36,30 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(INMATES_LIB)/Makefile.lib
+include $(ALWAYS_COMPAT_MK)
 
-always-y := lib.a inmate.lds
+-include $(GEN_CONFIG_MK)
 
-lib-y := $(common-objs-y)
-lib-y += header.o printk.o setup.o uart.o
+#KBUILD_CFLAGS += -m64 -mno-red-zone
+LINUXINCLUDE += -I$(INMATES_LIB)/include
 
-lib-y += ../cmdline.o ../printk.o ../setup.o ../string.o ../uart-8250.o
+define DECLARE_TARGETS =
+ _TARGETS = $(1)
+ always-y := $$(_TARGETS)
+ # $(NAME-y) NAME-linked.o NAME.bin
+ targets += $$(foreach t,$$(_TARGETS:.bin=-y),$$($$t)) \
+            $$(_TARGETS:.bin=-linked.o) $$(_TARGETS)
+endef
+
+# prevent deleting intermediate files which would cause rebuilds
+# FIXME: Doesn't work since latest make version
+#.SECONDARY: $(addprefix $(obj)/,$(targets))
+
+# obj/NAME-linked.o: ... obj/$(NAME-y) lib/lib[32].a
+.SECONDEXPANSION:
+$(obj)/%-linked.o: $(INMATES_LIB)/inmate.lds $$(addprefix $$(obj)/,$$($$*-y)) \
+		   $(INMATES_LIB)/$$(if $$($$*_32),lib32.a,lib.a) FORCE
+	$(call if_changed,ld)
+
+$(obj)/%.bin: $(obj)/%-linked.o FORCE
+	$(call if_changed,objcopy)

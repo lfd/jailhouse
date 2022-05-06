@@ -72,6 +72,7 @@
 #define MSIX_CTRL_FMASK		0x4000
 
 #ifndef __ASSEMBLY__
+
 typedef s8 __s8;
 typedef u8 __u8;
 
