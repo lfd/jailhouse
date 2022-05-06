@@ -20,6 +20,7 @@ include/jailhouse/config.h
 hypervisor/hypervisor.lds
 inmates/lib/arm/inmate.lds
 inmates/lib/arm64/inmate.lds
+inmates/lib/riscv/inmate.lds
 pyjailhouse/pci_defs.py
 tools/demos/cache-timings
 tools/demos/ivshmem-demo
