@@ -513,6 +513,7 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 
 	header = (struct jailhouse_header *)hypervisor_mem;
 	header->max_cpus = config_header.root_cell.num_cpus;
+	header->initial_load_address = (unsigned long)hypervisor_mem;
 
 #if defined(CONFIG_ARM) || defined(CONFIG_ARM64)
 	header->arm_linux_hyp_vectors = virt_to_phys(*__hyp_stub_vectors_sym);
