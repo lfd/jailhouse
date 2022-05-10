@@ -77,6 +77,8 @@ struct jailhouse_header {
 	 * @note Filled at build time */
 	void *gcov_info_head;
 
+	unsigned long initial_load_address;
+
 	/** Configured maximum logical CPU ID + 1.
 	 * @note Filled by Linux loader driver before entry. */
 	unsigned int max_cpus;
