@@ -219,7 +219,7 @@ unsigned long paging_virt2phys(const struct paging_structures *pg_structs,
 
 	while (1) {
 		pte = paging->get_entry(pt, virt);
-		if (!paging->entry_valid(pte, flags))
+		if (!paging->entry_valid(pte, PAGE_PRESENT_FLAGS))
 			return INVALID_PHYS_ADDR;
 		phys = paging->get_phys(pte, virt);
 		if (phys != INVALID_PHYS_ADDR)
