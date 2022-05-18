@@ -21,14 +21,14 @@ LD = $(CC) $(KBUILD_CFLAGS)
 NOSTDINC_FLAGS :=
 LINUXINCLUDE := -I$(src)/../driver
 KBUILD_CFLAGS := -g -O3 -DLIBEXECDIR=\"$(libexecdir)\" \
-	-Wall -Wextra -Wmissing-declarations -Wmissing-prototypes -Werror \
+	-Wall -Wextra -Wmissing-declarations -Wmissing-prototypes \
 	-D__LINUX_COMPILER_TYPES_H \
 	-DJAILHOUSE_VERSION=\"$(shell cat $(src)/../VERSION)\" $(EXTRA_CFLAGS)
 KBUILD_CPPFLAGS :=
 # prior to 4.19
 LDFLAGS :=
 # since 4.19
-KBUILD_LDFLAGS :=
+KBUILD_LDFLAGS := -static
 
 # force no-pie for distro compilers that enable pie by default
 KBUILD_CFLAGS += $(call cc-option, -fno-pie)
