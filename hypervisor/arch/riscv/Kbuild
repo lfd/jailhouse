@@ -14,4 +14,5 @@
 
 always-y := lib.a
 
-lib-y := entry.o setup.o dbg-write.o control.o ivshmem.o paging.o pci.o lib.o
+lib-y := entry.o setup.o dbg-write.o control.o ivshmem.o paging.o pci.o traps.o
+lib-y += lib.o
