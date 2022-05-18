@@ -22,8 +22,14 @@
 
 #define BLANK() asm volatile("\n=>" : : )
 
+#define OFF(type, sym, str, mem) \
+	DEFINE(sym, __builtin_offsetof(type str, mem))
+
 #define OFFSET(sym, str, mem) \
-	DEFINE(sym, __builtin_offsetof(struct str, mem))
+	OFF(struct, sym, str, mem)
+
+#define OFFSETU(sym, str, mem) \
+	OFF(union , sym, str, mem)
 
 #define COMMENT(x) \
 	asm volatile("\n=>#" x)
