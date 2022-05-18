@@ -25,8 +25,8 @@ LINUXINCLUDE := -I$(src)/arch/$(SRCARCH)/include \
 		-I$(src)/include \
 		-I$(src)/../include/arch/$(SRCARCH) \
 		-I$(src)/../include
-KBUILD_AFLAGS := -D__ASSEMBLY__ -fno-PIE
-KBUILD_CFLAGS := -g -Os -Werror -Wall -Wextra -Wno-unused-parameter \
+KBUILD_AFLAGS := -g -ggdb -gdwarf-3 -D__ASSEMBLY__ -fno-PIE
+KBUILD_CFLAGS := -g -ggdb -gdwarf-3 -O0 -Wall -Wextra -Wno-unused-parameter \
 		 -Wstrict-prototypes -Wtype-limits \
 		 -Wmissing-declarations -Wmissing-prototypes \
 		 -Wnested-externs -Wshadow -Wredundant-decls \
