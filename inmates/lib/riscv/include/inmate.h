@@ -1,7 +1,7 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) OTH Regensburg
+ * Copyright (c) OTH Regensburg, 2022
  *
  * Authors:
  *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
@@ -60,6 +60,9 @@ typedef unsigned long long u64;
 
 #define SR_SIE	0x00000002UL
 
+#define IRQ_S_TIMER	5
+#define IE_TIE		(0x1UL << IRQ_S_TIMER)
+
 #define csr_read(csr)                                           \
 ({                                                              \
 	register unsigned long __v;                             \
@@ -93,9 +96,29 @@ typedef unsigned long long u64;
 			      : "memory");                      \
 })
 
+static inline unsigned long get_cycles(void)
+{
+	return csr_read(time);
+}
+
 static inline void disable_irqs(void)
 {
 	csr_clear(sstatus, SR_SIE);
+}
+
+static inline void enable_irqs(void)
+{
+	csr_set(sstatus, SR_SIE);
+}
+
+static inline void timer_enable(void)
+{
+	csr_set(sie, IE_TIE);
+}
+
+static inline void timer_disable(void)
+{
+	csr_clear(sie, IE_TIE);
 }
 
 static inline void cpu_relax(void)
@@ -151,6 +174,8 @@ static inline void mmio_write64(void *address, u64 value)
 {
 	*(volatile u64 *)address = value;
 }
+
+unsigned long timer_handler(void);
 
 #include <inmate_common.h>
 
