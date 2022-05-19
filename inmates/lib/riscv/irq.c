@@ -36,38 +36,72 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define STRUCT_REGISTERS_SIZE (32 * 8)
+#include <inmate.h>
 
-.macro context cmd
-        .irp reg 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, \
-		 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
-                \cmd    x\reg, 8*(\reg - 1)(sp)
-        .endr
-.endm
+#define CAUSE_IRQ_FLAG	(1UL << (__riscv_xlen - 1))
 
-.section ".boot", "ax"
+void arch_handle_trap(void);
 
-	.globl __reset_entry
-__reset_entry:
-	la	sp, __stack_top
-	addi	sp, sp, -STRUCT_REGISTERS_SIZE
+static inline bool is_irq(u64 cause)
+{
+	return !!(cause & CAUSE_IRQ_FLAG);
+}
 
-	la	a5 , __ex_stack_top
-	csrw	sscratch, a5
+static inline unsigned long to_irq(unsigned long cause)
+{
+	return cause & ~CAUSE_IRQ_FLAG;
+}
 
-	la	a5, exception_handler
-	csrw	stvec, a5
+static int handle_irq(unsigned int irq)
+{
+	int err;
+	struct sbiret ret;
+	unsigned long tval;
 
-	j	c_entry
+	switch (irq) {
+		case IRQ_S_TIMER:
+			tval = timer_handler();
+			ret = sbi_set_timer(tval);
+			err = ret.error;
+			break;
 
-.text
-.align 4
-exception_handler:
-	csrrw	sp, sscratch, sp
-	context	sd
+		default:
+			err = -1;
+			break;
+	}
+	return err;
+}
 
-	jal arch_handle_trap
+/*
+ * Any positive value will reprogramm the timer, -1 will halt the timer.
+ */
+unsigned long __attribute__((weak)) timer_handler(void)
+{
+	return -1;
+}
 
-	context	ld
-	csrrw	sp, sscratch, sp
-	sret
+void arch_handle_trap(void)
+{
+	unsigned long scause = csr_read(scause);
+	int err;
+
+	if (is_irq(scause)) {
+		err = handle_irq(to_irq(scause));
+		goto out;
+	}
+
+	switch (scause) {
+	default:
+		/* We don't have any exception handlers at the moment */
+		printk("Unhandled exception %lu occured.\n", scause);
+		err = -1;
+		break;
+	}
+
+out:
+	if (err) {
+		printk("FATAL INMATE ERROR. HALTED.\n");
+		stop();
+
+	}
+}
