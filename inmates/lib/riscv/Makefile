@@ -41,6 +41,6 @@ include $(INMATES_LIB)/Makefile.lib
 always-y := lib.a inmate.lds
 
 lib-y := $(common-objs-y)
-lib-y += header.o printk.o setup.o uart.o
+lib-y += header.o irq.o printk.o setup.o uart.o
 
 lib-y += ../cmdline.o ../printk.o ../setup.o ../string.o ../uart-8250.o
