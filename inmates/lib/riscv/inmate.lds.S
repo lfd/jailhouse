@@ -69,6 +69,9 @@ SECTIONS {
 	. = ALIGN(4096);
 	. = . + 0x1000;
 	__stack_top = .;
+
+	. = . + 0x1000;
+	__ex_stack_top = .;
 }
 
 ENTRY(__reset_entry)
