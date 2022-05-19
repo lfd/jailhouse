@@ -12,8 +12,9 @@
 
 include $(INMATES_LIB)/Makefile.lib
 
-INMATES := tiny-demo.bin
+INMATES := tiny-demo.bin timer-demo.bin
 
 tiny-demo-y	:= tiny-demo.o
+timer-demo-y	:= timer-demo.o
 
 $(eval $(call DECLARE_TARGETS,$(INMATES)))
