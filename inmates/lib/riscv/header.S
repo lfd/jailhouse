@@ -58,6 +58,9 @@ __reset_entry:
 	la	a5, exception_handler
 	csrw	stvec, a5
 
+	la	a5, hart_id
+	sd	a0, 0(a5)
+
 	j	c_entry
 
 .text
