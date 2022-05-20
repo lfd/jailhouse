@@ -58,6 +58,8 @@ typedef unsigned int u32;
 typedef signed long long s64;
 typedef unsigned long long u64;
 
+extern unsigned long hart_id;
+
 #define SR_SIE	0x00000002UL
 
 #define IRQ_S_TIMER	5
