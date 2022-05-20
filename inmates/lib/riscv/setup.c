@@ -38,6 +38,8 @@
 
 #include <inmate.h>
 
+unsigned long hart_id;
+
 void arch_init_early(void)
 {
 }
