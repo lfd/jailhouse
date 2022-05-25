@@ -444,6 +444,13 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 		}
 	}
 #endif
+#ifdef CONFIG_RISCV
+	if (!riscv_isa_extension_available(NULL, h)) {
+		pr_err("jailhouse: hypervisor extension not available\n");
+		err = -ENODEV;
+		goto error_put_module;
+	}
+#endif
 
 	/* Load hypervisor image */
 	err = request_firmware(&hypervisor, fw_name, jailhouse_dev);
