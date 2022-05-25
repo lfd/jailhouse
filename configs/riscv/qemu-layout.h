@@ -20,3 +20,9 @@
 #define HV_SIZE			0x600000 /* 6MiB HV Size */
 #define HV_OFFSET		0x200000 /* Recent OpenSBI place DTB there */
 #define HV_PHYS			(MEM_TOP - HV_OFFSET - HV_SIZE)
+
+/* In preparation for IVSHMEM */
+#define IVSHMEM_NET_PHYS	(HV_PHYS - MIB)
+
+#define INMATE_TINY_SIZE	MIB
+#define INMATE_TINY_PHYS	(IVSHMEM_NET_PHYS - INMATE_TINY_SIZE)
