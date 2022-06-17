@@ -163,6 +163,17 @@ JAILHOUSE_CPU_STATS_ATTR(vmexits_smccc, JAILHOUSE_CPU_STAT_VMEXITS_SMCCC);
 #ifdef CONFIG_ARM
 JAILHOUSE_CPU_STATS_ATTR(vmexits_cp15, JAILHOUSE_CPU_STAT_VMEXITS_CP15);
 #endif
+#elif CONFIG_RISCV
+JAILHOUSE_CPU_STATS_ATTR(vmexits_sbi_ipi, JAILHOUSE_CPU_STAT_VMEXITS_SBI_IPI);
+JAILHOUSE_CPU_STATS_ATTR(vmexits_sbi_rfence,
+			 JAILHOUSE_CPU_STAT_VMEXITS_SBI_RFENCE);
+JAILHOUSE_CPU_STATS_ATTR(vmexits_sbi_time,
+			 JAILHOUSE_CPU_STAT_VMEXITS_SBI_TIME);
+JAILHOUSE_CPU_STATS_ATTR(vmexits_sbi_other,
+			 JAILHOUSE_CPU_STAT_VMEXITS_SBI_OTHER);
+JAILHOUSE_CPU_STATS_ATTR(vmexits_timer, JAILHOUSE_CPU_STAT_VMEXITS_TIMER);
+JAILHOUSE_CPU_STATS_ATTR(vmexits_ipi, JAILHOUSE_CPU_STAT_VMEXITS_IPI);
+JAILHOUSE_CPU_STATS_ATTR(vmexits_virq, JAILHOUSE_CPU_STAT_VMEXITS_VIRQ);
 #endif
 
 static struct attribute *cell_stats_attrs[] = {
@@ -188,6 +199,14 @@ static struct attribute *cell_stats_attrs[] = {
 #ifdef CONFIG_ARM
 	&vmexits_cp15_cell_attr.kattr.attr,
 #endif
+#elif CONFIG_RISCV
+	&vmexits_sbi_ipi_cell_attr.kattr.attr,
+	&vmexits_sbi_rfence_cell_attr.kattr.attr,
+	&vmexits_sbi_time_cell_attr.kattr.attr,
+	&vmexits_sbi_other_cell_attr.kattr.attr,
+	&vmexits_timer_cell_attr.kattr.attr,
+	&vmexits_ipi_cell_attr.kattr.attr,
+	&vmexits_virq_cell_attr.kattr.attr,
 #endif
 	NULL
 };
@@ -221,6 +240,14 @@ static struct attribute *cpu_stats_attrs[] = {
 #ifdef CONFIG_ARM
 	&vmexits_cp15_cpu_attr.kattr.attr,
 #endif
+#elif CONFIG_RISCV
+	&vmexits_sbi_ipi_cpu_attr.kattr.attr,
+	&vmexits_sbi_rfence_cpu_attr.kattr.attr,
+	&vmexits_sbi_time_cpu_attr.kattr.attr,
+	&vmexits_sbi_other_cpu_attr.kattr.attr,
+	&vmexits_timer_cpu_attr.kattr.attr,
+	&vmexits_ipi_cpu_attr.kattr.attr,
+	&vmexits_virq_cpu_attr.kattr.attr,
 #endif
 	NULL
 };
