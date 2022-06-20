@@ -82,6 +82,11 @@ static inline bool irqchip_irq_in_cell(struct cell *cell, unsigned int irq)
 	return irq_bitmap_test(cell->arch.irq_bitmap, irq);
 }
 
+static inline bool irqchip_virq_in_cell(struct cell *cell, unsigned int irq)
+{
+	return irq_bitmap_test(cell->arch.virq_present_bitmap, irq);
+}
+
 static inline void guest_inject_ext(void)
 {
 	csr_set(CSR_HVIP, (1 << IRQ_S_EXT) << VSIP_TO_HVIP_SHIFT);
@@ -93,5 +98,11 @@ static inline void ext_disable(void)
 }
 
 int irqchip_set_pending(void);
+
+void irqchip_register_virq(unsigned int irq);
+void irqchip_unregister_virq(unsigned int irq);
+void irqchip_send_virq(struct cell *cell, unsigned int irq);
+void irqchip_process_pending_virqs(void);
+bool irqchip_inject_pending_virqs(void);
 
 #endif /* __ASSEMBLY__ */

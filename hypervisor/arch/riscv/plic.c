@@ -149,6 +149,7 @@ static inline void plic_passthru(const struct mmio_access *access)
 static inline enum mmio_result
 plic_handle_context_claim(struct mmio_access *access, unsigned long hart)
 {
+	/* clear pending bit */
 	if (!access->is_write) {
 		access->value = irqchip.pending[hart];
 		return MMIO_HANDLED;
@@ -161,11 +162,18 @@ plic_handle_context_claim(struct mmio_access *access, unsigned long hart)
 		return MMIO_ERROR;
 	}
 
-	plic_write(access->address, access->value);
+	/* TODO: vIRQ could have been disabled before acknowledgement */
+	if (!irq_bitmap_test(this_cell()->arch.virq_present_bitmap, access->value))
+		plic_write(access->address, access->value);
 
 	/* Check if there's another physical IRQ pending */
 	/* TODO: This is where we would need to prioritise vIRQs */
 	irqchip.pending[hart] = plic_read(access->address);
+	if (irqchip.pending[hart])
+		return MMIO_HANDLED;
+
+	/* TODO: vIRQ has the lowest prio at the moment */
+	irqchip_inject_pending_virqs();
 	if (irqchip.pending[hart])
 		return MMIO_HANDLED;
 
@@ -229,6 +237,12 @@ static enum mmio_result plic_handle_prio(struct mmio_access *access)
 
 	irq = access->address / IRQCHIP_REG_SZ;
 
+	if (irqchip_virq_in_cell(this_cell(), irq)) {
+		// TODO: Allow priorities
+		printk("PLIC: virq priorities not supported!\n");
+		return MMIO_HANDLED;
+	}
+
 	if (!irqchip_irq_in_cell(this_cell(), irq))
 		return MMIO_ERROR;
 
@@ -245,8 +259,8 @@ static enum mmio_result plic_handle_prio(struct mmio_access *access)
 
 static enum mmio_result plic_handle_enable(struct mmio_access *access)
 {
+	u32 *virq_enabled, irq_allowed_bitmap, virq_allowed_bitmap;
 	struct public_per_cpu *pc;
-	u32 irq_allowed_bitmap;
 	unsigned int idx, cpu;
 	short int ctx;
 
@@ -296,20 +310,28 @@ allowed:
 	 */
 	idx = ((access->address - PLIC_ENABLE_BASE) % PLIC_ENABLE_OFF)
 		* 8 / IRQCHIP_BITS_PER_REG;
+	// TODO: Should this be locked? virq_allowed_bitmap could be changed
+	// during execution
+	virq_enabled = &pc->virq_enabled_bitmap[idx];
 
 	if (!access->is_write) {
-		access->value = plic_read(access->address);
+		access->value = plic_read(access->address) | *virq_enabled;
 		return MMIO_HANDLED;
 	}
 
 	/* write case */
 	irq_allowed_bitmap = this_cell()->arch.irq_bitmap[idx];
+	virq_allowed_bitmap = this_cell()->arch.virq_present_bitmap[idx];
 
-	if (access->value & ~irq_allowed_bitmap) {
+	if (access->value & ~(irq_allowed_bitmap | virq_allowed_bitmap)) {
 		printk("FATAL: Cell enabled non-assigned IRQ\n");
 		return MMIO_ERROR;
 	}
 
+	*virq_enabled = access->value & virq_allowed_bitmap;
+
+	/* Only forward physical IRQs to the PLIC */
+	access->value &= irq_allowed_bitmap;
 	plic_passthru(access);
 
 	return MMIO_HANDLED;
