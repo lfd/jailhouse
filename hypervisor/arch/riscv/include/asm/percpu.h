@@ -42,6 +42,10 @@ enum sbi_hart_state {
 	} hsm;								\
 	bool wait_for_power_on;						\
 	bool reset;							\
-	bool park;
+	bool park;							\
+	struct {							\
+		u32 enabled_bitmap[MAX_IRQS / (sizeof(u32) * 8)];	\
+		u32 pending_bitmap[MAX_IRQS / (sizeof(u32) * 8)];	\
+	} virq;
 
 #define ARCH_PERCPU_FIELDS

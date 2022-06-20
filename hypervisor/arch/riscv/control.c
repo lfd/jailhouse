@@ -141,6 +141,8 @@ int arch_cell_create(struct cell *const cell)
 		ppc->reset = false;
 	}
 
+	spin_init(&cell->arch.virq_lock);
+
 	if (!cell->arch.mm.root_table)
 		return -ENOMEM;
 
