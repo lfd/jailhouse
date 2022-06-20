@@ -22,6 +22,7 @@ struct arch_cell {
 	struct paging_structures mm;
 
 	u32 irq_bitmap[MAX_IRQS / (sizeof(u32) * 8)];
+	u32 virq_present_bitmap[MAX_IRQS / (sizeof(u32) * 8)];
 };
 
 #endif /* !_JAILHOUSE_ASM_CELL_H */

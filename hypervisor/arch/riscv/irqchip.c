@@ -67,6 +67,8 @@ static int irqchip_cell_init(struct cell *cell)
 			     irqchip_mmio, cell);
 
 	memset(cell->arch.irq_bitmap, 0, sizeof(cell->arch.irq_bitmap));
+	memset(cell->arch.virq_present_bitmap, 0,
+	       sizeof(cell->arch.virq_present_bitmap));
 
 	for_each_irqchip(chip, cell->config, n) {
 		/* Only support one single PLIC at the moment */
@@ -186,6 +188,52 @@ static void irqchip_cell_exit(struct cell *cell)
 	        for (pos = 0; pos < ARRAY_SIZE(chip->pin_bitmap); pos++)
 			root_cell.arch.irq_bitmap[chip->pin_base / 32 + pos] &=
 				chip->pin_bitmap[pos];
+}
+
+void irqchip_send_virq(struct cell *cell, unsigned int irq)
+{
+	//printk("sending vIRQ %u from %s to %s\n", irq, this_cell()->config->name, cell->config->name);
+	irqchip.send_virq(cell, irq);
+}
+
+void irqchip_register_virq(unsigned int irq)
+{
+	struct cell *cell = this_cell();
+
+	if (irqchip_irq_in_cell(cell, irq)) {
+		printk("FATAL: irqchip: Unable to register vIRQ %u\n", irq);
+		panic_stop();
+	}
+
+	irqchip.register_virq(cell, irq);
+}
+
+void irqchip_unregister_virq(unsigned int irq)
+{
+	irqchip.unregister_virq(this_cell(), irq);
+}
+
+bool irqchip_inject_pending_virqs(void)
+{
+	return irqchip.inject_pending_virqs();
+}
+
+void irqchip_process_pending_virqs(void)
+{
+	/*
+	 * We can only inject IRQs if there's no other IRQ waiting. No problem:
+	 * If other IRQs are currently being handled, the cell must somewhen
+	 * acknowledge the interrupt. On acknowledgement, this routine is
+	 * called again, so we won't miss the IRQ.
+	 */
+	if (guest_ext_pending())
+		return;
+
+	if (!irqchip_inject_pending_virqs())
+		return;
+
+	ext_disable();
+	guest_inject_ext();
 }
 
 DEFINE_UNIT(irqchip, "RISC-V irqchip");
