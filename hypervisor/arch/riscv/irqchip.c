@@ -23,6 +23,8 @@
 #define IRQ_BITMAP_PINS \
 	(sizeof(((struct cell *)0)->arch.irq_bitmap) * 8)
 
+extern const struct irqchip irqchip_plic;
+
 struct irqchip irqchip;
 
 static unsigned int irqchip_mmio_count_regions(struct cell *cell)
@@ -131,8 +133,11 @@ static int irqchip_init(void)
 {
 	int err;
 
-	/* We don't have a working irqchip yet */
 	switch (irqchip_type()) {
+		case JAILHOUSE_RISCV_PLIC:
+			irqchip = irqchip_plic;
+			break;
+
 		default:
 			return trace_error(-ENOSYS);
 	}
