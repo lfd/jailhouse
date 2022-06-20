@@ -32,6 +32,7 @@ struct cell;
  * Define MMIO read accessor.
  * @param size		Access size.
  */
+#ifndef DEFINE_MMIO_READ
 #define DEFINE_MMIO_READ(size)						\
 static inline u##size mmio_read##size(void *address)			\
 {									\
@@ -49,12 +50,14 @@ DEFINE_MMIO_READ(8)
 DEFINE_MMIO_READ(16)
 DEFINE_MMIO_READ(32)
 DEFINE_MMIO_READ(64)
+#endif
 /** @} */
 
 /**
  * Define MMIO write accessor.
  * @param size		Access size.
  */
+#ifndef DEFINE_MMIO_WRITE
 #define DEFINE_MMIO_WRITE(size)						\
 static inline void mmio_write##size(void *address, u##size value)	\
 {									\
@@ -71,6 +74,7 @@ DEFINE_MMIO_WRITE(8)
 DEFINE_MMIO_WRITE(16)
 DEFINE_MMIO_WRITE(32)
 DEFINE_MMIO_WRITE(64)
+#endif
 /** @} */
 
 /**
