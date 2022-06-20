@@ -146,6 +146,7 @@ static inline void plic_passthru(const struct mmio_access *access)
 static inline enum mmio_result
 plic_handle_context_claim(struct mmio_access *access, unsigned long hart)
 {
+	/* clear pending bit */
 	if (!access->is_write) {
 		access->value = irqchip.pending[hart];
 		return MMIO_HANDLED;
@@ -158,11 +159,18 @@ plic_handle_context_claim(struct mmio_access *access, unsigned long hart)
 		return MMIO_ERROR;
 	}
 
-	plic_write(access->address, access->value);
+	/* TODO: vIRQ could have been disabled before acknowledgement */
+	if (!irq_bitmap_test(this_cell()->arch.virq_present_bitmap, access->value))
+		plic_write(access->address, access->value);
 
 	/* Check if there's another physical IRQ pending */
 	/* TODO: This is where we would need to prioritise vIRQs */
 	irqchip.pending[hart] = plic_read(access->address);
+	if (irqchip.pending[hart])
+		return MMIO_HANDLED;
+
+	/* TODO: vIRQ has the lowest prio at the moment */
+	irqchip_inject_pending_virqs();
 	if (irqchip.pending[hart])
 		return MMIO_HANDLED;
 
@@ -226,6 +234,12 @@ static enum mmio_result plic_handle_prio(struct mmio_access *access)
 
 	irq = access->address / IRQCHIP_REG_SZ;
 
+	if (irqchip_virq_in_cell(this_cell(), irq)) {
+		// TODO: Allow priorities
+		printk("PLIC: virq priorities not supported!\n");
+		return MMIO_HANDLED;
+	}
+
 	/*
 	 * When booting non-root Linux, it will set priorities of all IRQs.
 	 * Hence, simply ignore non-allowed writes instead of crashing the
@@ -247,8 +261,8 @@ static enum mmio_result plic_handle_prio(struct mmio_access *access)
 
 static enum mmio_result plic_handle_enable(struct mmio_access *access)
 {
+	u32 *virq_enabled, irq_allowed_bitmap, virq_allowed_bitmap;
 	struct public_per_cpu *pc;
-	u32 irq_allowed_bitmap;
 	unsigned int idx, cpu;
 	short int ctx;
 
@@ -273,20 +287,28 @@ allowed:
 	 */
 	idx = ((access->address - PLIC_ENABLE_BASE) % PLIC_ENABLE_OFF)
 		* 8 / IRQCHIP_BITS_PER_REG;
+	// TODO: Should this be locked? virq_allowed_bitmap could be changed
+	// during execution
+	virq_enabled = &pc->virq.enabled_bitmap[idx];
 
 	if (!access->is_write) {
-		access->value = plic_read(access->address);
+		access->value = plic_read(access->address) | *virq_enabled;
 		return MMIO_HANDLED;
 	}
 
 	/* write case */
 	irq_allowed_bitmap = this_cell()->arch.irq_bitmap[idx];
+	virq_allowed_bitmap = this_cell()->arch.virq_present_bitmap[idx];
 
-	if (access->value & ~irq_allowed_bitmap) {
+	if (access->value & ~(irq_allowed_bitmap | virq_allowed_bitmap)) {
 		printk("FATAL: Cell enabled non-assigned IRQ\n");
 		return MMIO_ERROR;
 	}
 
+	*virq_enabled = access->value & virq_allowed_bitmap;
+
+	/* Only forward physical IRQs to the PLIC */
+	access->value &= irq_allowed_bitmap;
 	plic_passthru(access);
 
 	return MMIO_HANDLED;
@@ -365,9 +387,82 @@ cont:
 	}
 }
 
+static void plic_send_virq(struct cell *cell, unsigned int irq)
+{
+	struct public_per_cpu *pcpu;
+	unsigned int cpu;
+
+	if (!irq_bitmap_test(cell->arch.virq_present_bitmap, irq)) {
+		printk("vIRQ not present in destination\n");
+		return;
+	}
+
+	// Do we need to lock this section? A vIRQ could be disabled during injection
+	for_each_cpu(cpu, &cell->cpu_set) {
+		pcpu = public_per_cpu(cpu);
+		if (irq_bitmap_test(pcpu->virq.enabled_bitmap, irq)) {
+			irq_bitmap_set(pcpu->virq.pending_bitmap, irq);
+			memory_barrier();
+			arch_send_event(pcpu);
+			break;
+		}
+	}
+}
+
+static void plic_register_virq(struct cell *cell, unsigned int irq)
+{
+	irq_bitmap_set(cell->arch.virq_present_bitmap, irq);
+}
+
+static void plic_unregister_virq(struct cell *cell, unsigned int irq)
+{
+	unsigned int cpu;
+
+	if (!irq_bitmap_test(cell->arch.virq_present_bitmap, irq))
+		return;
+
+	irq_bitmap_clear(cell->arch.virq_present_bitmap, irq);
+	for_each_cpu(cpu, &cell->cpu_set)
+		irq_bitmap_clear(public_per_cpu(cpu)->virq.enabled_bitmap, irq);
+}
+
+static bool plic_inject_pending_virqs(void)
+{
+	struct public_per_cpu *pcpu = this_cpu_public();
+	u32 idx, irq = 0;
+
+	for (idx = 0; idx < ARRAY_SIZE(pcpu->virq.pending_bitmap); idx++) {
+		irq = pcpu->virq.pending_bitmap[idx];
+		if (!irq)
+			continue;
+
+		/*
+		 * FIXME: For the moment, simply inject the first pending IRQ.
+		 * Later, we need to prioritise those IRQs. Haha. Per call of
+		 * this routine, we can only inject ONE single IRQ. That's not
+		 * an issue, as the guest will trap again after acknowledging
+		 * the last irq. So there will be no misses of pending IRQs.
+		 */
+
+		irq = ffsl(irq) + idx * 32;
+
+		irqchip.pending[pcpu->phys_id] = irq;
+
+		irq_bitmap_clear(pcpu->virq.pending_bitmap, irq);
+		return true;
+	}
+
+	return false;
+}
+
 const struct irqchip irqchip_plic = {
 	.init = plic_init,
 	.claim_irq = plic_claim_irq,
 	.adjust_irq_target = plic_adjust_irq_target,
 	.mmio_handler = plic_handler,
+
+	.send_virq = plic_send_virq,
+	.register_virq = plic_register_virq,
+	.unregister_virq = plic_unregister_virq,
+	.inject_pending_virqs = plic_inject_pending_virqs,
 };
