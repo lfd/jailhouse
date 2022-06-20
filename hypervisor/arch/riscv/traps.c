@@ -175,6 +175,7 @@ static inline int handle_ipi(void)
 	 * IPI is acknowledged here, as from now on, further IPIs might already
 	 * be sent by remote CPUs.
 	 */
+	irqchip_process_pending_virqs();
 	spin_unlock(&pcpu->control_lock);
 	irqchip_process_pending_virqs();
 
