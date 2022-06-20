@@ -15,4 +15,7 @@
 
 #define PLIC_MAX_IRQS	1024
 
+extern int plic_set_pending(void);
+bool irqchip_irq_in_cell(struct cell *cell, unsigned int irq);
+
 #endif /* _PLIC_H */
