@@ -15,4 +15,4 @@
 always-y := lib.a
 
 lib-y := entry.o exception.o setup.o dbg-write.o control.o ivshmem.o paging.o
-lib-y += pci.o traps.o lib.o
+lib-y += plic.o pci.o traps.o lib.o
