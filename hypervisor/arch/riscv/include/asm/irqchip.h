@@ -29,6 +29,11 @@ struct irqchip {
 	int (*claim_irq)(void);
 	void (*adjust_irq_target)(struct cell *cell, unsigned int irq);
 
+	void (*send_virq)(struct cell *cell, unsigned int irq);
+	void (*register_virq)(struct cell *cell, unsigned int irq);
+	void (*unregister_virq)(struct cell *cell, unsigned int irq);
+	bool (*inject_pending_virqs)(void);
+
 	void *base;
 	unsigned long pending[MAX_CPUS];
 };
@@ -97,6 +102,17 @@ static inline bool irqchip_irq_in_cell(struct cell *cell, unsigned int irq)
 	return irq_bitmap_test(cell->arch.irq_bitmap, irq);
 }
 
+static inline bool irqchip_virq_in_cell(struct cell *cell, unsigned int irq)
+{
+	return irq_bitmap_test(cell->arch.virq_present_bitmap, irq);
+}
+
 int irqchip_set_pending(void);
+
+void irqchip_register_virq(unsigned int irq);
+void irqchip_unregister_virq(unsigned int irq);
+void irqchip_send_virq(struct cell *cell, unsigned int irq);
+void irqchip_process_pending_virqs(void);
+bool irqchip_inject_pending_virqs(void);
 
 #endif /* __ASSEMBLY__ */
