@@ -18,4 +18,11 @@
 extern int plic_set_pending(void);
 bool irqchip_irq_in_cell(struct cell *cell, unsigned int irq);
 
+void plic_register_virq(unsigned int irq);
+void plic_unregister_virq(unsigned int irq);
+
+void plic_send_virq(struct cell *cell, unsigned int irq);
+
+void plic_process_pending_virqs(void);
+
 #endif /* _PLIC_H */

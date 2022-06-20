@@ -1,21 +1,35 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2020
+ * Copyright (c) Siemens AG, 2016-2019
+ * Copyright (c) OTH Regensburg, 2022
  *
  * Authors:
  *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
  */
 
-#include <jailhouse/entry.h>
 #include <jailhouse/ivshmem.h>
+#include <jailhouse/cell.h>
+#include <asm/processor.h>
 
 void arch_ivshmem_trigger_interrupt(struct ivshmem_endpoint *ive,
 				    unsigned int vector)
 {
+	unsigned int irq_id = ive->irq_cache.id[vector];
+
+	if (irq_id) {
+		/*
+		 * Ensure that all data written by the sending guest is visible
+		 * to the target before triggering the interrupt.
+		 */
+		memory_barrier();
+
+		plic_send_virq(ive->device->cell, irq_id);
+	}
 }
 
 int arch_ivshmem_update_msix(struct ivshmem_endpoint *ive, unsigned int vector,
@@ -26,4 +40,22 @@ int arch_ivshmem_update_msix(struct ivshmem_endpoint *ive, unsigned int vector,
 
 void arch_ivshmem_update_intx(struct ivshmem_endpoint *ive, bool enabled)
 {
+	u8 pin = ive->cspace[PCI_CFG_INT/4] >> 8;
+	struct pci_device *device = ive->device;
+	unsigned int virq;
+
+	/*
+	 * Lock used as barrier, ensuring all interrupts triggered after return
+	 * use the new setting.
+	 */
+	virq = device->cell->config->vpci_irq_base + pin - 1;
+	spin_lock(&ive->irq_lock);
+	if (enabled) {
+		ive->irq_cache.id[0] = virq;
+		plic_register_virq(virq);
+	} else {
+		ive->irq_cache.id[0] = 0;
+		plic_unregister_virq(virq);
+	}
+	spin_unlock(&ive->irq_lock);
 }
