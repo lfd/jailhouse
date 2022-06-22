@@ -25,7 +25,7 @@ struct {
 	struct jailhouse_cpu cpus[6];
 	struct jailhouse_memory mem_regions[7];
 	struct jailhouse_irqchip irqchips[1];
-	struct jailhouse_pci_device pci_devices[0];
+	struct jailhouse_pci_device pci_devices[1];
 	struct jailhouse_pci_capability pci_caps[0];
 } __attribute__((packed)) config = {
 	.header = {
@@ -145,5 +145,15 @@ struct {
 	},
 
 	.pci_devices = {
+		{ /* IVSHMEM (networking) */
+			.type = JAILHOUSE_PCI_TYPE_IVSHMEM,
+			.domain = 0x0000,
+			.bdf = 0x10 << 3,
+			.bar_mask = JAILHOUSE_IVSHMEM_BAR_MASK_INTX,
+			.shmem_regions_start = 3,
+			.shmem_dev_id = 0,
+			.shmem_peers = 2,
+			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
+		},
 	},
 };
