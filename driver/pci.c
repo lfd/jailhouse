@@ -292,19 +292,21 @@ static unsigned int count_ivshmem_devices(struct cell *cell)
 	return count;
 }
 
-static const struct of_device_id gic_of_match[] = {
+static const struct of_device_id irqchip_of_match[] = {
 	{ .compatible = "arm,cortex-a15-gic", },
 	{ .compatible = "arm,cortex-a7-gic", },
 	{ .compatible = "arm,gic-400", },
 	{ .compatible = "arm,gic-v3", },
+	{ .compatible = "riscv,plic0", },
+	{ .compatible = "sifive,plic-1.0.0", },
 	{},
 };
 
 static bool create_vpci_of_overlay(struct jailhouse_system *config)
 {
-	u32 address_cells, size_cells, gic_address_cells, gic_phandle;
+	u32 address_cells, size_cells, irqchip_address_cells, irqchip_phandle;
 	struct device_node *vpci_node = NULL;
-	struct device_node *root, *gic;
+	struct device_node *root, *irqchip;
 	struct property *prop = NULL;
 	unsigned int n, cell;
 	u64 base_addr;
@@ -322,15 +324,16 @@ static bool create_vpci_of_overlay(struct jailhouse_system *config)
 
 	of_node_put(root);
 
-	gic = of_find_matching_node(NULL, gic_of_match);
-	if (!gic)
+	irqchip = of_find_matching_node(NULL, irqchip_of_match);
+	if (!irqchip)
 		return false;
 
-	if (of_property_read_u32(gic, "#address-cells", &gic_address_cells) < 0)
-		gic_address_cells = 0;
-	gic_phandle = gic->phandle;
+	if (of_property_read_u32(irqchip, "#address-cells",
+				 &irqchip_address_cells) < 0)
+		irqchip_address_cells = 0;
+	irqchip_phandle = irqchip->phandle;
 
-	of_node_put(gic);
+	of_node_put(irqchip);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6,6,0)
 	if (of_overlay_fdt_apply(__dtb_vpci_template_begin,
@@ -391,7 +394,7 @@ static bool create_vpci_of_overlay(struct jailhouse_system *config)
 	}
 
 	prop = alloc_prop("interrupt-map",
-			  sizeof(u32) * (8 + gic_address_cells) * 4);
+			  sizeof(u32) * (8 + irqchip_address_cells) * 4);
 	if (!prop)
 		goto out;
 
@@ -399,12 +402,18 @@ static bool create_vpci_of_overlay(struct jailhouse_system *config)
 	for (n = 0, cell = 0; n < 4; n++) {
 		cell += 3;				/* match addr (0) */
 		prop_val[cell++] = cpu_to_be32(n + 1);	/* match addr */
-		prop_val[cell++] = cpu_to_be32(gic_phandle);
-		cell += gic_address_cells;		/* parent addr (0) */
+		prop_val[cell++] = cpu_to_be32(irqchip_phandle);
+		cell += irqchip_address_cells;		/* parent addr (0) */
+#if defined(CONFIG_ARM) || defined(CONFIG_ARM64)
 		prop_val[cell++] = cpu_to_be32(GIC_SPI);
 		prop_val[cell++] =
 			cpu_to_be32(config->root_cell.vpci_irq_base + n);
 		prop_val[cell++] = cpu_to_be32(IRQ_TYPE_EDGE_RISING);
+#elif defined(CONFIG_RISCV)
+		prop_val[cell++] =
+			cpu_to_be32(config->root_cell.vpci_irq_base + n);
+		prop_val[cell++] = 0;
+#endif
 	}
 
 	if (of_changeset_add_property(&overlay_changeset, vpci_node, prop) < 0)
