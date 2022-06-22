@@ -126,5 +126,22 @@
 			riscv,ndev = <31>;
 			riscv,max-priority = <7>;
 		};
+
+		pci@40000000 {
+		        #address-cells = <3>;
+		        #size-cells = <2>;
+		        #interrupt-cells = <1>;
+
+		        device_type = "pci";
+		        bus-range = <0 0>;
+		        reg = <0x0 0x40000000 0x0 0x100000>;
+		        ranges =  <0x2000000 0x0 0x40100000 0x0 0x40100000  0 0x2000>;
+
+		        interrupt-map-mask = <0>;
+		        interrupt-map = <0 0 0 1 &plic0 28 0>;
+
+		        compatible = "pci-host-ecam-generic";
+			status = "okay";
+		};
 	};
 };
