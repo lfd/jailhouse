@@ -18,9 +18,17 @@
 struct {
 	struct jailhouse_cell_desc cell;
 	struct jailhouse_cpu cpus[2];
+#ifdef QEMU_IVSHMEM
+	struct jailhouse_memory mem_regions[8];
+#else
 	struct jailhouse_memory mem_regions[4];
+#endif
 	struct jailhouse_irqchip irqchips[1];
+#ifdef QEMU_IVSHMEM
+	struct jailhouse_pci_device pci_devices[1];
+#else
 	struct jailhouse_pci_device pci_devices[0];
+#endif
 } __attribute__((packed)) config = {
 	.cell = {
 		.signature = JAILHOUSE_CELL_DESC_SIGNATURE,
@@ -56,6 +64,10 @@ struct {
 	},
 
 	.mem_regions = {
+#ifdef QEMU_IVSHMEM
+		/* IVSHMEM shared memory regions (networking) */
+		JAILHOUSE_SHMEM_NET_REGIONS(0xbf900000, 1),
+#endif
 		/* RAM low */ {
 			.phys_start = 0xbf800000,
 			.virt_start = 0x0,
@@ -86,6 +98,18 @@ struct {
 	},
 
 	.pci_devices = {
+#ifdef QEMU_IVSHMEM
+		{ /* IVSHMEM (networking) */
+			.type = JAILHOUSE_PCI_TYPE_IVSHMEM,
+			.domain = 0x0000,
+			.bdf = 0x10 << 3,
+			.bar_mask = JAILHOUSE_IVSHMEM_BAR_MASK_INTX,
+			.shmem_regions_start = 0,
+			.shmem_dev_id = 1,
+			.shmem_peers = 2,
+			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
+		},
+#endif
 	},
 
 	.irqchips = {

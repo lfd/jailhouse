@@ -27,9 +27,17 @@ struct {
 #elif defined(QEMU_MC)
 	struct jailhouse_cpu cpus[6];
 #endif
+#ifdef QEMU_IVSHMEM
+	struct jailhouse_memory mem_regions[12];
+#else
 	struct jailhouse_memory mem_regions[8];
+#endif
 	struct jailhouse_irqchip irqchips[1];
+#ifdef QEMU_IVSHMEM
+	struct jailhouse_pci_device pci_devices[2];
+#else
 	struct jailhouse_pci_device pci_devices[1];
+#endif
 	struct jailhouse_pci_capability pci_caps[6];
 } __attribute__((packed)) config = {
 	.header = {
@@ -113,6 +121,10 @@ struct {
 	},
 
 	.mem_regions = {
+#ifdef QEMU_IVSHMEM
+		/* IVSHMEM shared memory regions (networking) */
+		JAILHOUSE_SHMEM_NET_REGIONS(0xbf900000, 0),
+#endif
 		/* RAM */ {
 			.phys_start = 0x80000000,
 			.virt_start = 0x80000000,
@@ -206,6 +218,18 @@ struct {
 			.msix_region_size = 0x1000,
 			.msix_address = 0x40080000,
 		},
+#ifdef QEMU_IVSHMEM
+		{ /* IVSHMEM (networking) */
+			.type = JAILHOUSE_PCI_TYPE_IVSHMEM,
+			.domain = 0x0000,
+			.bdf = 0x10 << 3,
+			.bar_mask = JAILHOUSE_IVSHMEM_BAR_MASK_INTX,
+			.shmem_regions_start = 0,
+			.shmem_dev_id = 0,
+			.shmem_peers = 2,
+			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
+		},
+#endif
 	},
 
 	.pci_caps = {
