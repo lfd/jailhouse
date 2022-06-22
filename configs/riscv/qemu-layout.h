@@ -19,7 +19,6 @@
 #define HV_SIZE			0x600000	/* 6MiB Size */
 #define HV_PHYS			(MEM_TOP - HV_SIZE)
 
-/* In preparation for IVSHMEM */
 #define IVSHMEM_NET_PHYS	(HV_PHYS - MIB1)
 
 #define INMATE_TINY_SIZE	MIB1

@@ -21,6 +21,16 @@
 #include <jailhouse/cell-config.h>
 #include "qemu-layout.h"
 
+#define MEM_REGIONS_BASE	8
+
+#ifdef QEMU_IVSHMEM
+#define IVSHMEM_REGIONS		4
+#else
+#define IVSHMEM_REGIONS		0
+#endif
+
+#define MEM_REGIONS		(MEM_REGIONS_BASE + IVSHMEM_REGIONS)
+
 struct {
 	struct jailhouse_system header;
 #ifdef QEMU_UC
@@ -28,9 +38,13 @@ struct {
 #elif defined(QEMU_MC)
 	struct jailhouse_cpu cpus[6];
 #endif
-	struct jailhouse_memory mem_regions[8];
+	struct jailhouse_memory mem_regions[MEM_REGIONS];
 	struct jailhouse_irqchip irqchips[1];
+#ifdef QEMU_IVSHMEM
+	struct jailhouse_pci_device pci_devices[2];
+#else
 	struct jailhouse_pci_device pci_devices[1];
+#endif
 	struct jailhouse_pci_capability pci_caps[6];
 } __attribute__((packed)) config = {
 	.header = {
@@ -114,6 +128,10 @@ struct {
 	},
 
 	.mem_regions = {
+#ifdef QEMU_IVSHMEM
+		/* IVSHMEM shared memory regions (networking) */
+		JAILHOUSE_SHMEM_NET_REGIONS(IVSHMEM_NET_PHYS, 0),
+#endif
 		/* RAM */ {
 			.phys_start = 0x80000000,
 			.virt_start = 0x80000000,
@@ -207,6 +225,18 @@ struct {
 			.msix_region_size = 0x1000,
 			.msix_address = 0x40080000,
 		},
+#ifdef QEMU_IVSHMEM
+		{ /* IVSHMEM (networking) */
+			.type = JAILHOUSE_PCI_TYPE_IVSHMEM,
+			.domain = 0x0000,
+			.bdf = 0x10 << 3,
+			.bar_mask = JAILHOUSE_IVSHMEM_BAR_MASK_INTX,
+			.shmem_regions_start = 0,
+			.shmem_dev_id = 0,
+			.shmem_peers = 2,
+			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
+		},
+#endif
 	},
 
 	.pci_caps = {

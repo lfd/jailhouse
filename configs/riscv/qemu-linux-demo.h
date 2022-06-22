@@ -16,12 +16,26 @@
 #include <jailhouse/cell-config.h>
 #include "qemu-layout.h"
 
+#define MEM_REGIONS_BASE	4
+
+#ifdef QEMU_IVSHMEM
+#define IVSHMEM_REGIONS		4
+#else
+#define IVSHMEM_REGIONS		0
+#endif
+
+#define MEM_REGIONS		(MEM_REGIONS_BASE + IVSHMEM_REGIONS)
+
 struct {
 	struct jailhouse_cell_desc cell;
 	struct jailhouse_cpu cpus[2];
-	struct jailhouse_memory mem_regions[4];
+	struct jailhouse_memory mem_regions[MEM_REGIONS];
 	struct jailhouse_irqchip irqchips[1];
+#ifdef QEMU_IVSHMEM
+	struct jailhouse_pci_device pci_devices[1];
+#else
 	struct jailhouse_pci_device pci_devices[0];
+#endif
 } __attribute__((packed)) config = {
 	.cell = {
 		.signature = JAILHOUSE_CELL_DESC_SIGNATURE,
@@ -57,6 +71,10 @@ struct {
 	},
 
 	.mem_regions = {
+#ifdef QEMU_IVSHMEM
+		/* IVSHMEM shared memory regions (networking) */
+		JAILHOUSE_SHMEM_NET_REGIONS(IVSHMEM_NET_PHYS, 1),
+#endif
 		/* RAM low */ {
 			.phys_start = INMATE_LINUX_LOW_PHYS,
 			.virt_start = 0x0,
@@ -87,6 +105,18 @@ struct {
 	},
 
 	.pci_devices = {
+#ifdef QEMU_IVSHMEM
+		{ /* IVSHMEM (networking) */
+			.type = JAILHOUSE_PCI_TYPE_IVSHMEM,
+			.domain = 0x0000,
+			.bdf = 0x10 << 3,
+			.bar_mask = JAILHOUSE_IVSHMEM_BAR_MASK_INTX,
+			.shmem_regions_start = 0,
+			.shmem_dev_id = 1,
+			.shmem_peers = 2,
+			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
+		},
+#endif
 	},
 
 	.irqchips = {
