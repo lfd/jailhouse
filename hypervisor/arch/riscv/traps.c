@@ -486,7 +486,7 @@ static int handle_ecall(union registers *regs)
 	return 0;
 }
 
-static inline int gmem_read16(unsigned long addr, u16 *val)
+static __attribute__((noinline)) int gmem_read16(unsigned long addr, u16 *val)
 {
 	register unsigned long err asm("a0");
 	register unsigned long _val asm("a1") = (unsigned long)val;
