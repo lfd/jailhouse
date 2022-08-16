@@ -1,7 +1,7 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) OTH Regensburg, 2018
+ * Copyright (c) OTH Regensburg, 2022-2023
  *
  * Authors:
  *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
@@ -39,27 +39,23 @@
 #include <inmate.h>
 #include <uart.h>
 
-DECLARE_UART(8250);
-DECLARE_UART(hscif);
-DECLARE_UART(imx);
-DECLARE_UART(imx_lpuart);
-DECLARE_UART(mvebu);
-DECLARE_UART(pl011);
-DECLARE_UART(scif);
-DECLARE_UART(scifa);
-DECLARE_UART(xuartps);
-DECLARE_UART(linflex);
+#define UARTSR			0x0014
+#define  LINFLEXD_UARTSR_DTFTFF	(1 << 1)
+#define UART_BDRL		0x0038
+#define  UART_STAT_TX_FULL	(1 << 11)
 
-struct uart_chip *uart_array[] = {
-	&UART_OPS_NAME(8250),
-	&UART_OPS_NAME(hscif),
-	&UART_OPS_NAME(imx),
-	&UART_OPS_NAME(imx_lpuart),
-	&UART_OPS_NAME(mvebu),
-	&UART_OPS_NAME(pl011),
-	&UART_OPS_NAME(scif),
-	&UART_OPS_NAME(scifa),
-	&UART_OPS_NAME(xuartps),
-	&UART_OPS_NAME(linflex),
-	NULL
-};
+static void uart_linflex_init(struct uart_chip *chip)
+{
+}
+
+static bool uart_linflex_is_busy(struct uart_chip *chip)
+{
+	return !!(mmio_read32(chip->base + UARTSR) & LINFLEXD_UARTSR_DTFTFF);
+}
+
+static void uart_linflex_write(struct uart_chip *chip, char c)
+{
+	mmio_write8(chip->base + UART_BDRL, c);
+}
+
+DEFINE_UART(linflex, "LINFLEX", JAILHOUSE_CON_TYPE_LINFLEXUART);
