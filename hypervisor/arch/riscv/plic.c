@@ -369,8 +369,13 @@ static enum mmio_result plic_handle_prio(struct mmio_access *access)
 		return MMIO_HANDLED;
 	}
 
+	/*
+	 * When booting non-root Linux, it will set priorities of all IRQs.
+	 * Hence, simply ignore non-allowed writes instead of crashing the
+	 * cell.
+	 */
 	if (!irqchip_irq_in_cell(this_cell(), irq))
-		return MMIO_ERROR;
+		return MMIO_HANDLED;
 
 	/*
 	 * Maybe we can abandon this check. The cell should know the max
@@ -399,32 +404,7 @@ static enum mmio_result plic_handle_enable(struct mmio_access *access)
 			goto allowed;
 	}
 
-	/*
-	 * FIXME: Why does Linux read non-allowed ctxs? This seems to be an
-	 * actual bug in Linux. When we remove a CPU from Linux, and we later
-	 * change the affinity of the IRQ, then Linux will try to access
-	 * Contexts which it is not in charge of any longer. While Linux
-	 * disables IRQs, it does not adjust smp_affinities when removing CPUs.
-	 *
-	 * For the moment, and as a workaround, simply report any read as 0,
-	 * and forbid writes != 0.
-	 *
-	 * ... Okay, we really have a Linux bug here.
-	 *  (a) Linux doesn't remove the affinity from removed CPUs
-	 *  (b) Linux allows to set affinity to non-present CPUs
-	 *
-	 * Actually, we should always return MMIO_ERROR here.
-	 */
-
-#if 1
-	if (!access->is_write) {
-		access->value = 0;
-	} else if (access->value != 0)
-		return MMIO_ERROR;
-	return MMIO_HANDLED;
-#else
 	return MMIO_ERROR;
-#endif
 
 allowed:
 	/*
