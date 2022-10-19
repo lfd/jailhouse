@@ -15,6 +15,8 @@
 #define _AT(T,X)	((T)(X))
 #endif
 
+#define CSR_STIMECMP	0x14D
+#define CSR_VSTIMECMP	0x24D
 #define CSR_SATP	0x180
 #define CSR_VSSTATUS	0x200
 #define CSR_VSIE	0x204
@@ -31,6 +33,8 @@
 #define CSR_HTIMEDELTA	0x605
 #define CSR_HCOUNTEREN	0x606
 #define CSR_HGEIE	0x607
+#define CSR_HENVCFG	0x60a
+#define ENVCFG_STCE	(_AC(1, ULL) << 63)
 #define CSR_HTVAL	0x643
 #define CSR_HIP		0x644
 #define CSR_HVIP	0x645

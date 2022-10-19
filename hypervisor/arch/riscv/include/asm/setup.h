@@ -10,5 +10,7 @@
  * the COPYING file in the top-level directory.
  */
 
+extern bool has_sstc;
+
 void __attribute__((noreturn))
 riscv_deactivate_vmm(union registers *regs, int errcode, bool from_ecall);
