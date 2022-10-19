@@ -105,6 +105,15 @@ static void dump_regs(union registers *r)
 static inline int handle_timer(void)
 {
 	this_cpu_public()->stats[JAILHOUSE_CPU_STAT_VMEXITS_TIMER]++;
+
+	/*
+	 * This routine must not be called, if SSTC is available: Either the
+	 * guest uses STCE on its own, or we catch the sbi_set_timer() call,
+	 * and set the guest's vstimecmp register.
+	 */
+	if (has_sstc)
+		return trace_error(-EINVAL);
+
 	sbi_set_timer(-1);
 
 	/* inject timer to VS */
@@ -203,6 +212,12 @@ static inline int sbi_ext_time(struct sbiret *ret, unsigned int fid, u64 stime)
 {
 	if (fid != SBI_EXT_TIME_SET_TIMER)
 		return -ENOSYS;
+
+	if (has_sstc) {
+		ret->error = SBI_SUCCESS;
+		csr_write(CSR_VSTIMECMP, stime);
+		return 0;
+	}
 
 	/* Clear pending IRQs */
 	csr_clear(CSR_HVIP, VIE_TIE);
