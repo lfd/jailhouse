@@ -87,6 +87,11 @@ static inline void guest_clear_ext(void)
 	csr_clear(CSR_HVIP, (1 << IRQ_S_EXT) << VSIP_TO_HVIP_SHIFT);
 }
 
+static inline void timer_disable(void)
+{
+	csr_clear(sie, IE_TIE);
+}
+
 static inline void ext_disable(void)
 {
 	csr_clear(sie, IE_EIE);
