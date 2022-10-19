@@ -94,6 +94,9 @@ void __attribute__ ((noreturn)) arch_cpu_activate_vmm(void)
 	csr_write(CSR_HCOUNTEREN, SCOUNTEREN_CY | SCOUNTEREN_TM);
 	csr_write(CSR_HTIMEDELTA, 0);
 
+	/* Enable SSTC extension (if available) */
+	csr_write(CSR_HENVCFG, ENVCFG_STCE);
+
 	tmp = csr_read(sip);
 	csr_write(sip, tmp); /* clear pending */
 	csr_write(CSR_HVIP, tmp); /* reinject pending */
