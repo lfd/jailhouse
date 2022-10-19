@@ -25,6 +25,8 @@ void riscv_park_loop(void);
 void __attribute((noreturn))
 __riscv_deactivate_vmm(union registers *regs, int errcode, bool from_ecall);
 
+static bool has_stce;
+
 int arch_init_early(void)
 {
 	int err;
@@ -94,6 +96,21 @@ void __attribute__ ((noreturn)) arch_cpu_activate_vmm(void)
 	csr_write(CSR_HCOUNTEREN, SCOUNTEREN_CY | SCOUNTEREN_TM);
 	csr_write(CSR_HTIMEDELTA, 0);
 
+	/* try to enable SSTC extension, if available */
+	csr_write(CSR_HENVCFG, ENVCFG_STCE);
+	/* STCE is WARL, check its presence */
+	has_stce = !!(csr_read(CSR_HENVCFG) & ENVCFG_STCE);
+	/*
+	 * If we discovered STCE, then disable the S-Mode Timer and migrate it
+	 * to VS-Mode. Even if the guest doesn't use STCE this is okay, as the
+	 * Timer will arrive regularly.
+	 */
+	if (has_stce) {
+		tmp = csr_read(CSR_STIMECMP);
+		csr_write(CSR_VSTIMECMP, tmp);
+		csr_write(CSR_STIMECMP, -1);
+	}
+
 	tmp = csr_read(sip);
 	csr_write(sip, tmp); /* clear pending */
 	csr_write(CSR_HVIP, tmp); /* reinject pending */
@@ -123,6 +140,7 @@ riscv_deactivate_vmm(union registers *regs, int errcode, bool from_ecall)
 	void __attribute__((noreturn))
 		(*deactivate_vmm)(union registers *regs, int errcode, bool from_ecall);
 	unsigned long linux_tables_offset, bootstrap_table_phys;
+	u64 timecmp;
 	u8 atp_mode;
 
 
@@ -130,6 +148,13 @@ riscv_deactivate_vmm(union registers *regs, int errcode, bool from_ecall)
 
 	/* Do not return to VS-mode, rather return to S-Mode */
 	csr_clear(CSR_HSTATUS, HSTATUS_SPV);
+
+	/* Migrate the timer back to S-Mode */
+	if (has_stce) {
+		timecmp = csr_read(CSR_VSTIMECMP);
+		csr_write(CSR_VSTIMECMP, -1);
+		csr_write(CSR_STIMECMP, timecmp);
+	}
 
 	/*
 	 * We don't know which page table is currently active. So in any case,
