@@ -53,6 +53,7 @@ struct {
 			.pci_mmconfig_end_bus = 0xff, // ??
 			.riscv = {
 				.irqchip = {
+#ifdef QEMU_PLIC
 					.type = JAILHOUSE_RISCV_PLIC,
 					.base_address = 0xc000000,
 					.size = 0x600000,
@@ -66,7 +67,14 @@ struct {
 						[4] = 9,
 						[5] = 11,
 						[6 ... 31] = -1,
-					}
+					},
+#elif defined(QEMU_APLIC)
+					.type = JAILHOUSE_RISCV_APLIC,
+					.base_address = 0xd000000,
+					.size = 0x8000,
+					.max_irq = 96,
+					.max_priority = 7,
+#endif
 				},
 			},
 		},
@@ -171,9 +179,14 @@ struct {
 		},
 	},
 	.irqchips = {
+#ifdef QEMU_PLIC
 		/* plic@c000000 */ {
 			.address = 0xc000000,
-			.id = 0 /* PLIC */,
+#elif defined(QEMU_APLIC)
+		/* aplic_s@d000000 */ {
+			.address = 0xd000000,
+#endif
+			.id = 0,
 			.pin_base = 0,
 			.pin_bitmap = {
 				(1 << 0xa), /* uart@10000000 */
