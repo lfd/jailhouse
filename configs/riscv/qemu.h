@@ -61,6 +61,7 @@ struct {
 			.pci_mmconfig_end_bus = 0xff, // ??
 			.riscv = {
 				.irqchip = {
+#ifdef QEMU_PLIC
 					.type = JAILHOUSE_RISCV_PLIC,
 					.base_address = 0xc000000,
 					.size = 0x600000,
@@ -74,7 +75,25 @@ struct {
 						[4] = 9,
 						[5] = 11,
 						[6 ... 31] = -1,
-					}
+					},
+#elif defined(QEMU_APLIC)
+					.type = JAILHOUSE_RISCV_APLIC,
+					.base_address = 0xd000000,
+					.size = 0x8000,
+					.max_irq = 96,
+					.max_priority = 7,
+					/*
+					.hart_to_context = {
+						[0] = 1,
+						[1] = 3,
+						[2] = 5,
+						[3] = 7,
+						[4] = 9,
+						[5] = 11,
+						[6 ... 31] = -1,
+					},
+					*/
+#endif
 				},
 			},
 		},
@@ -191,6 +210,7 @@ struct {
 		JAILHOUSE_SHMEM_NET_REGIONS(0xbf900000, 0),
 	},
 	.irqchips = {
+#ifdef QEMU_PLIC
 		/* plic@c000000 */ {
 			.address = 0xc000000,
 			.id = 0 /* PLIC */,
@@ -214,6 +234,31 @@ struct {
 				0,
 			},
 		},
+#elif defined(QEMU_APLIC)
+		/* aplic_s@d000000 */ {
+			.address = 0xd000000,
+			.id = 0 /* APLIC_S */,
+			.pin_base = 0,
+			.pin_bitmap = {
+				0
+				| 1 << 1 /* virtio_mmio@10001000 */
+				| 1 << 2 /* virtio_mmio@10002000 */
+				| 1 << 3 /* virtio_mmio@10003000 */
+				| 1 << 4 /* virtio_mmio@10004000 */
+				| 1 << 5 /* virtio_mmio@10005000 */
+				| 1 << 6 /* virtio_mmio@10006000 */
+				| 1 << 7 /* virtio_mmio@10007000 */
+				| 1 << 8 /* virtio_mmio@10008000 */
+				| 1 << 0xa /* uart@10000000 */
+				| 1 << 0xb /* rtc@101000 */
+				,
+				1 << (0x22 - 0x20) /* PCI INT C / slot 0 */
+				,
+				0,
+				0,
+			},
+		},
+#endif
 	},
 
 	.pci_devices = {
