@@ -333,6 +333,7 @@ struct jailhouse_pio {
 	!!((flags) & JAILHOUSE_SYS_VIRTUAL_DEBUG_CONSOLE)
 
 #define JAILHOUSE_RISCV_PLIC		0
+#define JAILHOUSE_RISCV_APLIC		1
 
 /**
  * General descriptor of the system.

@@ -89,9 +89,11 @@ struct {
 	},
 
 	.irqchips = {
-		/* PLIC */ {
+		/* (A)PLIC */ {
 #ifdef QEMU_PLIC
 			.address = 0xc000000,
+#elif defined(QEMU_APLIC)
+			.address = 0xd000000,
 #endif
 			.pin_base = 0,
 			.pin_bitmap = {

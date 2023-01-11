@@ -1,3 +1,3 @@
 #define QEMU_MC
-#define QEMU_PLIC
+#define QEMU_APLIC
 #include "qemu.h"
