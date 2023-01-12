@@ -95,6 +95,9 @@ void __attribute__ ((noreturn)) arch_cpu_activate_vmm(void)
 	csr_write(CSR_HTIMEDELTA, 0);
 
 	/* Enable SSTC extension (if available) */
+	// FIXME Somewhat causes Linux to not receive any more timer interrupts
+	// when jailhouse is disabled, and SSTC is active. With this, Linux
+	// ends up looping in cpu idle
 	csr_write(CSR_HENVCFG, ENVCFG_STCE);
 
 	tmp = csr_read(sip);
