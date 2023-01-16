@@ -1,0 +1,444 @@
+/*
+ * Jailhouse, a Linux-based partitioning hypervisor
+ *
+ * Copyright (c) OTH Regensburg, 2022-2023
+ *
+ * Authors:
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
+ *
+ * This work is licensed under the terms of the GNU GPL, version 2.  See
+ * the COPYING file in the top-level directory.
+ */
+
+#include <jailhouse/paging.h>
+#include <jailhouse/cell.h>
+#include <jailhouse/string.h>
+#include <jailhouse/unit.h>
+#include <jailhouse/control.h>
+#include <jailhouse/processor.h>
+#include <jailhouse/printk.h>
+#include <asm/csr64.h>
+#include <asm/irqchip.h>
+
+#define REGISTER(X) REG_RANGE((X), (X) + IRQCHIP_REG_SZ)
+
+#define DOMAINCFG		0x0
+#define  DOMAINCFG_DM		2
+#define  DOMAINCFG_BE		0
+#define  DOMAINCFG_IE		8
+#define  DOMAINCFG_DEFAULT	((1 << 31) | (1 << DOMAINCFG_IE))
+
+#define SOURCECFG_BASE 		0x4
+#define  SOURCECFG_D		10
+#define SOURCECFG_END 		0x1000
+
+#define TARGET_BASE		0x3004
+#define TARGET_DM_HART_SHIFT	18
+
+#define SETIE_BASE		0x1e00
+#define SETIENUM		0x1edc
+
+#define CLRIE_START		0x1f00
+#define CLRIE_END		(0x1f7c + IRQCHIP_REG_SZ)
+#define CLRIENUM		0x1fdc
+
+/* Per-Hart Interrupt Delivery Control (IDC) */
+#define IDC_BASE		0x4000
+#define IDC_SIZE		0x20
+#define  IDC_CLAIMI		0x1c
+
+static inline u32 aplic_read(u32 reg)
+{
+	return mmio_read32(irqchip.base + reg);
+}
+
+static inline void aplic_write(u32 reg, u32 value)
+{
+	mmio_write32(irqchip.base + reg, value);
+}
+
+static inline u32 aplic_read_setie(unsigned short no)
+{
+	return aplic_read(SETIE_BASE + no * IRQCHIP_REG_SZ);
+}
+
+static inline bool aplic_irq_is_enabled(unsigned int irq)
+{
+	u32 en = aplic_read_setie(irq / IRQCHIP_BITS_PER_REG);
+
+	return !!(en & IRQ_MASK(irq));
+}
+
+static inline void aplic_write_target(unsigned int target, u32 val)
+{
+	aplic_write(TARGET_BASE + target * IRQCHIP_REG_SZ, val);
+}
+
+static inline void aplic_write_sourcecfg(unsigned int source, u32 val)
+{
+	aplic_write(SOURCECFG_BASE + source * IRQCHIP_REG_SZ, val);
+}
+
+static inline u32 aplic_read_target(unsigned int target)
+{
+	return aplic_read(TARGET_BASE + target * IRQCHIP_REG_SZ);
+}
+
+static inline void aplic_write_clrienum(unsigned int irq)
+{
+	aplic_write(CLRIENUM, irq);
+}
+
+static void aplic_adjust_irq_target(struct cell *cell, unsigned int irq)
+{
+	u32 target, hart_index;
+	unsigned int cpu;
+
+	/* Assumption: We're in direct delivery mode */
+	target = aplic_read_target(irq - 1);
+	hart_index =  target >> 18;
+	for_each_cpu(cpu, &cell->cpu_set) {
+		if (public_per_cpu(cpu)->phys_id == hart_index)
+			return;
+	}
+
+	/*
+	 * Disable the IRQ. As IRQs must globally stay enabled in DOMAINCFG, we
+	 * need to selecively disable it here to prevent spurious IRQs in the
+	 * new cell.
+	 */
+	aplic_write_sourcecfg(irq - 1, 0);
+
+	/* We have to adjust the IRQ. Locate it on the first CPU of the cell */
+	hart_index = public_per_cpu(first_cpu(&cell->cpu_set))->phys_id;
+	target = (hart_index << 18) | (target & 0xff);
+
+	aplic_write_target(irq - 1, target);
+}
+
+static inline u32 aplic_read_idc(unsigned long hart, unsigned long reg)
+{
+	return aplic_read(IDC_BASE + IDC_SIZE * hart + reg);
+}
+
+static inline u32 aplic_read_claimi(unsigned long hart)
+{
+	return aplic_read_idc(hart, IDC_CLAIMI);
+}
+
+static int aplic_claim_irq(void)
+{
+	u32 claimi, source;
+	unsigned int hart;
+
+	hart = phys_processor_id();
+
+	claimi = aplic_read_claimi(hart);
+
+	source = (claimi >> 16) & 0x7ff;
+	if (source == 0) /* spurious IRQ, should not happen */
+		return -EINVAL;
+
+	if (source > irqchip_max_irq())
+		return -EINVAL;
+
+	irqchip.pending[hart] = claimi;
+
+	return 0;
+}
+
+static inline void aplic_passthru(const struct mmio_access *access)
+{
+	aplic_write(access->address, access->value);
+}
+
+static inline unsigned int idc_to_hart(unsigned int idc)
+{
+	/*
+	 * For the moment, assume that we only have one APLIC and #IDC = #HART
+	 */
+	return idc;
+}
+
+static inline enum mmio_result
+aplic_handle_claimi(struct mmio_access *access, unsigned int idc)
+{
+	unsigned long hart = idc_to_hart(idc);
+
+	if (access->is_write)
+		return MMIO_ERROR;
+
+	access->value = irqchip.pending[hart];
+
+	irqchip.pending[hart] = aplic_read(access->address);
+
+	guest_clear_ext();
+	ext_enable();
+
+	return MMIO_HANDLED;
+}
+
+static enum mmio_result aplic_handle_idc(struct mmio_access *access)
+{
+	unsigned long hart;
+	unsigned int cpu, idc, reg;
+
+	idc = (access->address - IDC_BASE) / IDC_SIZE;
+	reg = access->address % IDC_SIZE;
+
+	/*
+	 * It is clear that a hart is allowed to access its own IDC.
+	 * But we also need to allow accesses to IDCs of neighboured
+	 * harts within the cell.
+	 *
+	 * In (probably) 99% of all cases, the current active CPU will access
+	 * its own context. So do this simple check first, and check other
+	 * contexts of the cell (for loop) later. This results in a bit more
+	 * complex code, but results in better performance.
+	 */
+	hart = phys_processor_id();
+	if (idc_to_hart(idc) == hart)
+		goto allowed;
+
+	/*
+	 * If we land here, then a HART accesses the IDC register of a
+	 * neighboured HART. In this case, we forbid the access if a HART tries
+	 * to cross-claim the interrupt. The reason is simple: If we would
+	 * allow cross-core claiming of IRQs, then we would need to grab a lock
+	 * inside aplic_handle_claimi() to prevent race conditions, which is
+	 * too costful. I never saw any cross-HART irq claims.
+	 */
+	 if (reg == IDC_CLAIMI)
+		return trace_error(MMIO_ERROR);
+
+	for_each_cpu_except(cpu, &this_cell()->cpu_set, this_cpu_id())
+		if (idc_to_hart(public_per_cpu(cpu)->phys_id) == idc)
+			goto passthru;
+
+	return trace_error(MMIO_ERROR);
+
+allowed:
+	if (reg == IDC_CLAIMI)
+		return aplic_handle_claimi(access, hart);
+
+passthru:
+	aplic_passthru(access);
+
+	return MMIO_HANDLED;
+}
+
+static enum mmio_result aplic_handle_ienum(struct mmio_access *access)
+{
+	/* Spec: A read always returns zero */
+	if (!access->is_write) {
+		access->value = 0;
+		return MMIO_HANDLED;
+	}
+
+	if (!irqchip_irq_in_cell(this_cell(), access->value))
+		return MMIO_ERROR;
+
+	aplic_passthru(access);
+
+	return MMIO_HANDLED;
+}
+
+static enum mmio_result aplic_handle_sourcecfg(struct mmio_access *access)
+{
+	unsigned int source;
+
+	/* Check if the source IRQ belongs to the cell */
+	source = (access->address - SOURCECFG_BASE) / IRQCHIP_REG_SZ + 1;
+
+	/* If not, simply ignore the access. */
+	if (!irqchip_irq_in_cell(this_cell(), source)) {
+		if (!access->is_write)
+			access->value = 0;
+		return MMIO_HANDLED;
+	}
+
+	/* If read, then pass through */
+	if (!access->is_write) {
+		access->value = aplic_read(access->address);
+		return MMIO_HANDLED;
+	}
+
+	/* Don't support delegations at the moment */
+	if (access->value & (1 << 10)) /* Delegation */
+		return MMIO_ERROR;
+
+	/* If no delegations, simply pass through */
+	aplic_passthru(access);
+
+	return MMIO_HANDLED;
+}
+
+static bool hart_in_cell(struct cell *cell, unsigned long hart)
+{
+	unsigned int cpu;
+
+	for_each_cpu(cpu, &cell->cpu_set)
+		if (public_per_cpu(cpu)->phys_id == hart)
+			return true;
+
+	return false;
+}
+
+/* Assumption: We're in direct delivery mode */
+static enum mmio_result aplic_handle_target(struct mmio_access *access)
+{
+	unsigned int source;
+	struct cell *cell = this_cell();
+	u32 target;
+
+	/* Check if the source IRQ belongs to the cell */
+	source = (access->address - TARGET_BASE) / IRQCHIP_REG_SZ + 1;
+
+	/* If not, simply ignore the access. */
+	if (!irqchip_irq_in_cell(cell, source)) {
+		if (!access->is_write)
+			access->value = 0;
+		return MMIO_HANDLED;
+	}
+
+	/* If read, then pass through */
+	if (!access->is_write) {
+		access->value = aplic_read(access->address);
+		return MMIO_HANDLED;
+	}
+
+	/* Here we are in the write case */
+	target = access->value >> TARGET_DM_HART_SHIFT;
+
+	/*
+	 * Linux initialises all targets with default priorities, even if the
+	 * IRQ doesn't belong to it. Just return success.
+	 */
+	if (hart_in_cell(cell, target))
+		aplic_passthru(access);
+
+	return MMIO_HANDLED;
+}
+
+static enum mmio_result aplic_handle_clrie(struct mmio_access *access)
+{
+	unsigned int idx;
+	u32 allowed;
+
+	idx = (access->address - CLRIE_START) / IRQCHIP_REG_SZ;
+
+	/* Only allow clearing of IRQs that are in the cell */
+	allowed = this_cell()->arch.irq_bitmap[idx];
+
+	aplic_write(access->address, access->value & allowed);
+
+	return MMIO_HANDLED;
+}
+
+static enum mmio_result aplic_handle_domaincfg(struct mmio_access *access)
+{
+	/*
+	 * Domaincfg is handled as follows: We can not allow guests to globally
+	 * disable IRQs (i.e., modify the IE bit of the APLIC) as this would
+	 * affect other cells. The easy strategy for the moment is, to simple
+	 * ignore disabling of the IE bit. This avoids complex softemulation,
+	 * and works for most situations, as IRQs that are assigned to a cell
+	 * are disabled up on cell creation.
+	 *
+	 * So if Domaincfg is read, deliver that IE is enabled, and that's it.
+	 * Ignore any modification of the IE bit, and don't allow to touch
+	 * other bits, such as DM and BE.
+	 */
+	 if (!access->is_write) {
+		access->value = DOMAINCFG_DEFAULT;
+		return MMIO_HANDLED;
+	}
+
+	if (access->value & ((1 << DOMAINCFG_DM) | (1 << DOMAINCFG_BE)))
+		return MMIO_ERROR;
+
+	return MMIO_HANDLED;
+}
+
+static enum mmio_result aplic_handler(void *arg, struct mmio_access *access)
+{
+	enum mmio_result res = MMIO_ERROR;
+
+	switch (access->address) {
+	case REGISTER(DOMAINCFG):
+		res = aplic_handle_domaincfg(access);
+		break;
+
+	case REGISTER(SETIENUM):
+	case REGISTER(CLRIENUM):
+		res = aplic_handle_ienum(access);
+		break;
+
+	case REG_RANGE(CLRIE_START, CLRIE_END):
+		res = aplic_handle_clrie(access);
+		break;
+
+	case REG_RANGE(SOURCECFG_BASE, SOURCECFG_END):
+		res = aplic_handle_sourcecfg(access);
+		break;
+
+	case REG_RANGE(TARGET_BASE, IDC_BASE):
+		res = aplic_handle_target(access);
+		break;
+
+	case REG_RANGE(IDC_BASE, IDC_BASE + IDC_SIZE * MAX_CPUS):
+		res = aplic_handle_idc(access);
+		break;
+
+	default:
+		printk("Unknown APLIC access: 0x%lx - 0x%lx - %s\n",
+		       access->address, access->value,
+		       access->is_write ? "Write" : "Read");
+		break;
+	}
+
+	return res;
+}
+
+static int aplic_init(void)
+{
+	unsigned int irq;
+	u32 tmp;
+
+	/* Some sanity checks. Disallow MSI & Delegations for the moment */
+	tmp = aplic_read(DOMAINCFG);
+	if (tmp & (1 << DOMAINCFG_DM)) {
+		printk("MSI Delivery mode not supported!\n");
+		return -ENOSYS;
+	}
+
+	for (irq = 1; irq < MAX_IRQS; irq++) {
+		tmp = aplic_read(SOURCECFG_BASE + irq * IRQCHIP_REG_SZ);
+		if (tmp & (1 << SOURCECFG_D)) {
+			printk("IRQ delegation not supported: %d\n", irq);
+			return -ENOSYS;
+		}
+	}
+
+	/*
+	 * If we check during early initialisation if all enabled IRQs belong
+	 * to the root cell, then we don't need to check if an IRQ belongs to a
+	 * cell on arrival.
+	 */
+	for (irq = 0; irq < MAX_IRQS; irq++)
+		if (aplic_irq_is_enabled(irq) &&
+		    !irqchip_irq_in_cell(&root_cell, irq)) {
+			printk("Error: IRQ %u active in root cell\n",
+			       irq);
+			return trace_error(-EINVAL);
+		}
+
+	return 0;
+}
+
+const struct irqchip irqchip_aplic = {
+	.init = aplic_init,
+	.claim_irq = aplic_claim_irq,
+	.adjust_irq_target = aplic_adjust_irq_target,
+	.mmio_handler = aplic_handler,
+};
