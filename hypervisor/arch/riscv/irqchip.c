@@ -23,7 +23,7 @@
 #define IRQ_BITMAP_PINS \
 	(sizeof(((struct cell *)0)->arch.irq_bitmap) * 8)
 
-extern const struct irqchip irqchip_plic;
+extern const struct irqchip irqchip_aplic, irqchip_plic;
 
 struct irqchip irqchip;
 
@@ -136,6 +136,10 @@ static int irqchip_init(void)
 	switch (irqchip_type()) {
 		case JAILHOUSE_RISCV_PLIC:
 			irqchip = irqchip_plic;
+			break;
+
+		case JAILHOUSE_RISCV_APLIC:
+			irqchip = irqchip_aplic;
 			break;
 
 		default:
