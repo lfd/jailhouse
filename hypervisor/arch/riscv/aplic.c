@@ -253,13 +253,27 @@ passthru:
 
 static inline enum mmio_result aplic_handle_ienum(struct mmio_access *access)
 {
+	struct cell *cell = this_cell();
+	unsigned int target;
+
 	/* Spec: A read always returns zero */
 	if (!access->is_write) {
 		access->value = 0;
 		return MMIO_HANDLED;
 	}
 
-	if (!irqchip_irq_in_cell(this_cell(), access->value))
+	/* Here we are in the write case */
+	if (irqchip_virq_in_cell(cell, access->value)) {
+		target = access->value - cell->config->vpci_irq_base;
+		if (access->address == SETIENUM)
+			cell->arch.aplic_virq.enabled |= (1 << target);
+		else
+			cell->arch.aplic_virq.enabled &= ~(1 << target);
+
+		return MMIO_HANDLED;
+	}
+
+	if (!irqchip_irq_in_cell(cell, access->value))
 		return MMIO_ERROR;
 
 	if (access->address == SETIENUM)
@@ -279,6 +293,16 @@ aplic_handle_sourcecfg(struct mmio_access *access)
 
 	/* Check if the source IRQ belongs to the cell */
 	irq = (access->address - SOURCECFG_BASE) / IRQCHIP_REG_SZ + 1;
+
+	if (irqchip_virq_in_cell(this_cell(), irq)) {
+		/*
+		 * Actually, we don't need sourcecfg for vIRQs at all. Just
+		 * emulate some 'sane' behaviour.
+		 */
+		if (!access->is_write)
+			access->value = 6;
+		return MMIO_HANDLED;
+	}
 
 	/* If not, simply ignore the access. */
 	if (!irqchip_irq_in_cell(this_cell(), irq)) {
@@ -317,6 +341,35 @@ static bool hart_in_cell(struct cell *cell, unsigned long hart)
 	return false;
 }
 
+static inline enum mmio_result
+aplic_handle_virq_target(struct mmio_access *access, unsigned int irq)
+{
+	struct cell *cell = this_cell();
+	unsigned int cpu, *virq_target;
+	unsigned long hart;
+	u32 target;
+
+	irq -= cell->config->vpci_irq_base;
+	virq_target = &cell->arch.aplic_virq.target[irq];
+
+	if (!access->is_write) {
+		access->value = public_per_cpu(*virq_target)->phys_id
+			<< TARGET_HART_SHIFT;
+		return MMIO_HANDLED;
+	}
+
+	target = access->value >> TARGET_HART_SHIFT;
+	for_each_cpu(cpu, &cell->cpu_set) {
+		hart = public_per_cpu(cpu)->phys_id;
+		if (hart == target) {
+			*virq_target = cpu;
+			return MMIO_HANDLED;
+		}
+	}
+
+	return MMIO_ERROR;
+}
+
 /* Assumption: We're in direct delivery mode */
 static inline enum mmio_result aplic_handle_target(struct mmio_access *access)
 {
@@ -326,6 +379,9 @@ static inline enum mmio_result aplic_handle_target(struct mmio_access *access)
 
 	/* Check if the source IRQ belongs to the cell */
 	irq = (access->address - TARGET_BASE) / IRQCHIP_REG_SZ + 1;
+
+	if (irqchip_virq_in_cell(cell, irq))
+		return aplic_handle_virq_target(access, irq);
 
 	/* If not, simply ignore the access. */
 	if (!irqchip_irq_in_cell(cell, irq)) {
@@ -477,9 +533,98 @@ static int aplic_init(void)
 	return 0;
 }
 
+static void aplic_register_virq(struct cell *cell, unsigned int irq)
+{
+	unsigned int *virq_target;
+	unsigned int index;
+
+	index = irq - cell->config->vpci_irq_base;
+	if (index >= APLIC_MAX_VIRQ) {
+		printk("FATAL: aplic: too much vIRQs\n");
+		panic_stop();
+	}
+
+	spin_lock(&cell->arch.virq_lock);
+	virq_target = &cell->arch.aplic_virq.target[index];
+	if (!cell_owns_cpu(cell, *virq_target))
+		*virq_target = first_cpu(&cell->cpu_set);
+
+	irq_bitmap_set(cell->arch.virq_present_bitmap, irq);
+	spin_unlock(&cell->arch.virq_lock);
+}
+
+static void aplic_unregister_virq(struct cell *cell, unsigned int irq)
+{
+	unsigned int index, cpu;
+
+	index = irq - cell->config->vpci_irq_base;
+
+	spin_lock(&cell->arch.virq_lock);
+	cell->arch.aplic_virq.enabled &= ~(1 << index);
+
+	for_each_cpu(cpu, &cell->cpu_set)
+		public_per_cpu(cpu)->virq.aplic_pending &= ~(1 << index);
+
+	irq_bitmap_clear(cell->arch.virq_present_bitmap, irq);
+	spin_unlock(&cell->arch.virq_lock);
+}
+
+static void aplic_send_virq(struct cell *cell, unsigned int irq)
+{
+	unsigned int index;
+	unsigned int target_cpu;
+	struct public_per_cpu *pcpu;
+
+	spin_lock(&cell->arch.virq_lock);
+	if (!irqchip_virq_in_cell(cell, irq)) {
+		printk("vIRQ not present in destination\n");
+		goto out;
+	}
+
+	index = irq - cell->config->vpci_irq_base;
+	target_cpu = cell->arch.aplic_virq.target[index];
+	pcpu = public_per_cpu(target_cpu);
+
+	pcpu->virq.aplic_pending |= (1 << index);
+
+	memory_barrier();
+
+	spin_unlock(&cell->arch.virq_lock);
+	arch_send_event(pcpu);
+	return;
+
+out:
+	spin_unlock(&cell->arch.virq_lock);
+}
+
+/* We must arrive with virq_lock being held */
+static bool aplic_inject_pending_virqs(void)
+{
+	struct cell *cell = this_cell();
+	unsigned int *pending;
+	unsigned int virq;
+
+	pending = &this_cpu_public()->virq.aplic_pending;
+	if (!*pending)
+		return false;
+
+	virq = ffsl(*pending);
+	*pending &= ~(1 << virq);
+
+	virq += cell->config->vpci_irq_base;
+	irqchip.pending[this_cpu_public()->phys_id] = virq << 16;
+
+	return true;
+}
+
 const struct irqchip irqchip_aplic = {
 	.init = aplic_init,
 	.claim_irq = aplic_claim_irq,
 	.adjust_irq_target = aplic_adjust_irq_target,
 	.mmio_handler = aplic_handler,
+
+	.register_virq = aplic_register_virq,
+	.unregister_virq = aplic_unregister_virq,
+	.send_virq = aplic_send_virq,
+	.inject_pending_virqs = aplic_inject_pending_virqs,
 };
