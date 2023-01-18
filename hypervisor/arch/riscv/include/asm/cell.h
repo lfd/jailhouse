@@ -19,12 +19,24 @@
 #include <jailhouse/types.h>
 #include <asm/spinlock.h>
 
+/* Only for APLIC. Current maximum: 32, as we use unsigned integers */
+#define APLIC_MAX_VIRQ	4
+#if APLIC_MAX_VIRQ >= 32
+#error "MAX_VIRQ can not be greater than 32"
+#endif
+
 struct arch_cell {
 	struct paging_structures mm;
 
+	/* Used by both, PLIC and APLIC */
 	u32 irq_bitmap[MAX_IRQS / (sizeof(u32) * 8)];
 	u32 virq_present_bitmap[MAX_IRQS / (sizeof(u32) * 8)];
 	spinlock_t virq_lock;
+
+	struct {
+		unsigned int target[APLIC_MAX_VIRQ];
+		unsigned int enabled;
+	} aplic_virq;
 };
 
 #endif /* !_JAILHOUSE_ASM_CELL_H */
