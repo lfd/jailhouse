@@ -25,6 +25,7 @@
 
 struct irqchip {
 	int (*init)(void);
+	void (*shutdown)(void);
 	enum mmio_result (*mmio_handler)(void *arg, struct mmio_access *access);
 	int (*claim_irq)(void);
 	void (*adjust_irq_target)(struct cell *cell, unsigned int irq);
@@ -39,6 +40,7 @@ struct irqchip {
 };
 
 extern struct irqchip irqchip;
+extern void *imsic;
 
 static inline unsigned long imsic_base(void)
 {
@@ -114,5 +116,10 @@ void irqchip_unregister_virq(unsigned int irq);
 void irqchip_send_virq(struct cell *cell, unsigned int irq);
 void irqchip_process_pending_virqs(void);
 bool irqchip_inject_pending_virqs(void);
+
+static inline void imsic_write(unsigned long base, unsigned int file, unsigned int eiid)
+{
+	mmio_write32(imsic + base + file * 0x1000, eiid);
+}
 
 #endif /* __ASSEMBLY__ */

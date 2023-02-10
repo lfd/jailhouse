@@ -35,6 +35,7 @@ struct arch_cell {
 
 	struct {
 		unsigned int target[APLIC_MAX_VIRQ];
+		unsigned int eiid[APLIC_MAX_VIRQ];
 		unsigned int enabled;
 	} aplic_virq;
 

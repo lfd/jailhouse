@@ -2,7 +2,7 @@
  * Jailhouse, a Linux-based partitioning hypervisor
  *
  * Copyright (c) Siemens AG, 2016-2019
- * Copyright (c) OTH Regensburg, 2022
+ * Copyright (c) OTH Regensburg, 2022-2024
  *
  * Authors:
  *  Jan Kiszka <jan.kiszka@siemens.com>
@@ -23,7 +23,28 @@ void arch_ivshmem_trigger_interrupt(struct ivshmem_endpoint *ive,
 {
 	unsigned int irq_id = ive->irq_cache.id[vector];
 
-	if (irq_id) {
+	/* If we have an IMSIC, then always deliver the IRQ as MSI-X */
+	if (imsic) {
+		/*
+		 * If a cell is shutdown, the device might already be lost.
+		 * Further, heck for a non-zero irq id
+		 */
+		if (!ive->device || !irq_id)
+			return;
+
+		if (ive->device->msix_vectors[vector].masked)
+			return;
+
+		imsic_write(
+			    ive->device->msix_vectors[vector].address - imsic_base(),
+			    ive->device->cell->arch.vs_file,
+			    irq_id);
+	} else if (irq_id) {
+		/*
+		 * Legacy IRQs - even if translated to MSIs - are delivered via
+		 * the irqchip
+		 */
+
 		/*
 		 * Ensure that all data written by the sending guest is visible
 		 * to the target before triggering the interrupt.
@@ -37,7 +58,15 @@ void arch_ivshmem_trigger_interrupt(struct ivshmem_endpoint *ive,
 int arch_ivshmem_update_msix(struct ivshmem_endpoint *ive, unsigned int vector,
 			     bool enabled)
 {
-	return -ENOSYS;
+	struct pci_device *device = ive->device;
+	unsigned int irq_id;
+
+	spin_lock(&ive->irq_lock);
+	irq_id = device->msix_vectors[vector].data;
+	ive->irq_cache.id[vector] = enabled ? irq_id : 0;
+	spin_unlock(&ive->irq_lock);
+
+	return 0;
 }
 
 void arch_ivshmem_update_intx(struct ivshmem_endpoint *ive, bool enabled)
