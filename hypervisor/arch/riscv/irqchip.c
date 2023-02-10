@@ -167,6 +167,8 @@ static void irqchip_shutdown(void)
 	if (!irqchip.base)
 		return;
 
+	irqchip.shutdown();
+
 	paging_unmap_device(irqchip_phys(), irqchip.base, irqchip_size());
 }
 

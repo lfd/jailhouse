@@ -482,8 +482,13 @@ out:
 	spin_unlock(&cell->arch.virq_lock);
 }
 
+static void plic_shutdown(void)
+{
+}
+
 const struct irqchip irqchip_plic = {
 	.init = plic_init,
+	.shutdown = plic_shutdown,
 	.claim_irq = plic_claim_irq,
 	.adjust_irq_target = plic_adjust_irq_target,
 	.mmio_handler = plic_handler,
