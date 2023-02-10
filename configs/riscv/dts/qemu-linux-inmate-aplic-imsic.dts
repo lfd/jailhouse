@@ -1,7 +1,7 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) OTH Regensburg, 2022
+ * Copyright (c) OTH Regensburg, 2023
  *
  * Authors:
  *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
@@ -40,7 +40,7 @@
 			reg = <0>;
 			status = "okay";
 			compatible = "riscv";
-			riscv,isa = "rv64imafdc_zicsr_zifencei_zihintpause_zawrs_zba_zbb_zbc_zbs_sstc";
+			riscv,isa = "rv64imafdc_zicsr_zifencei_zihintpause_zawrs_zba_zbb_zbc_zbs_smaia_ssaia_sstc";
 			mmu-type = "riscv,sv39";
 
 			cpu0_intc: interrupt-controller {
@@ -55,7 +55,7 @@
 			reg = <1>;
 			status = "okay";
 			compatible = "riscv";
-			riscv,isa = "rv64imafdc_zicsr_zifencei_zihintpause_zawrs_zba_zbb_zbc_zbs_sstc";
+			riscv,isa = "rv64imafdc_zicsr_zifencei_zihintpause_zawrs_zba_zbb_zbc_zbs_smaia_ssaia_sstc";
 			mmu-type = "riscv,sv39";
 
 			cpu1_intc: interrupt-controller {
@@ -72,30 +72,42 @@
 		ranges;
 
 		uart@10000000 {
-			interrupts = <10>;
-			interrupt-parent = <&plic0>;
+			interrupts = <10 4>;
+			interrupt-parent = <&aplic0>;
 			clock-frequency = "\08@";
 			reg = <0x00 0x10000000 0x00 0x100>;
 			compatible = "ns16550a";
 			status = "okay";
 		};
 
-		plic0: plic@c000000 {
-			compatible = "sifive,plic-1.0.0\0riscv,plic0";
-			reg = <0x00 0xc000000 0x00 0x210000>;
-			#address-cells = <0>;
-			#interrupt-cells = <1>;
-			interrupts-extended =
-				<&cpu0_intc 11>, <&cpu0_intc 9>,
-				<&cpu1_intc 11>, <&cpu1_intc 9>;
+		/* S-Mode APLIC */
+		aplic0: aplic@d000000 {
+			riscv,num-sources = <0x60>;
+			reg = <0x00 0xd000000 0x00 0x8000>;
+			msi-parent = <&imsic0>;
 			interrupt-controller;
-			riscv,ndev = <0x35>;
+			#interrupt-cells = <0x02>;
+			compatible = "riscv,aplic";
+		};
+
+		imsic0: imsics@28000000 {
+			riscv,guest-index-bits = <0x0>;
+			riscv,ipi-id = <0x01>;
+			riscv,num-ids = <0xff>;
+			reg = <0x00 0x28000000 0x00 0x2000>;
+			interrupts-extended = <&cpu0_intc 0x09>,
+					      <&cpu1_intc 0x09>;
+			msi-controller;
+			interrupt-controller;
+			#interrupt-cells = <0x00>;
+			compatible = "riscv,imsics";
 		};
 
 		pci@30000000 {
 			compatible = "pci-host-ecam-generic";
 			device_type = "pci";
 			bus-range = <0 0>;
+			msi-parent = <&imsic0>;
 			#interrupt-cells = <1>;
 			reg = <0x0 0x30000000 0x0 0x10000000>;
 			#address-cells = <3>;
@@ -106,7 +118,7 @@
 				0x3000000 0x04 0x00 0x04 0x00 0x04 0x00>;
 
 			interrupt-map-mask = <0>;
-			interrupt-map = <0 0 0 1 &plic0 32 0>;
+			interrupt-map = <0 0 0 1 &aplic0 32 4>;
 		};
 	};
 };

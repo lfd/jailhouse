@@ -20,6 +20,7 @@
 #include <jailhouse/types.h>
 #include <jailhouse/cell-config.h>
 #include "qemu-layout.h"
+#include "qemu-imsic.h"
 
 #define MEM_REGIONS_BASE	9
 
@@ -27,9 +28,19 @@
 #define IVSHMEM_REGIONS		4
 #else
 #define IVSHMEM_REGIONS		0
-#endif
+#endif /* QEMU_IVSHMEM */
 
-#define MEM_REGIONS		(MEM_REGIONS_BASE + IVSHMEM_REGIONS)
+#ifdef QEMU_IMSIC
+#ifdef QEMU_UC
+#define IMSIC_REGIONS		1
+#else
+#define IMSIC_REGIONS		6
+#endif /* QEMU_UC */
+#else
+#define IMSIC_REGIONS		0
+#endif /* QEMU_IMSIC */
+
+#define MEM_REGIONS		(MEM_REGIONS_BASE + IVSHMEM_REGIONS + IMSIC_REGIONS)
 
 struct {
 	struct jailhouse_system header;
@@ -88,6 +99,11 @@ struct {
 					.size = 0x8000,
 					.max_irq = 96,
 					.max_priority = 7,
+#ifdef QEMU_IMSIC
+					.imsic_base = IMSIC_BASE,
+					.imsic_size = IMSIC_HART_STRIDE * ARRAY_SIZE(config.cpus),
+					.imsic_stride = IMSIC_HART_STRIDE,
+#endif
 #endif
 				},
 			},
@@ -195,6 +211,25 @@ struct {
 			.size = 0x20000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
 		},
+
+		/*
+		 * When having an IMSIC, we hide the S-Mode file from the
+		 * guest, and overlay it with a free VS-mode file.
+		 *
+		 * With IMSICs, every cell needs its own IMSIC VS-Mode file.
+		 * Hence, the number of Jailhouse cells must be less or equal
+		 * than the available VS-Mode files of the platform.
+		 */
+#ifdef QEMU_IMSIC
+		IMSIC_ROOT_REGION(0, VS_FILE),
+#ifdef QEMU_MC
+		IMSIC_ROOT_REGION(1, VS_FILE),
+		IMSIC_ROOT_REGION(2, VS_FILE),
+		IMSIC_ROOT_REGION(3, VS_FILE),
+		IMSIC_ROOT_REGION(4, VS_FILE),
+		IMSIC_ROOT_REGION(5, VS_FILE),
+#endif
+#endif
 	},
 	.irqchips = {
 #ifdef QEMU_PLIC
