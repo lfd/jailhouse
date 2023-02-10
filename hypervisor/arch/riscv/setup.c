@@ -16,6 +16,7 @@
 #include <jailhouse/entry.h>
 #include <jailhouse/paging.h>
 #include <jailhouse/percpu.h>
+#include <asm/irqchip.h>
 #include <asm/setup.h>
 
 extern unsigned long bt_tbl_l0[PAGE_SIZE / sizeof(unsigned long)];
@@ -26,6 +27,8 @@ __riscv_deactivate_vmm(union registers *regs, int errcode, bool from_ecall);
 
 bool has_sstc;
 
+static bool imsic_migration_done;
+
 int arch_init_early(void)
 {
 	int err;
@@ -34,6 +37,9 @@ int arch_init_early(void)
 	if (err)
 		return err;
 
+	/* Always take VS-file 1, if IMSIC is available */
+	root_cell.arch.vs_file = imsic_base() ? 1 : 0;
+
 	parking_pt.root_paging = root_cell.arch.mm.root_paging;
 
 	err = paging_create(&parking_pt, paging_hvirt2phys(riscv_park_loop),
@@ -41,6 +47,49 @@ int arch_init_early(void)
 			RISCV_PTE_FLAG(U), PAGING_COHERENT | PAGING_NO_HUGE);
 
 	return 0;
+}
+
+static void imsic_migrate_to_vs(unsigned char reg, bool set)
+{
+	u64 val;
+
+	csr_write(CSR_SISELECT, reg);
+	csr_write(CSR_VSISELECT, reg);
+
+	val = csr_read(CSR_SIREG);
+	csr_write(CSR_SIREG, 0);
+	if (set)
+		csr_set(CSR_VSIREG, val);
+	else
+		csr_write(CSR_VSIREG, val);
+}
+
+static void imsic_migrate_to_s(unsigned char reg, bool set)
+{
+	u64 val;
+
+	csr_write(CSR_VSISELECT, reg);
+	csr_write(CSR_SISELECT, reg);
+
+	val = csr_read(CSR_VSIREG);
+	csr_write(CSR_VSIREG, 0);
+
+	if (set)
+		csr_set(CSR_SIREG, val);
+	else
+		csr_write(CSR_SIREG, val);
+}
+
+static void imsic_migrate_regs(void (*migrator)(unsigned char, bool))
+{
+	unsigned short eiep;
+
+	migrator(CSR_SIREG_EIDELIVERY, false);
+	migrator(CSR_SIREG_EITHRESHOLD, false);
+	for (eiep = 0; eiep < (irqchip_max_irq() + 63) / 64; eiep++) {
+		migrator(CSR_SIREG_EIE0 + 2 * eiep, false);
+		migrator(CSR_SIREG_EIP0 + 2 * eiep, true);
+	}
 }
 
 int arch_cpu_init(struct per_cpu *cpu_data)
@@ -62,7 +111,17 @@ int arch_cpu_init(struct per_cpu *cpu_data)
 	final_pt = paging_hvirt2phys(&ppc->root_table_page);
 	enable_mmu_satp(hv_atp_mode, final_pt);
 
-	csr_write(CSR_HSTATUS, 0);
+	cpu_set_vs_file(root_cell.arch.vs_file);
+
+	/*
+	 * If VGEIN is set, then we have an IMSIC. Migrate its registers to the
+	 * new VS-mode file. We need to do this very early, in case we have an
+	 * IMSIC, as this migration works on per-cpu CSR registers. Hence, we
+	 * can't do it in aplic_init().
+	 */
+	if (root_cell.arch.vs_file)
+		ppc->imsic_base =
+			imsic_base() + ppc->phys_id * imsic_stride_size();
 
 	return 0;
 }
@@ -123,6 +182,18 @@ void __attribute__ ((noreturn)) arch_cpu_activate_vmm(void)
 
 	csr_write(sepc, regs->ra); /* We will use sret, so move ra->sepc */
 
+	/*
+	 * While activating jailhouse, a MSI(-X) might still arrive at the
+	 * S-file until the MSI's address is relocated. In this case, S-Mode
+	 * will still hold pending interrupts. Here, all IRQs (legacy IRQs, as
+	 * well as MSIs) are migrated, and we can safely migrate all pending
+	 * IRQs from the old S-Mode file to the VS-File.
+	 */
+	 if (csr_read(CSR_HSTATUS) & HSTATUS_VGEIN) {
+		imsic_migrate_regs(imsic_migrate_to_vs);
+		imsic_migration_done = true;
+	 }
+
 	tmp = csr_swap(sscratch, regs->sp);
 	asm volatile("mv sp, %0\n"
 		     "j vmreturn\n" : : "r"(tmp));
@@ -144,7 +215,6 @@ riscv_deactivate_vmm(union registers *regs, int errcode, bool from_ecall)
 	u64 timecmp;
 	u8 atp_mode;
 
-
 	linux_tables_offset =
 		symbol_offset((void*)hypervisor_header.initial_load_address);
 
@@ -157,6 +227,10 @@ riscv_deactivate_vmm(union registers *regs, int errcode, bool from_ecall)
 		csr_write(CSR_VSTIMECMP, -1);
 		csr_write(CSR_STIMECMP, timecmp);
 	}
+
+	/* Migrate the VS-Mode IMSIC file back to the S-Mode file */
+	if ((csr_read(CSR_HSTATUS) & HSTATUS_VGEIN) && imsic_migration_done)
+		imsic_migrate_regs(imsic_migrate_to_s);
 
 	/*
 	 * We don't know which page table is currently active. So in any case,
