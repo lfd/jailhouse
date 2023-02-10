@@ -41,6 +41,24 @@
 #define CSR_HTINST	0x64a
 #define CSR_HGATP	0x680
 
+/* IMSIC CSRs */
+#define CSR_SISELECT	0x150
+#define  CSR_SIREG_EIDELIVERY	0x70
+#define  CSR_SIREG_EITHRESHOLD	0x72
+#define  CSR_SIREG_EIP0		0x80
+#define  CSR_SIREG_EIE0		0xc0
+#define CSR_SIREG	0x151
+#define CSR_VSISELECT	0x250
+#define CSR_VSIREG	0x251
+
+#define CSR_STOPEI	0x15c
+#define CSR_VSTOPEI	0x25c
+
+#define CSR_STOPI	0xdb0
+#define CSR_VSTOPI	0xeb0
+
+#define TOPI_IID_SHIFT	16
+
 /* Status register flags */
 #define SR_SIE		_AC(0x00000002, UL) /* Supervisor Interrupt Enable */
 #define SR_MIE		_AC(0x00000008, UL) /* Machine Interrupt Enable */
@@ -131,6 +149,7 @@
 #define HSTATUS_VTVM            _AC(0x00100000, UL)
 #define HSTATUS_VGEIN           _AC(0x0003f000, UL)
 #define HSTATUS_VGEIN_SHIFT     12
+#define HSTATUS_VGEIN_MASK	BIT_MASK(17, HSTATUS_VGEIN_SHIFT)
 #define HSTATUS_HU              _AC(0x00000200, UL)
 #define HSTATUS_SPVP            _AC(0x00000100, UL)
 #define HSTATUS_SPV             _AC(0x00000080, UL)

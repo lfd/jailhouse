@@ -37,6 +37,8 @@ struct arch_cell {
 		unsigned int target[APLIC_MAX_VIRQ];
 		unsigned int enabled;
 	} aplic_virq;
+
+	unsigned short vs_file;
 };
 
 #endif /* !_JAILHOUSE_ASM_CELL_H */
