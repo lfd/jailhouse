@@ -192,7 +192,13 @@ void __attribute__ ((noreturn)) arch_cpu_activate_vmm(void)
 	 if (csr_read(CSR_HSTATUS) & HSTATUS_VGEIN) {
 		imsic_migrate_regs(imsic_migrate_to_vs);
 		imsic_migration_done = true;
-	 }
+
+		/*
+		 * In case we have an IMSIC, there must be no external IRQs any
+		 * longer, so disable them for the S-Mode Hypervisor
+		 */
+		ext_disable();
+	}
 
 	tmp = csr_swap(sscratch, regs->sp);
 	asm volatile("mv sp, %0\n"
