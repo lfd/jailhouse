@@ -2,7 +2,7 @@
  * Jailhouse, a Linux-based partitioning hypervisor
  *
  * Copyright (c) Siemens AG, 2020
- * Copyright (c) OTH Regensburg, 2022
+ * Copyright (c) OTH Regensburg, 2022-2023
  *
  * Authors:
  *  Konrad Schwarz <konrad.schwarz@siemens.com>
@@ -12,6 +12,7 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <jailhouse/utils.h>
 #include <asm/processor.h>
 #include <asm/spinlock.h>
 
@@ -26,6 +27,16 @@ enum sbi_hart_state {
 	SUSPEND_PENDING = 5,
 	RESUME_PENDING	= 6,
 };
+
+static inline void cpu_set_vs_file(unsigned int file)
+{
+	u64 hstatus;
+
+	hstatus = csr_read(CSR_HSTATUS);
+	hstatus &= ~HSTATUS_VGEIN_MASK;
+	hstatus |= file << HSTATUS_VGEIN_SHIFT;
+	csr_write(CSR_HSTATUS, hstatus);
+}
 
 #define ARCH_PUBLIC_PERCPU_FIELDS					\
 	unsigned long phys_id;						\
@@ -47,6 +58,7 @@ enum sbi_hart_state {
 		u32 enabled_bitmap[MAX_IRQS / (sizeof(u32) * 8)];	\
 		u32 pending_bitmap[MAX_IRQS / (sizeof(u32) * 8)];	\
 		unsigned int aplic_pending;				\
-	} virq;
+	} virq;								\
+	unsigned long imsic_base;
 
 #define ARCH_PERCPU_FIELDS

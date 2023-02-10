@@ -134,6 +134,9 @@ int arch_cell_create(struct cell *const cell)
 	cell->arch.mm.root_table =
 		page_alloc_aligned(&mem_pool, CELL_ROOT_PT_PAGES);
 
+	/* Always take VS file 1 for every cell, if IMSIC is available */
+	cell->arch.vs_file = imsic_base() ? 1 : 0;
+
 	for_each_cpu(cpu, &cell->cpu_set) {
 		ppc = public_per_cpu(cpu);
 		ppc->wait_for_power_on = false;
@@ -264,6 +267,8 @@ retry:
 void riscv_park_cpu(void)
 {
 	this_cpu_public()->hsm.state = STOPPED;
+
+	cpu_set_vs_file(this_cell()->arch.vs_file);
 
 	/*
 	 * When parking a HART, we let the CPU spin in a wfi loop. To avoid
