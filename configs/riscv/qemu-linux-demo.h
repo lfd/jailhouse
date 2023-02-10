@@ -15,6 +15,7 @@
 #include <jailhouse/types.h>
 #include <jailhouse/cell-config.h>
 #include "qemu-layout.h"
+#include "qemu-imsic.h"
 
 #define MEM_REGIONS_BASE	4
 
@@ -22,9 +23,15 @@
 #define IVSHMEM_REGIONS		4
 #else
 #define IVSHMEM_REGIONS		0
-#endif
+#endif /* !QEMU_IVSHMEM */
 
-#define MEM_REGIONS		(MEM_REGIONS_BASE + IVSHMEM_REGIONS)
+#ifdef QEMU_IMSIC
+#define IMSIC_REGIONS		2
+#else
+#define IMSIC_REGIONS		0
+#endif /* !QEMU_IMSIC */
+
+#define MEM_REGIONS		(MEM_REGIONS_BASE + IVSHMEM_REGIONS + IMSIC_REGIONS)
 
 struct {
 	struct jailhouse_cell_desc cell;
@@ -102,6 +109,10 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_ROOTSHARED,
 		},
+#ifdef QEMU_IMSIC
+		IMSIC_NON_ROOT_REGION(0, VS_FILE),
+		IMSIC_NON_ROOT_REGION(1, VS_FILE),
+#endif
 	},
 
 	.pci_devices = {

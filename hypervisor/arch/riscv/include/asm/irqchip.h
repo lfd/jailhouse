@@ -40,6 +40,21 @@ struct irqchip {
 
 extern struct irqchip irqchip;
 
+static inline unsigned long imsic_base(void)
+{
+	return SYSCONFIG_IRQCHIP.imsic_base;
+}
+
+static inline unsigned long imsic_size(void)
+{
+	return SYSCONFIG_IRQCHIP.imsic_size;
+}
+
+static inline unsigned long imsic_stride_size(void)
+{
+	return SYSCONFIG_IRQCHIP.imsic_stride;
+}
+
 static inline unsigned long irqchip_type(void)
 {
 	return SYSCONFIG_IRQCHIP.type;

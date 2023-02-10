@@ -15,6 +15,7 @@
 #include <jailhouse/types.h>
 #include <jailhouse/cell-config.h>
 #include "qemu-layout.h"
+#include "qemu-imsic.h"
 
 struct {
 	struct jailhouse_cell_desc cell;
