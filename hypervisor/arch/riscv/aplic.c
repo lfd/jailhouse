@@ -33,6 +33,13 @@
 
 #define TARGET_BASE		0x3004
 #define TARGET_HART_SHIFT	18
+#define TARGET_GUEST_SHIFT	12
+#define TARGET_GUEST_MSK	BIT_MASK(17, 12)
+#define TARGET_PRIO_MSK		BIT_MASK(7, 0)
+#define TARGET_EIID_MSK		BIT_MASK(10, 0)
+
+#define IN_CLRIP_START		0x1d00
+#define IN_CLRIP_END		(0x1d7c + IRQCHIP_REG_SZ)
 
 #define SETIE_BASE		0x1e00
 #define SETIENUM		0x1edc
@@ -41,10 +48,14 @@
 #define CLRIE_END		(0x1f7c + IRQCHIP_REG_SZ)
 #define CLRIENUM		0x1fdc
 
+#define SETIPNUM_LE		0x2000
+
 /* Per-Hart Interrupt Delivery Control (IDC) */
 #define IDC_BASE		0x4000
 #define IDC_SIZE		0x20
 #define  IDC_CLAIMI		0x1c
+
+static void *imsic;
 
 /*
  * When destroying cells, legacy IRQs need to be assigned back to the root
@@ -134,7 +145,13 @@ static void aplic_adjust_irq_target(struct cell *cell, unsigned int irq)
 
 	/* We have to adjust the IRQ. Locate it on the first CPU of the cell */
 	hart_index = public_per_cpu(first_cpu(&cell->cpu_set))->phys_id;
-	target = (hart_index << TARGET_HART_SHIFT) | (target & 0xff);
+
+	target = (hart_index << TARGET_HART_SHIFT);
+	if (imsic)
+		target |= (cell->arch.vs_file << TARGET_GUEST_SHIFT) |
+			  (target & TARGET_EIID_MSK);
+	else
+		target |= (target & TARGET_PRIO_MSK); /* preserve priority */
 
 	aplic_write_target(irq, target);
 }
@@ -154,6 +171,9 @@ static int aplic_claim_irq(void)
 	unsigned short source;
 	unsigned int hart;
 	u32 claimi;
+
+	if (imsic)
+		return -EINVAL;
 
 	hart = phys_processor_id();
 
@@ -206,6 +226,9 @@ static inline enum mmio_result aplic_handle_idc(struct mmio_access *access)
 {
 	unsigned long hart;
 	unsigned int cpu, idc, reg;
+
+	if (imsic)
+		return MMIO_ERROR;
 
 	idc = (access->address - IDC_BASE) / IDC_SIZE;
 	reg = access->address % IDC_SIZE;
@@ -356,29 +379,38 @@ aplic_handle_virq_target(struct mmio_access *access, unsigned int irq)
 	virq_target = &cell->arch.aplic_virq.target[irq];
 
 	if (!access->is_write) {
-		access->value = public_per_cpu(*virq_target)->phys_id
-			<< TARGET_HART_SHIFT;
+		access->value = public_per_cpu(*virq_target)->phys_id <<
+				TARGET_HART_SHIFT;
+		if (imsic)
+			access->value |= cell->arch.aplic_virq.eiid[irq];
 		return MMIO_HANDLED;
 	}
 
 	target = access->value >> TARGET_HART_SHIFT;
+
 	for_each_cpu(cpu, &cell->cpu_set) {
 		hart = public_per_cpu(cpu)->phys_id;
-		if (hart == target) {
-			*virq_target = cpu;
-			return MMIO_HANDLED;
-		}
+		if (hart == target)
+			goto write_allowed;
 	}
 
 	return MMIO_ERROR;
+
+write_allowed:
+	*virq_target = cpu;
+	if (imsic) {
+		cell->arch.aplic_virq.eiid[irq] =
+			access->value & TARGET_EIID_MSK;
+	}
+
+	return MMIO_HANDLED;
 }
 
-/* Assumption: We're in direct delivery mode */
 static inline enum mmio_result aplic_handle_target(struct mmio_access *access)
 {
 	struct cell *cell = this_cell();
 	unsigned int irq;
-	u32 target;
+	u32 target, value;
 
 	/* Check if the source IRQ belongs to the cell */
 	irq = (access->address - TARGET_BASE) / IRQCHIP_REG_SZ + 1;
@@ -393,9 +425,12 @@ static inline enum mmio_result aplic_handle_target(struct mmio_access *access)
 		return MMIO_HANDLED;
 	}
 
-	/* If read, then pass through */
+	/* If read, then pass through, but take care on the guest index */
 	if (!access->is_write) {
 		access->value = aplic_read(access->address);
+		if (imsic)
+			access->value &= ~TARGET_GUEST_MSK;
+
 		return MMIO_HANDLED;
 	}
 
@@ -406,8 +441,19 @@ static inline enum mmio_result aplic_handle_target(struct mmio_access *access)
 	 * Linux initialises all targets with default priorities, even if the
 	 * IRQ doesn't belong to it. Just return success.
 	 */
-	if (hart_in_cell(cell, target))
-		aplic_passthru(access);
+	if (!hart_in_cell(cell, target))
+		return MMIO_HANDLED;
+
+	value = access->value;
+	if (imsic) {
+		value &= ~TARGET_GUEST_MSK;
+		value |= cell->arch.vs_file << TARGET_GUEST_SHIFT;
+	}
+	aplic_write(access->address, value);
+
+	/* Store the shadow, if we're on the root cell */
+	if (cell == &root_cell)
+		shadow.target[irq] = value;
 
 	return MMIO_HANDLED;
 }
@@ -433,6 +479,8 @@ static inline enum mmio_result aplic_handle_clrie(struct mmio_access *access)
 static inline enum mmio_result
 aplic_handle_domaincfg(struct mmio_access *access)
 {
+	u32 restricted_mask;
+
 	/*
 	 * Domaincfg is handled as follows: We can not allow guests to globally
 	 * disable IRQs (i.e., modify the IE bit of the APLIC) as this would
@@ -447,13 +495,60 @@ aplic_handle_domaincfg(struct mmio_access *access)
 	 */
 	 if (!access->is_write) {
 		access->value = DOMAINCFG_DEFAULT;
+		if (imsic)
+			access->value |= (1 << DOMAINCFG_DM);
 		return MMIO_HANDLED;
 	}
 
-	if (access->value & ((1 << DOMAINCFG_DM) | (1 << DOMAINCFG_BE)))
+	restricted_mask = (1 << DOMAINCFG_BE);
+	if (!imsic)
+		restricted_mask |= (1 << DOMAINCFG_DM);
+
+	if (access->value & restricted_mask)
 		return MMIO_ERROR;
 
 	return MMIO_HANDLED;
+}
+
+static inline enum mmio_result aplic_in_clrip(struct mmio_access *access)
+{
+	unsigned int no;
+	no = (access->address - IN_CLRIP_START) / IRQCHIP_REG_SZ;
+	u32 bitmap;
+
+	/* Not implemented as never seen */
+	if (!imsic)
+		return MMIO_ERROR;
+
+	/* Not implemented as never seen */
+	if (access->is_write)
+		return MMIO_ERROR;
+
+	/* Read case */
+	bitmap = this_cell()->arch.irq_bitmap[no];
+	access->value = aplic_read(access->address);
+	access->value = access->value & bitmap;
+
+	return MMIO_HANDLED;
+}
+
+static inline enum mmio_result aplic_setipnum(struct mmio_access *access)
+{
+	/* Not implemented as never seen */
+	if (!imsic)
+		return MMIO_ERROR;
+
+	if (!access->is_write) {
+		access->value = 0;
+		return MMIO_HANDLED;
+	}
+
+	if (irqchip_irq_in_cell(this_cell(), access->value)) {
+		aplic_passthru(access);
+		return MMIO_HANDLED;
+	}
+
+	return MMIO_ERROR;
 }
 
 static enum mmio_result aplic_handler(void *arg, struct mmio_access *access)
@@ -465,17 +560,25 @@ static enum mmio_result aplic_handler(void *arg, struct mmio_access *access)
 		res = aplic_handle_domaincfg(access);
 		break;
 
+	case REG_RANGE(SOURCECFG_BASE, SOURCECFG_END):
+		res = aplic_handle_sourcecfg(access);
+		break;
+
 	case REGISTER(SETIENUM):
 	case REGISTER(CLRIENUM):
 		res = aplic_handle_ienum(access);
 		break;
 
-	case REG_RANGE(CLRIE_START, CLRIE_END):
-		res = aplic_handle_clrie(access);
+	case REGISTER(SETIPNUM_LE):
+		res = aplic_setipnum(access);
 		break;
 
-	case REG_RANGE(SOURCECFG_BASE, SOURCECFG_END):
-		res = aplic_handle_sourcecfg(access);
+	case REG_RANGE(IN_CLRIP_START, IN_CLRIP_END):
+		res = aplic_in_clrip(access);
+		break;
+
+	case REG_RANGE(CLRIE_START, CLRIE_END):
+		res = aplic_handle_clrie(access);
 		break;
 
 	case REG_RANGE(TARGET_BASE, IDC_BASE):
@@ -496,16 +599,36 @@ static enum mmio_result aplic_handler(void *arg, struct mmio_access *access)
 	return res;
 }
 
+static void migrate_irq(unsigned int irq, u32 file)
+{
+	u32 value;
+
+	value = aplic_read_target(irq) & ~TARGET_GUEST_MSK;
+	value |= file << TARGET_GUEST_SHIFT;
+	aplic_write_target(irq, value);
+}
+
 static int aplic_init(void)
 {
-	unsigned short irq;
+	unsigned short irq, vs_file;
 	u32 sourcecfg;
 	bool enabled;
 
-	/* Disallow MSI & Delegations for the moment */
+	vs_file = this_cell()->arch.vs_file;
 	if (aplic_read(DOMAINCFG) & (1 << DOMAINCFG_DM)) {
-		printk("MSI Delivery mode not supported!\n");
-		return -ENOSYS;
+		if (!vs_file) {
+			printk("FATAL: MSI Delivery enabled, "
+			       "but no VS-file specified.\n");
+			return -EINVAL;
+		}
+		imsic = paging_map_device(imsic_base(), imsic_size());
+		if (!imsic)
+			return -ENOMEM;
+
+	} else if (vs_file) {
+		printk("FATAL: VS-file specified, while MSI "
+		       "delivery mode not enabled\n");
+		return -EINVAL;
 	}
 
 	/*
@@ -522,6 +645,9 @@ static int aplic_init(void)
 
 		enabled = aplic_irq_is_enabled(irq);
 		if (irqchip_irq_in_cell(&root_cell, irq)) {
+			if (imsic)
+				migrate_irq(irq, vs_file);
+
 			shadow.sourcecfg[irq] = sourcecfg;
 			shadow.target[irq] = aplic_read_target(irq);
 			if (enabled)
@@ -572,6 +698,15 @@ static void aplic_unregister_virq(struct cell *cell, unsigned int irq)
 	spin_unlock(&cell->arch.virq_lock);
 }
 
+static void
+imsic_inject_irq(unsigned long hart, unsigned int file, unsigned int eiid)
+{
+	void *target;
+
+	target = imsic + hart * imsic_stride_size() + file * 0x1000;
+	mmio_write32(target, eiid);
+}
+
 static void aplic_send_virq(struct cell *cell, unsigned int irq)
 {
 	unsigned int index;
@@ -587,6 +722,12 @@ static void aplic_send_virq(struct cell *cell, unsigned int irq)
 	index = irq - cell->config->vpci_irq_base;
 	target_cpu = cell->arch.aplic_virq.target[index];
 	pcpu = public_per_cpu(target_cpu);
+
+	if (imsic) {
+		imsic_inject_irq(target_cpu, cell->arch.vs_file,
+				 cell->arch.aplic_virq.eiid[index]);
+		goto out;
+	}
 
 	pcpu->virq.aplic_pending |= (1 << index);
 
@@ -604,6 +745,9 @@ static bool aplic_inject_pending_virqs(void)
 	unsigned int *pending;
 	unsigned int virq;
 
+	if (imsic)
+		return false;
+
 	pending = &this_cpu_public()->virq.aplic_pending;
 	if (!*pending)
 		return false;
@@ -617,8 +761,24 @@ static bool aplic_inject_pending_virqs(void)
 	return true;
 }
 
+static void aplic_shutdown(void)
+{
+	unsigned short irq;
+
+	if (!imsic)
+		return;
+
+	/* Migrate VS-Mode IRQs back to S-Mode */
+	for (irq = 1; irq < irqchip_max_irq(); irq++)
+		if (irqchip_irq_in_cell(&root_cell, irq))
+			migrate_irq(irq, 0);
+
+	paging_unmap_device(imsic_base(), imsic, imsic_size());
+}
+
 const struct irqchip irqchip_aplic = {
 	.init = aplic_init,
+	.shutdown = aplic_shutdown,
 	.claim_irq = aplic_claim_irq,
 	.adjust_irq_target = aplic_adjust_irq_target,
 	.mmio_handler = aplic_handler,

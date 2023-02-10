@@ -25,6 +25,7 @@
 
 struct irqchip {
 	int (*init)(void);
+	void (*shutdown)(void);
 	enum mmio_result (*mmio_handler)(void *arg, struct mmio_access *access);
 	int (*claim_irq)(void);
 	void (*adjust_irq_target)(struct cell *cell, unsigned int irq);
