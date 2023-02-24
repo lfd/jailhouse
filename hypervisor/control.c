@@ -368,10 +368,10 @@ static void cell_destroy_internal(struct cell *cell)
 	cell->comm_page.comm_region.cell_state = JAILHOUSE_CELL_SHUT_DOWN;
 
 	for_each_cpu(cpu, &cell->cpu_set) {
+		public_per_cpu(cpu)->cell = &root_cell;
 		arch_park_cpu(cpu);
 
 		set_bit(cpu, root_cell.cpu_set.bitmap);
-		public_per_cpu(cpu)->cell = &root_cell;
 		public_per_cpu(cpu)->failed = false;
 		memset(public_per_cpu(cpu)->stats, 0,
 		       sizeof(public_per_cpu(cpu)->stats));
