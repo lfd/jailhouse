@@ -96,8 +96,8 @@ static ssize_t cell_stats_show(struct kobject *kobj,
 
 	for_each_cpu(cpu, &cell->cpus_assigned) {
 		jailhouse_cpu = per_cpu(jailhouse_cpu_id, cpu);
-		value = jailhouse_call_arg2(JAILHOUSE_HC_CPU_GET_INFO, cpu,
-					    code);
+		value = jailhouse_call_arg2(JAILHOUSE_HC_CPU_GET_INFO,
+					    jailhouse_cpu, code);
 		if (value > 0)
 			sum += value;
 	}
