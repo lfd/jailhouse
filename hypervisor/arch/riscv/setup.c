@@ -189,6 +189,7 @@ void __attribute__ ((noreturn)) arch_cpu_activate_vmm(void)
 	 * well as MSIs) are migrated, and we can safely migrate all pending
 	 * IRQs from the old S-Mode file to the VS-File.
 	 */
+
 	 if (csr_read(CSR_HSTATUS) & HSTATUS_VGEIN) {
 		imsic_migrate_regs(imsic_migrate_to_vs);
 		imsic_migration_done = true;
@@ -199,6 +200,11 @@ void __attribute__ ((noreturn)) arch_cpu_activate_vmm(void)
 		 */
 		ext_disable();
 	}
+
+	// HACK: Qemu: If VSEIP is set in hip (via hvip) is pending when
+	// enabling the hypervisor, clear it. Otherwise it will remain
+	// indefinetly set (at least in Qemu)
+	csr_clear(CSR_HVIP, VIE_EIE | VIE_TIE);
 
 	tmp = csr_swap(sscratch, regs->sp);
 	asm volatile("mv sp, %0\n"
