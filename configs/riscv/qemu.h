@@ -24,14 +24,10 @@
 
 #define MEM_REGIONS_BASE	8
 
-#define INTEL_HDA		1
-
 #ifdef QEMU_IVSHMEM
 #define IVSHMEM_REGIONS		4
-#define PCI_DEV_IVSHMEM		1
 #else
 #define IVSHMEM_REGIONS		0
-#define PCI_DEV_IVSHMEM		0
 #endif /* QEMU_IVSHMEM */
 
 #ifdef QEMU_IMSIC
@@ -44,16 +40,7 @@
 #define IMSIC_REGIONS		0
 #endif /* QEMU_IMSIC */
 
-#ifdef INTEL_HDA
-#define HDA_REGIONS		1
-#define PCI_DEV_HDA             1
-#else
-#define HDA_REGIONS		0
-#define PCI_DEV_HDA             0
-#endif /* INTEL_HDA */
-
-#define MEM_REGIONS		(MEM_REGIONS_BASE + IVSHMEM_REGIONS + IMSIC_REGIONS + HDA_REGIONS)
-#define NUM_PCI_DEVICES		(1 + PCI_DEV_IVSHMEM + PCI_DEV_HDA)
+#define MEM_REGIONS		(MEM_REGIONS_BASE + IVSHMEM_REGIONS + IMSIC_REGIONS)
 
 struct {
 	struct jailhouse_system header;
@@ -64,13 +51,12 @@ struct {
 #endif
 	struct jailhouse_memory mem_regions[MEM_REGIONS];
 	struct jailhouse_irqchip irqchips[1];
-	struct jailhouse_pci_device pci_devices[NUM_PCI_DEVICES];
-
-#ifdef INTEL_HDA
-	struct jailhouse_pci_capability pci_caps[7];
+#ifdef QEMU_IVSHMEM
+	struct jailhouse_pci_device pci_devices[2];
 #else
-	struct jailhouse_pci_capability pci_caps[6];
+	struct jailhouse_pci_device pci_devices[1];
 #endif
+	struct jailhouse_pci_capability pci_caps[6];
 } __attribute__((packed)) config = {
 	.header = {
 		.signature = JAILHOUSE_SYSTEM_SIGNATURE,
@@ -218,14 +204,7 @@ struct {
 			.size = 0x20000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
 		},
-#ifdef INTEL_HDA
-		{ /* ihda */
-			.phys_start = 0x40080000,
-			.virt_start = 0x40080000,
-			.size = 0x4000,
-                        .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
-#endif
+
 		/*
 		 * When having an IMSIC, we hide the S-Mode file from the
 		 * guest, and overlay it with a free VS-mode file.
@@ -257,8 +236,7 @@ struct {
 			.pin_base = 0,
 			.pin_bitmap = {
 				(1 << 0xa), /* uart@10000000 */
-				(1 << (0x22 - 0x20)) /* PCI INT C / slot 0 */
-				| (1 << (0x21 - 0x20)) /* intel hda, irq33 */,
+				(1 << (0x22 - 0x20)), /* PCI INT C / slot 0 */
 				0,
 				0,
 			},
@@ -280,28 +258,8 @@ struct {
 			.msi_64bits = 1,
 			.num_msix_vectors = 5,
 			.msix_region_size = 0x1000,
-			//.msix_address = 0x40080000,  /without intel hda
-			.msix_address = 0x40084000,
+			.msix_address = 0x40080000,
 		},
-#ifdef INTEL_HDA
-		{ /* intel hda */
-                        .type = JAILHOUSE_PCI_TYPE_DEVICE,
-                        .domain = 0x0,
-                        .bdf = 0x8,
-                        .bar_mask = {
-                                0xffffc000, 0x00000000, 0x00000000,
-                                0x00000000, 0x00000000, 0x00000000,
-                        },
-                        .caps_start = 6,
-                        .num_caps = 1,
-                        .num_msi_vectors = 1,
-                        .msi_64bits = 1,
-                        .msi_maskable = 0,
-                        .num_msix_vectors = 0,
-                        .msix_region_size = 0x0,
-                        .msix_address = 0x0,
-                },
-#endif
 #ifdef QEMU_IVSHMEM
 		{ /* IVSHMEM (networking) */
 			.type = JAILHOUSE_PCI_TYPE_IVSHMEM,
@@ -353,13 +311,5 @@ struct {
 			.len = 4,
 			.flags = 0,
 		},
-#ifdef INTEL_HDA
-		{ /* intel hda */
-                        .id = PCI_CAP_ID_MSI,
-                        .start = 0x60,
-                        .len = 0xe,
-                        .flags = JAILHOUSE_PCICAPS_WRITE,
-                },
-#endif
 	},
 };
