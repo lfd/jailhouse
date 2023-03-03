@@ -116,4 +116,6 @@ void irqchip_send_virq(struct cell *cell, unsigned int irq);
 void irqchip_process_pending_virqs(void);
 bool irqchip_inject_pending_virqs(void);
 
+void imsic_inject_irq(unsigned long hart, unsigned int file, unsigned int eiid);
+
 #endif /* __ASSEMBLY__ */
