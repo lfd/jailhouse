@@ -37,8 +37,8 @@ int arch_init_early(void)
 	if (err)
 		return err;
 
-	/* Always take VS-file 1, if IMSIC is available */
-	root_cell.arch.vs_file = imsic_base() ? 1 : 0;
+	root_cell.arch.vs_file =
+		system_config->platform_info.riscv.irqchip.imsic_vs_file;
 
 	parking_pt.root_paging = root_cell.arch.mm.root_paging;
 
