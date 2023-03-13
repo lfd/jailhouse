@@ -114,6 +114,9 @@ struct jailhouse_cell_desc {
 	__u64 cpu_reset_address;
 	__u64 msg_reply_timeout;
 
+	__u8 imsic_vs_file;
+	__u8 padding[3];
+
 	struct jailhouse_console console;
 } __attribute__((packed));
 
@@ -381,11 +384,11 @@ struct jailhouse_system {
 					u64 base_address;
 					u32 size;
 					u32 max_priority;
+					u8 imsic_vs_file;
+					u8 _res1[1];
 					u16 imsic_stride;
-					u8 _res1[2];
 					u64 imsic_base;
 					u64 imsic_size;
-
 					s16 hart_to_context[32];
 				} __attribute__((packed)) irqchip;
 			} __attribute__((packed)) riscv;

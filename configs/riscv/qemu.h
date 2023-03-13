@@ -22,6 +22,8 @@
 #include "qemu-layout.h"
 #include "qemu-imsic.h"
 
+#define VS_FILE			1
+
 #define MEM_REGIONS_BASE	8
 
 #ifdef QEMU_IVSHMEM
@@ -100,6 +102,7 @@ struct {
 					.max_irq = 96,
 					.max_priority = 7,
 #ifdef QEMU_IMSIC
+					.imsic_vs_file = VS_FILE,
 					.imsic_base = IMSIC_BASE,
 					.imsic_size = IMSIC_HART_STRIDE * ARRAY_SIZE(config.cpus),
 					.imsic_stride = IMSIC_HART_STRIDE,
