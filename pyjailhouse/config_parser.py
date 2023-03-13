@@ -160,7 +160,7 @@ class PIORegion:
 
 
 class CellConfig:
-    _HEADER_FORMAT = '=5sBH32s4xIIIIIIIIIIQ8x4x32x'
+    _HEADER_FORMAT = '=5sBH32s4xIIIIIIIIIIQ8x32x'
 
     def __init__(self, data, root_cell=False):
         self.data = data
@@ -271,7 +271,7 @@ class SystemConfig:
     _NUM_IOMMUS = 8
     _ARCH_ARM_FORMAT = '=BB2xQQQQQ'
     _ARCH_X86_FORMAT = '=HBxIII28x'
-    _ARCH_RISCV_FORMAT = '=HBxQIIxx2x8x8x'
+    _ARCH_RISCV_FORMAT = '=HBxQII2x2x8x8x'
     _ARCH_RISCV_FORMAT_HTC = '=32H'
 
     def __init__(self, data):

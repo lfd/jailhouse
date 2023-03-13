@@ -15,8 +15,7 @@
 #include <jailhouse/types.h>
 #include <jailhouse/cell-config.h>
 #include "qemu-layout.h"
-
-#define VS_FILE			3
+#include "qemu-imsic.h"
 
 struct {
 	struct jailhouse_cell_desc cell;
@@ -41,10 +40,6 @@ struct {
 		.console = {
 			.type = JAILHOUSE_CON_TYPE_RISCV_SBI,
 		},
-
-#ifdef QEMU_IMSIC
-		.imsic_vs_file = VS_FILE,
-#endif
 	},
 
 	.cpus = {
