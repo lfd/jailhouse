@@ -14,8 +14,6 @@
 #define IMSIC_BASE		0x28000000
 #define IMSIC_FILE_SIZE		0x1000
 
-#define VS_FILE			1
-
 /*
  * Qemu ist started with two guest files, the layout will be one page for:
  *   - S-File

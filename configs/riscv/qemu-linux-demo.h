@@ -17,6 +17,8 @@
 #include "qemu-layout.h"
 #include "qemu-imsic.h"
 
+#define VS_FILE			2
+
 #define MEM_REGIONS_BASE	4
 
 #ifdef QEMU_IVSHMEM
@@ -66,6 +68,9 @@ struct {
 		},
 
 		.vpci_irq_base = 32,
+#ifdef QEMU_IMSIC
+		.imsic_vs_file = VS_FILE,
+#endif
 	},
 
 	.cpus = {
