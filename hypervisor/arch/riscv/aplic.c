@@ -698,7 +698,8 @@ static void aplic_unregister_virq(struct cell *cell, unsigned int irq)
 	spin_unlock(&cell->arch.virq_lock);
 }
 
-void imsic_inject_irq(unsigned long hart, unsigned int file, unsigned int eiid)
+static void
+imsic_inject_irq(unsigned long hart, unsigned int file, unsigned int eiid)
 {
 	void *target;
 
