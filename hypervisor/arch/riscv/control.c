@@ -134,7 +134,8 @@ int arch_cell_create(struct cell *const cell)
 	cell->arch.mm.root_table =
 		page_alloc_aligned(&mem_pool, CELL_ROOT_PT_PAGES);
 
-	cell->arch.vs_file = cell->config->imsic_vs_file;
+	/* Always take VS file 1 for every cell, if IMSIC is available */
+	cell->arch.vs_file = imsic_base() ? 1 : 0;
 
 	for_each_cpu(cpu, &cell->cpu_set) {
 		ppc = public_per_cpu(cpu);

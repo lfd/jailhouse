@@ -100,7 +100,6 @@ struct {
 					.max_irq = 96,
 					.max_priority = 7,
 #ifdef QEMU_IMSIC
-					.imsic_vs_file = VS_FILE,
 					.imsic_base = IMSIC_BASE,
 					.imsic_size = IMSIC_HART_STRIDE * ARRAY_SIZE(config.cpus),
 					.imsic_stride = IMSIC_HART_STRIDE,
