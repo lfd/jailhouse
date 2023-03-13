@@ -49,7 +49,7 @@ int arch_init_early(void)
 	return 0;
 }
 
-static void imsic_migrate_to_vs(unsigned char reg)
+static void imsic_migrate_to_vs(unsigned char reg, bool set)
 {
 	u64 val;
 
@@ -58,10 +58,13 @@ static void imsic_migrate_to_vs(unsigned char reg)
 
 	val = csr_read(CSR_SIREG);
 	csr_write(CSR_SIREG, 0);
-	csr_write(CSR_VSIREG, val);
+	if (set)
+		csr_set(CSR_VSIREG, val);
+	else
+		csr_write(CSR_VSIREG, val);
 }
 
-static void imsic_migrate_to_s(unsigned char reg)
+static void imsic_migrate_to_s(unsigned char reg, bool set)
 {
 	u64 val;
 
@@ -70,17 +73,23 @@ static void imsic_migrate_to_s(unsigned char reg)
 
 	val = csr_read(CSR_VSIREG);
 	csr_write(CSR_VSIREG, 0);
-	csr_write(CSR_SIREG, val);
+
+	if (set)
+		csr_set(CSR_SIREG, val);
+	else
+		csr_write(CSR_SIREG, val);
 }
 
-static void imsic_migrate_regs(void (*migrator)(unsigned char))
+static void imsic_migrate_regs(void (*migrator)(unsigned char, bool))
 {
-	unsigned short eie;
+	unsigned short eiep;
 
-	migrator(CSR_SIREG_EIDELIVERY);
-	migrator(CSR_SIREG_EITHRESHOLD);
-	for (eie = 0; eie < (irqchip_max_irq() + 63) / 64; eie++)
-		migrator(CSR_SIREG_EIE0 + 2 * eie);
+	migrator(CSR_SIREG_EIDELIVERY, false);
+	migrator(CSR_SIREG_EITHRESHOLD, false);
+	for (eiep = 0; eiep < (irqchip_max_irq() + 63) / 64; eiep++) {
+		migrator(CSR_SIREG_EIE0 + 2 * eiep, false);
+		migrator(CSR_SIREG_EIP0 + 2 * eiep, true);
+	}
 }
 
 int arch_cpu_init(struct per_cpu *cpu_data)
@@ -121,7 +130,6 @@ void __attribute__ ((noreturn)) arch_cpu_activate_vmm(void)
 {
 	union registers *regs;
 	unsigned long tmp;
-	u64 pending;
 
 	regs = &this_cpu_data()->guest_regs;
 
@@ -183,11 +191,6 @@ void __attribute__ ((noreturn)) arch_cpu_activate_vmm(void)
 	 */
 
 	 if (csr_read(CSR_HSTATUS) & HSTATUS_VGEIN) {
-		while ((pending = csr_swap(CSR_STOPEI, 0)) != 0) {
-			pending >>= TOPI_IID_SHIFT;
-			imsic_inject_irq(this_cpu_public()->phys_id,
-					 this_cell()->arch.vs_file, pending);
-		}
 		imsic_migrate_regs(imsic_migrate_to_vs);
 		imsic_migration_done = true;
 
@@ -221,7 +224,7 @@ riscv_deactivate_vmm(union registers *regs, int errcode, bool from_ecall)
 	void __attribute__((noreturn))
 		(*deactivate_vmm)(union registers *, int, bool);
 	unsigned long linux_tables_offset, bootstrap_table_phys;
-	u64 timecmp, pending;
+	u64 timecmp;
 	u8 atp_mode;
 
 	linux_tables_offset =
@@ -238,14 +241,8 @@ riscv_deactivate_vmm(union registers *regs, int errcode, bool from_ecall)
 	}
 
 	/* Migrate the VS-Mode IMSIC file back to the S-Mode file */
-	if ((csr_read(CSR_HSTATUS) & HSTATUS_VGEIN) && imsic_migration_done) {
-		while ((pending = csr_swap(CSR_VSTOPEI, 0)) != 0) {
-			pending >>= TOPI_IID_SHIFT;
-			imsic_inject_irq(this_cpu_public()->phys_id, 0,
-					 pending);
-		}
+	if ((csr_read(CSR_HSTATUS) & HSTATUS_VGEIN) && imsic_migration_done)
 		imsic_migrate_regs(imsic_migrate_to_s);
-	}
 
 	/*
 	 * We don't know which page table is currently active. So in any case,
