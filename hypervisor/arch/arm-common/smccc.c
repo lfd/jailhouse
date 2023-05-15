@@ -129,7 +129,11 @@ enum trap_return handle_smc(struct trap_context *ctx)
 	case ARM_SMCCC_OWNER_SIP:
 		stats[JAILHOUSE_CPU_STAT_VMEXITS_SMCCC]++;
 		if (this_cell() == &root_cell)
-			ret = TRAP_UNHANDLED;
+			/*
+			 *  S32G3 Hack: Passthru, we need it for SMIC.
+			 *  Requires further investigation!
+			 */
+			regs[0] = smc_arg7(regs[0], regs[1], regs[2], regs[3], regs[4], regs[5], regs[6], regs[7]);
 		else
 			regs[0] = ARM_SMCCC_NOT_SUPPORTED;
 		break;
