@@ -128,7 +128,10 @@ enum trap_return handle_smc(struct trap_context *ctx)
 
 	case ARM_SMCCC_OWNER_SIP:
 		stats[JAILHOUSE_CPU_STAT_VMEXITS_SMCCC]++;
-		regs[0] = ARM_SMCCC_NOT_SUPPORTED;
+		if (this_cell() == &root_cell)
+			ret = TRAP_UNHANDLED;
+		else
+			regs[0] = ARM_SMCCC_NOT_SUPPORTED;
 		break;
 
 	case ARM_SMCCC_OWNER_STANDARD:
