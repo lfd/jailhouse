@@ -159,8 +159,8 @@ void __attribute__ ((noreturn)) arch_cpu_activate_vmm(void)
 	tmp = csr_read(sip);
 	csr_write(CSR_HVIP, tmp << VSIP_TO_HVIP_SHIFT); /* reinject pending */
 
-	/* try to enable SSTC extension, if available */
-	csr_write(CSR_HENVCFG, ENVCFG_STCE);
+	/* try to enable SSTC and Zicboz extension, if available */
+	csr_write(CSR_HENVCFG, ENVCFG_STCE | ENVCFG_CBZE);
 	/* STCE is WARL, check its presence */
 	has_sstc = !!(csr_read(CSR_HENVCFG) & ENVCFG_STCE);
 	/*
