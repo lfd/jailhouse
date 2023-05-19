@@ -35,6 +35,7 @@
 #define CSR_HGEIE	0x607
 #define CSR_HENVCFG	0x60a
 #define ENVCFG_STCE	(_AC(1, ULL) << 63)
+#define ENVCFG_CBZE	(_AC(1, UL) << 7)
 #define CSR_HTVAL	0x643
 #define CSR_HIP		0x644
 #define CSR_HVIP	0x645
