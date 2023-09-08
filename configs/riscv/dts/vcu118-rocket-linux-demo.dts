@@ -1,0 +1,109 @@
+/*
+ * Jailhouse, a Linux-based partitioning hypervisor
+ *
+ * Copyright (c) OTH Regensburg, 2024
+ *
+ * Authors:
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
+ *
+ * This work is licensed under the terms of the GNU GPL, version 2.  See
+ * the COPYING file in the top-level directory.
+ */
+
+/dts-v1/;
+/ {
+	model = "Jailhouse cell on RISC-V";
+
+	#address-cells = <2>;
+	#size-cells = <2>;
+
+	chosen {
+		stdout-path = "/soc/uart@60020000:115200n8";
+		bootargs = "console=ttyS0,115200n8 earlycon=sbi";
+		linux,initrd-start = <0x82000000>;
+		linux,initrd-end = <0x84000000>;
+	};
+
+	memory: memory@80000000 {
+		device_type = "memory";
+		/* 128MiB @ 0x80000000 */
+		reg = <0x00000000 0x80000000>, <0x00000000 0x8000000>;
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		timebase-frequency = <1500000>;
+
+		cpu0: cpu@0 {
+			device_type = "cpu";
+			compatible = "sifive,rocket0", "riscv";
+			riscv,isa = "rv64imafdchzicsr_zifencei_zihpm_xrocket";
+			mmu-type = "riscv,sv39";
+			tlb-split;
+
+			reg = <0>;
+
+			clock-frequency = <150000000>;
+			timebase-frequency = <1500000>;
+
+			status = "okay";
+
+			cpu0_intc: interrupt-controller {
+				#interrupt-cells = <1>;
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+			};
+		};
+	};
+	soc {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		compatible = "simple-bus";
+		ranges;
+
+		uart: uart@60020000 {
+			clock-frequency = <150000000>;
+			compatible = "ns16550a";
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			reg = <0x0 0x60020000 0x0 0x10000>;
+			current-speed = <115200>;
+			interrupt-parent = <&plic>;
+			interrupts = <2>;
+			status = "okay";
+		};
+
+		plic: plic@c000000 {
+			compatible = "sifive,plic-1.0.0\0riscv,plic0";
+			reg = <0x00 0xc000000 0x00 0x210000>;
+			#address-cells = <0>;
+			#interrupt-cells = <1>;
+			interrupts-extended =
+				<&cpu0_intc 11>, <&cpu0_intc 9>;
+			interrupt-controller;
+			riscv,ndev = <0x35>;
+		};
+
+		pci@30000000 {
+			status = "okay";
+			compatible = "pci-host-ecam-generic";
+			device_type = "pci";
+			bus-range = <0 0>;
+			#interrupt-cells = <1>;
+			reg = <0x0 0x30000000 0x0 0x10000000>;
+			#address-cells = <3>;
+			#size-cells = <2>;
+			ranges =
+				<0x1000000 0x00 0x00 0x00 0x3000000 0x00 0x10000>,
+				<0x2000000 0x00 0x40000000 0x00 0x40000000 0x00 0x40000000>,
+				<0x3000000 0x04 0x00 0x04 0x00 0x04 0x00>;
+
+			interrupt-map-mask = <0 0 0 7>;
+			interrupt-map = <0 0 0 1 &plic 32>,
+					<0 0 0 2 &plic 33>,
+					<0 0 0 3 &plic 34>,
+					<0 0 0 4 &plic 35>;
+		};
+	};
+};
