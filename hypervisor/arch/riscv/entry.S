@@ -20,7 +20,8 @@
 			 SR_VS_DIRTY | SR_XS_DIRTY | SR_UXL_64)
 
 #define PAGING_FLAGS_NEXT_LEVEL	RISCV_PTE_FLAG(G) | RISCV_PTE_FLAG(V)
-#define PAGING_FLAGS_BOOTSTRAP	PAGE_DEFAULT_FLAGS | RISCV_PTE_FLAG(G)
+#define PAGING_FLAGS_BOOTSTRAP	PAGE_DEFAULT_FLAGS | RISCV_PTE_FLAG(G) | \
+				RISCV_PTE_FLAG(A) | RISCV_PTE_FLAG(D)
 
 /*
  * hideleg needs to be set early, otherwise vsip/vsie are forced to 0. Bits set
