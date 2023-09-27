@@ -35,7 +35,7 @@
 
 struct {
 	struct jailhouse_cell_desc cell;
-	struct jailhouse_cpu cpus[2];
+	struct jailhouse_cpu cpus[1];
 	struct jailhouse_memory mem_regions[MEM_REGIONS];
 	struct jailhouse_irqchip irqchips[1];
 #ifdef QEMU_IVSHMEM
@@ -72,9 +72,11 @@ struct {
 		{
 			.phys_id = 0,
 		},
+#if 0
 		{
 			.phys_id = 1,
 		},
+#endif
 	},
 
 	.mem_regions = {
