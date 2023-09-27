@@ -732,7 +732,10 @@ static void aplic_send_virq(struct cell *cell, unsigned int irq)
 	pcpu->virq.aplic_pending |= (1 << index);
 
 	memory_barrier();
+
+	spin_unlock(&cell->arch.virq_lock);
 	arch_send_event(pcpu);
+	return;
 
 out:
 	spin_unlock(&cell->arch.virq_lock);
