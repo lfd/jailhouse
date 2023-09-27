@@ -335,7 +335,12 @@ static bool create_vpci_of_overlay(struct jailhouse_system *config)
 
 	of_node_put(irqchip);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,6,0)
+	if (of_overlay_fdt_apply(__dtb_vpci_template_begin,
+			__dtb_vpci_template_end - __dtb_vpci_template_begin,
+			&overlay_id, NULL) < 0)
+		return false;
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0)
 	if (of_overlay_fdt_apply(__dtb_vpci_template_begin,
 			__dtb_vpci_template_end - __dtb_vpci_template_begin,
 			&overlay_id) < 0)
