@@ -53,7 +53,7 @@
 		cpu1: cpu@1 {
 			device_type = "cpu";
 			reg = <1>;
-			status = "okay";
+			status = "disabled";
 			compatible = "riscv";
 			riscv,isa = "rv64imafdc_zicsr_zifencei_zihintpause_zawrs_zba_zbb_zbc_zbs_sstc";
 			mmu-type = "riscv,sv39";
