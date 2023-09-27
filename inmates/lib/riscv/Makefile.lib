@@ -52,7 +52,7 @@ define DECLARE_TARGETS =
 endef
 
 # prevent deleting intermediate files which would cause rebuilds
-.SECONDARY: $(addprefix $(obj)/,$(targets))
+#.SECONDARY: $(addprefix $(obj)/,$(targets))
 
 # obj/NAME-linked.o: ... obj/$(NAME-y) lib/lib[32].a
 .SECONDEXPANSION:
