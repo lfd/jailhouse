@@ -344,6 +344,7 @@ static int riscv_unpark(struct sbiret *ret, unsigned long hartid,
 	arch_send_event(pcpu);
 
 	ret->error = SBI_SUCCESS;
+	return err;
 
 unlock_out:
 	spin_unlock(&pcpu->control_lock);
