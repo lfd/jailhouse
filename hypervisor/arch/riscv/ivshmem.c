@@ -25,6 +25,13 @@ void arch_ivshmem_trigger_interrupt(struct ivshmem_endpoint *ive,
 
 	/* If we have an IMSIC, then always deliver the IRQ as MSI-X */
 	if (imsic) {
+		/*
+		 * If a cell is shutdown, the device might already be lost.
+		 * Further, heck for a non-zero irq id
+		 */
+		if (!ive->device || !irq_id)
+			return;
+
 		if (ive->device->msix_vectors[vector].masked)
 			return;
 
