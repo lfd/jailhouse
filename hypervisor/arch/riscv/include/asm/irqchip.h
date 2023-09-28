@@ -117,4 +117,9 @@ void irqchip_send_virq(struct cell *cell, unsigned int irq);
 void irqchip_process_pending_virqs(void);
 bool irqchip_inject_pending_virqs(void);
 
+static inline void imsic_write(unsigned long base, unsigned int file, unsigned int eiid)
+{
+	mmio_write32(imsic + base + file * 0x1000, eiid);
+}
+
 #endif /* __ASSEMBLY__ */

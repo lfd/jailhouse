@@ -701,10 +701,7 @@ static void aplic_unregister_virq(struct cell *cell, unsigned int irq)
 static void
 imsic_inject_irq(unsigned long hart, unsigned int file, unsigned int eiid)
 {
-	void *target;
-
-	target = imsic + hart * imsic_stride_size() + file * 0x1000;
-	mmio_write32(target, eiid);
+	imsic_write(hart * imsic_stride_size(), file, eiid);
 }
 
 static void aplic_send_virq(struct cell *cell, unsigned int irq)
