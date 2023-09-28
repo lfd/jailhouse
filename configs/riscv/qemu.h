@@ -272,7 +272,12 @@ struct {
 			.type = JAILHOUSE_PCI_TYPE_IVSHMEM,
 			.domain = 0x0000,
 			.bdf = 0x10 << 3,
+#ifdef QEMU_IMSIC
+			.bar_mask = JAILHOUSE_IVSHMEM_BAR_MASK_MSIX,
+			.num_msix_vectors = 2,
+#else
 			.bar_mask = JAILHOUSE_IVSHMEM_BAR_MASK_INTX,
+#endif
 			.shmem_regions_start = 0,
 			.shmem_dev_id = 0,
 			.shmem_peers = 2,
