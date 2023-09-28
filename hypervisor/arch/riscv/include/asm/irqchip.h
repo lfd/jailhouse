@@ -40,6 +40,7 @@ struct irqchip {
 };
 
 extern struct irqchip irqchip;
+extern void *imsic;
 
 static inline unsigned long imsic_base(void)
 {

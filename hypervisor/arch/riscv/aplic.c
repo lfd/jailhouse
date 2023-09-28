@@ -55,7 +55,7 @@
 #define IDC_SIZE		0x20
 #define  IDC_CLAIMI		0x1c
 
-static void *imsic;
+void *imsic;
 
 /*
  * When destroying cells, legacy IRQs need to be assigned back to the root
