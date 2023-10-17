@@ -377,6 +377,9 @@ __riscv_deactivate_vmm:
 	csr_from_csr	stvec, CSR_VSTVEC, a5
 	csr_from_csr	sstatus, CSR_VSSTATUS, a5
 
+	li	a5, 0
+	csrw	CSR_VSIE, a5
+
 	/* If we didn't come here from en ecall, skip sepc setup */
 	beq a2, x0, 1f
 	/* scratch setup */
