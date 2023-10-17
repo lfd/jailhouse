@@ -59,10 +59,13 @@ struct {
 		},
 
 		.platform_info = {
+#if 0
 			.pci_mmconfig_base = 0x40000000,
 			.pci_mmconfig_end_bus = 0,
 			.pci_is_virtual = 1,
 			.pci_domain = 0,
+#endif
+
 			.riscv = {
 				.irqchip = {
 					.type = JAILHOUSE_RISCV_PLIC,
