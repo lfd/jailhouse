@@ -75,7 +75,8 @@ struct {
 
 		.platform_info = {
 			.pci_mmconfig_base = 0x30000000,
-			.pci_mmconfig_end_bus = 0xff, // ??
+			.pci_mmconfig_end_bus = 0xff,
+
 			.riscv = {
 				.irqchip = {
 #ifdef QEMU_PLIC
