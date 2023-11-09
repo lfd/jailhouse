@@ -19,7 +19,7 @@
 
 void arch_dbg_write_init(void)
 {
-	unsigned char con_type = system_config->debug_console.type;
+	unsigned int con_type = system_config->debug_console.type;
 
 	if (!CON_IS_MMIO(system_config->debug_console.flags))
 		return;
