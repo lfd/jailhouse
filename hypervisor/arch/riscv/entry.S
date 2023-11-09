@@ -16,6 +16,8 @@
 #include <asm/csr64.h>
 #include <asm/paging.h>
 
+#include <jailhouse/console.h>
+
 #define SSTATUS_INITIAL (SR_SPIE | SR_SPP | SR_FS_DIRTY | \
 			 SR_VS_DIRTY | SR_XS_DIRTY | SR_UXL_64)
 
@@ -45,7 +47,7 @@
 .endm
 
 .macro access_config op, reg, offset
-	\op	\reg, \offset (t4)
+	\op	\reg, \offset (a5)
 .endm
 
 .macro ld_constant reg, constant
@@ -60,7 +62,10 @@
 		bt_tbl_l3_0,\
 		bt_tbl_l1_1,\
 		bt_tbl_l2_1,\
-		bt_tbl_l3_1
+		bt_tbl_l3_1,\
+		bt_tbl_l1_2,\
+		bt_tbl_l2_2,\
+		bt_tbl_l3_2
 	\macro	\page
 	.endr
 .endm
@@ -105,29 +110,35 @@
 	riscv_pt_write_pte	\level, \virt, \addr, \table, \temp, \flags
 .endm
 
-.macro write_table lvl, table, dst, flags
+.macro write_table lvl, table, flags, dst
 	la	t0, \table
+
+	.ifnb \dst /* No identity map */
 	ld_constant	t3, \dst
 	add	t4, a2, t3
+	.else /* identity map */
+	move	t4, t2
+	.endif
+
 	riscv_pt_write_address   \lvl, t2, t4, t0, t5, \flags
 .endm
 
 .macro sv57_map_2M l0, l1, l2, l3, phys
-	write_table	4, \l0, \l1, PAGING_FLAGS_NEXT_LEVEL
-	write_table	3, \l1, \l2, PAGING_FLAGS_NEXT_LEVEL
-	write_table	2, \l2, \l3, PAGING_FLAGS_NEXT_LEVEL
-	write_table	1, \l3, \phys, PAGING_FLAGS_BOOTSTRAP
+	write_table	4, \l0, PAGING_FLAGS_NEXT_LEVEL, \l1
+	write_table	3, \l1, PAGING_FLAGS_NEXT_LEVEL, \l2
+	write_table	2, \l2, PAGING_FLAGS_NEXT_LEVEL, \l3
+	write_table	1, \l3, PAGING_FLAGS_BOOTSTRAP, \phys
 .endm
 
 .macro sv48_map_2M l0, l1, l2, phys
-	write_table	3, \l0, \l1, PAGING_FLAGS_NEXT_LEVEL
-	write_table	2, \l1, \l2, PAGING_FLAGS_NEXT_LEVEL
-	write_table	1, \l2, \phys, PAGING_FLAGS_BOOTSTRAP
+	write_table	3, \l0, PAGING_FLAGS_NEXT_LEVEL, \l1
+	write_table	2, \l1, PAGING_FLAGS_NEXT_LEVEL, \l2
+	write_table	1, \l2, PAGING_FLAGS_BOOTSTRAP, \phys
 .endm
 
 .macro sv39_map_2M l0, l1, phys
-	write_table	2, \l0, \l1, PAGING_FLAGS_NEXT_LEVEL
-	write_table	1, \l1, \phys, PAGING_FLAGS_BOOTSTRAP
+	write_table	2, \l0, PAGING_FLAGS_NEXT_LEVEL, \l1
+	write_table	1, \l1, PAGING_FLAGS_BOOTSTRAP, \phys
 .endm
 
 /* place large constants into here */
@@ -164,9 +175,9 @@ arch_entry:
 	lw		t1, HEADER_MAX_CPUS (t5)
 	lw		t2, HEADER_PERCPU_SIZE (t5)
 
-	/* t4: configuration area */
+	/* a5: configuration area */
 	mul	t2, t2, t1
-	add	t4, t2, t6
+	add	a5, t2, t6
 
 	/* t6: constant_pool */
 	la	t6, constant_pool
@@ -219,20 +230,33 @@ arch_entry:
 	 */
 	ld_constant	t2, jailhouse_base
 	/* a3: jailhouse_memory.phys_start */
-	access_config	ld, a3, CFG_PHYS_START
+	access_config	ld, a3, SYSCONFIG_HYPERVISOR_PHYS
 	/* a2: virt_to_phys; phys = virt_to_phys + virt */
 	sub	a2, a3, t2
 
 	/* Get MMU-Variant that Linux currently uses */
 	csrr	a4, satp
 	srli	a4, a4, ATP_MODE_SHIFT
+
+	/* Prepare address of debug console in t2, it will be ID-mapped */
+	access_config	ld, t2, SYSCONFIG_DEBUG_CONSOLE_PHYS
+	la	t0, hypervisor_header
+	sd	t2, HEADER_DEBUG_CONSOLE_VIRT (t0)
+	/* Align to next 2M-Page */
+	li		a6, ~0x1fffff
+	and		t2, t2, a6
+	/* Only map debug_console if it's not SBI */
+	access_config 	lh, t4, SYSCONFIG_DEBUG_CONSOLE_TYPE
+	li		t3, JAILHOUSE_CON_TYPE_RISCV_SBI
+
+
 	/* And choose the same variant for the bootstrap tables */
-	li	t2, ATP_MODE_SV39
-	beq	a4, t2, sv39
-	li	t2, ATP_MODE_SV48
-	beq	a4, t2, sv48
-	li	t2, ATP_MODE_SV57
-	beq	a4, t2, sv57
+	li	t0, ATP_MODE_SV39
+	beq	a4, t0, sv39
+	li	t0, ATP_MODE_SV48
+	beq	a4, t0, sv48
+	li	t0, ATP_MODE_SV57
+	beq	a4, t0, sv57
 
 	/* Unknown MMU type if we reach that */
 1:	wfi
@@ -240,6 +264,9 @@ arch_entry:
 
 	/* virt must be held in t2 */
 sv39:
+	beq		t4, t3, 1f
+	sv39_map_2M	bt_tbl_l0, bt_tbl_l1_2
+1:
 	ld_constant	t2, jailhouse_base
 	sv39_map_2M	bt_tbl_l0, bt_tbl_l1_0, jailhouse_base
 	la		t2, arch_entry
@@ -249,6 +276,9 @@ sv39:
 	j	setup_satp
 
 sv48:
+	beq		t4, t3, 1f
+	sv48_map_2M	bt_tbl_l0, bt_tbl_l1_2, bt_tbl_l2_2
+1:
 	ld_constant	t2, jailhouse_base
 	sv48_map_2M	bt_tbl_l0, bt_tbl_l1_0, bt_tbl_l2_0, jailhouse_base
 	la		t2, arch_entry
@@ -258,6 +288,9 @@ sv48:
 	j	setup_satp
 
 sv57:
+	beq		t4, t3, 1f
+	sv57_map_2M	bt_tbl_l0, bt_tbl_l1_2, bt_tbl_l2_2, bt_tbl_l3_2
+1:
 	ld_constant	t2, jailhouse_base
 	sv57_map_2M	bt_tbl_l0, bt_tbl_l1_0, bt_tbl_l2_0, bt_tbl_l3_0, \
 			jailhouse_base

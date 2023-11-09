@@ -37,8 +37,15 @@ void common(void)
 
 	OFFSET(HEADER_MAX_CPUS, jailhouse_header, max_cpus);
 	OFFSET(HEADER_PERCPU_SIZE, jailhouse_header, percpu_size);
+	OFFSET(HEADER_DEBUG_CONSOLE_VIRT, jailhouse_header, debug_console_base);
 
-	OFFSET(CFG_PHYS_START, jailhouse_system, hypervisor_memory.phys_start);
+	OFFSET(SYSCONFIG_HYPERVISOR_PHYS, jailhouse_system,
+	       hypervisor_memory.phys_start);
+	OFFSET(SYSCONFIG_DEBUG_CONSOLE_PHYS, jailhouse_system,
+	       debug_console.address);
+	OFFSET(SYSCONFIG_DEBUG_CONSOLE_TYPE, jailhouse_system,
+	       debug_console.type);
+
 
 	OFFSET(PCPU_GUEST_REGS, per_cpu, guest_regs);
 

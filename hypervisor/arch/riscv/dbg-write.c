@@ -14,6 +14,7 @@
 #include <jailhouse/console.h>
 #include <jailhouse/control.h>
 #include <jailhouse/printk.h>
+#include <jailhouse/uart.h>
 #include <asm/sbi.h>
 
 static void riscv_dbg_write_sbi(const char *msg)
@@ -26,8 +27,17 @@ static void riscv_dbg_write_sbi(const char *msg)
 
 void arch_dbg_write_init(void)
 {
-	u32 dbg_type = system_config->debug_console.type;
+	unsigned int con_type = system_config->debug_console.type;
 
-	if (dbg_type == JAILHOUSE_CON_TYPE_RISCV_SBI)
+	if (con_type == JAILHOUSE_CON_TYPE_RISCV_SBI)
 		arch_dbg_write = riscv_dbg_write_sbi;
+        else if (con_type == JAILHOUSE_CON_TYPE_8250)
+                uart = &uart_8250_ops;
+
+	if (uart) {
+		uart->debug_console = &system_config->debug_console;
+		uart->virt_base = hypervisor_header.debug_console_base;
+		uart->init(uart);
+		arch_dbg_write = uart_write;
+	}
 }
