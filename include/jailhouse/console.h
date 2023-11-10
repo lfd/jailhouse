@@ -87,6 +87,7 @@
 
 /* Bits 14-15: Reserved */
 
+#ifndef __ASSEMBLY__
 struct jailhouse_console {
 	__u64 address;
 	__u32 size;
@@ -96,5 +97,6 @@ struct jailhouse_console {
 	__u32 gate_nr;
 	__u64 clock_reg;
 } __attribute__((packed));
+#endif
 
 #endif /* !_JAILHOUSE_CONSOLE_H */
