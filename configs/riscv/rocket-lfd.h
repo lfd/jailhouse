@@ -55,7 +55,12 @@ struct {
 		},
 
 		.debug_console = {
-			.type = JAILHOUSE_CON_TYPE_RISCV_SBI,
+			.address = 0x60030000,
+			.size = 0x1000,
+			.type = JAILHOUSE_CON_TYPE_8250,
+			.flags = JAILHOUSE_CON_ACCESS_MMIO |
+				 JAILHOUSE_CON_REGDIST_4,
+			.divider = 0x51,
 		},
 
 		.platform_info = {
