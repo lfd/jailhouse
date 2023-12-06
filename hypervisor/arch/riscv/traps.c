@@ -25,6 +25,32 @@
 void arch_handle_trap(union registers *regs);
 void arch_handle_fault(union registers *regs);
 
+static inline void cflush(void)
+{
+	sbi_ecall(SBI_EXT_BASE, 0xf0f0, 0, 0, 0, 0, 0, 0);
+}
+
+static inline void hfence_gvma(void) {
+	    asm volatile(
+		".insn r 0x73, 0x0, 0x31, x0, x0, x0\n\t"
+		::: "memory");
+}
+
+static inline void hfence_vvma(void) {
+	    asm volatile(
+		".insn r 0x73, 0x0, 0x11, x0, x0, x0\n\t"
+		::: "memory");
+}
+
+static inline void sfence_vma(void) {
+	asm volatile ("sfence.vma" ::: "memory");
+}
+
+static inline void hfence(void) {
+	hfence_vvma();
+	hfence_gvma();
+}
+
 static const char *causes[] = {
 	[EXC_INST_MISALIGNED]		= "Instruction Address Misaligned",
 	[EXC_INST_ACCESS]		= "Instruction Address Fault",
