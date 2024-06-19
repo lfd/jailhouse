@@ -30,6 +30,8 @@
 #define PLIC_CTX_SZ		0x1000
 #define PLIC_CTX_END		0x4000000
 
+#define dbg(fmt, ...)	printk("%u: " fmt "\n", this_cpu_id(), ##__VA_ARGS__)
+
 static inline s16 hart_to_context(unsigned int hartid)
 {
 	if (hartid > ARRAY_SIZE(SYSCONFIG_IRQCHIP.hart_to_context))
@@ -131,6 +133,8 @@ static int plic_claim_irq(void)
 	if (irq > irqchip_max_irq())
 		return -EINVAL;
 
+	dbg("hart %lu got irq %u", hart, irq);
+
 	irqchip.pending[hart] = irq;
 
 	return 0;
@@ -191,6 +195,8 @@ plic_handle_context_claim(struct mmio_access *access, unsigned long hart)
 	if (!irq_bitmap_test(this_cell()->arch.virq_present_bitmap, access->value))
 		plic_write(access->address, access->value);
 
+	dbg("claimed irq for hart %lu", hart);
+
 	/* Check if there's another physical IRQ pending */
 	/* TODO: This is where we would need to prioritise vIRQs */
 	irqchip.pending[hart] = plic_read(access->address);
@@ -219,6 +225,8 @@ static enum mmio_result plic_handle_context(struct mmio_access *access)
 
 	addr = access->address - PLIC_CTX_BASE;
 	ctx = addr / PLIC_CTX_SZ;
+
+	dbg("ctx");
 
 	/*
 	 * It is clear that a hart is allowed to access its own context.
@@ -354,19 +362,21 @@ static enum mmio_result plic_handler(void *arg, struct mmio_access *access)
 {
 	switch (access->address) {
 	case REG_RANGE(PLIC_PRIO_BASE, PLIC_PENDING_BASE):
+		dbg("plic prio");
 		return plic_handle_prio(access);
 		break;
 
 	case REG_RANGE(PLIC_ENABLE_BASE, PLIC_ENABLE_END):
+		dbg("plic enable");
 		return plic_handle_enable(access);
 		break;
 
 	case REG_RANGE(PLIC_CTX_BASE, PLIC_CTX_END):
 		if (access->address < plic_size())
 			return plic_handle_context(access);
-		break;
 
 	default:
+		dbg("unknown");
 		break;
 	}
 
