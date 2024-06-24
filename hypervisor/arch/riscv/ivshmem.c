@@ -18,10 +18,14 @@
 #include <asm/processor.h>
 #include <asm/irqchip.h>
 
+#include <jailhouse/printk.h>
+
 void arch_ivshmem_trigger_interrupt(struct ivshmem_endpoint *ive,
 				    unsigned int vector)
 {
 	unsigned int irq_id = ive->irq_cache.id[vector];
+
+	printk("cpu %u: trigger vector %u (irq_id: %u)\n", this_cpu_id(), vector, irq_id);
 
 	/* If we have an IMSIC, then always deliver the IRQ as MSI-X */
 	if (imsic) {
@@ -35,6 +39,7 @@ void arch_ivshmem_trigger_interrupt(struct ivshmem_endpoint *ive,
 		if (ive->device->msix_vectors[vector].masked)
 			return;
 
+		printk("writing to imsic..\n");
 		imsic_write(
 			    ive->device->msix_vectors[vector].address - imsic_base(),
 			    ive->device->cell->arch.vs_file,
@@ -65,6 +70,8 @@ int arch_ivshmem_update_msix(struct ivshmem_endpoint *ive, unsigned int vector,
 	irq_id = device->msix_vectors[vector].data;
 	ive->irq_cache.id[vector] = enabled ? irq_id : 0;
 	spin_unlock(&ive->irq_lock);
+
+	printk("cpu %u: update msix. vector: %u irq_id: %u enabled: %u\n", this_cpu_id(), vector, irq_id, enabled ? 1:0);
 
 	return 0;
 }
