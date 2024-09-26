@@ -57,6 +57,11 @@
 
 #define SBI_EXT_SRST			0x53525354
 
+#define SBI_EXT_DBCN			0x4442434E
+#define SBI_EXT_DBCN_CONSOLE_WRITE	0
+#define SBI_EXT_DBCN_CONSOLE_READ	1
+#define SBI_EXT_DBCN_CONSOLE_WRITE_BYTE	2
+
 #ifndef __ASSEMBLY__
 
 static inline struct sbiret sbi_send_ipi(unsigned long hart_mask,

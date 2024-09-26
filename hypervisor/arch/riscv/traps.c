@@ -392,11 +392,22 @@ handle_sbi_hsm(struct sbiret *ret, unsigned int fid, unsigned long a0,
 	return err;
 }
 
+static inline int
+handle_sbi_dbcn(struct sbiret *ret, unsigned int fid, unsigned long a0,
+	        unsigned long a1, unsigned long a2)
+{
+	ret->error = SBI_ERR_DENIED;
+	return 0;
+}
+
 static struct sbiret sbi_probe_ext(unsigned long ext)
 {
 	struct sbiret ret;
 
-	/* Allow access to all extensions but system reset (SRST) */
+	/*
+	 * Allow access to all extensions except system reset (SRST) and debug
+	 * console (DBCN).
+	 */
 	switch (ext) {
 	case SBI_EXT_TIME:
 	case SBI_EXT_SPI:
@@ -406,6 +417,7 @@ static struct sbiret sbi_probe_ext(unsigned long ext)
 				0, 0, 0, 0, 0);
 		break;
 
+	case SBI_EXT_DBCN:
 	case SBI_EXT_SRST:
 	default:
 		ret.error = SBI_ERR_DENIED;
@@ -510,6 +522,12 @@ static int handle_ecall(union registers *regs)
 			stats[JAILHOUSE_CPU_STAT_VMEXITS_SBI_OTHER]++;
 			err = handle_sbi_hsm(&ret, fid, regs->a0, regs->a1,
 					     regs->a2);
+			break;
+
+		case SBI_EXT_DBCN:
+			stats[JAILHOUSE_CPU_STAT_VMEXITS_SBI_OTHER]++;
+			err = handle_sbi_dbcn(&ret, fid, regs->a0, regs->a1,
+					      regs->a2);
 			break;
 
 		case JAILHOUSE_EID:
