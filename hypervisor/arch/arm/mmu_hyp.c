@@ -263,6 +263,7 @@ int switch_exception_level(struct per_cpu *cpu_data)
 	unsigned long trampoline_size = &trampoline_end - &trampoline_start;
 	unsigned long stack_phys = virt2phys(cpu_data->stack);
 	u64 ttbr_el2;
+	u32 ret;
 
 	/* Check the paging structures as well as the MMU initialisation */
 	unsigned long jailhouse_base_phys =
@@ -303,9 +304,12 @@ int switch_exception_level(struct per_cpu *cpu_data)
 	 * Documentation/virtual/kvm/arm/hyp-abi.txt .
 	 */
 	if (hypervisor_header.arm_linux_hyp_abi == HYP_STUB_ABI_LEGACY)
-		hvc(phys_bootstrap, 0);
+		ret = hvc(phys_bootstrap, 0);
 	else
-		hvc(LINUX_HVC_SET_VECTOR, phys_bootstrap);
+		ret = hvc(LINUX_HVC_SET_VECTOR, phys_bootstrap);
+
+	if (ret == 0xbadca11)
+		return -EINVAL;
 
 	cpu_switch_el2(virt2phys);
 	/*
