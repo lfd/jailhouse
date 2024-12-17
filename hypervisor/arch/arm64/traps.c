@@ -163,6 +163,7 @@ static void fill_trap_context(struct trap_context *ctx, union registers *regs)
 
 static const trap_handler trap_handlers[0x40] =
 {
+	[ESR_EC_HVC32]		= handle_hvc,
 	[ESR_EC_HVC64]		= handle_hvc,
 	[ESR_EC_SMC64]		= handle_smc,
 	[ESR_EC_SYS64]		= handle_sysreg,
