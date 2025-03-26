@@ -19,7 +19,7 @@
 struct {
 	struct jailhouse_cell_desc cell;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[8];
+	struct jailhouse_memory mem_regions[9];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[1];
 } __attribute__((packed)) config = {
@@ -28,7 +28,7 @@ struct {
 		.revision = JAILHOUSE_CONFIG_REVISION,
 		.architecture = JAILHOUSE_ARM64,
 		.name = "inmate-demo",
-		.flags = JAILHOUSE_CELL_PASSIVE_COMMREG | JAILHOUSE_CELL_AARCH32 | JAILHOUSE_CELL_VIRTUAL_CONSOLE_PERMITTED,
+		.flags = JAILHOUSE_CELL_PASSIVE_COMMREG | JAILHOUSE_CELL_VIRTUAL_CONSOLE_PERMITTED,
 
 		.cpu_set_size = sizeof(config.cpus),
 		.num_memory_regions = ARRAY_SIZE(config.mem_regions),
@@ -46,7 +46,7 @@ struct {
 	},
 
 	.cpus = {
-		0b0010,
+		0b0001,
 	},
 
 	.mem_regions = {
@@ -90,10 +90,17 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_ROOTSHARED,
 		},
-		/* RAM */ {
+		/* RAM (low) */ {
 			.phys_start = 0x7fa00000,
 			.virt_start = 0,
 			.size = 0x00010000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
+		},
+		/* RAM (high, autosar) */ {
+			.phys_start = 0x70000000,
+			.virt_start = 0x34000000,
+			.size = 20 * 1024 * 1024,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
 		},
